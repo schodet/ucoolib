@@ -1,0 +1,7 @@
+obj
+*.pyc
+*.stm32f4.elf
+*.stm32f4.lst
+*.stm32f4.bin
+*.hex
+*.host
