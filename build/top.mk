@@ -44,6 +44,10 @@ vpath %.cc $(ALL_MODULES:%=$(BASE)/ucoolib/%)
 vpath %.c $(ALL_MODULES:%=$(BASE)/ucoolib/%)
 vpath %.S $(ALL_MODULES:%=$(BASE)/ucoolib/%)
 
+# Configuration.
+
+include $(BASE)/build/config.mk
+
 # Objects directory.
 
 $(OBJDIR):

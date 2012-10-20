@@ -1,0 +1,113 @@
+#!/usr/bin/python
+"""Read build configuration and generate header files."""
+import optparse
+import ConfigParser
+import sys
+import re
+import os
+
+def read_config(modules_configs, project_config):
+    """Read configuration definitions and default values from module
+    configuration files, then merge project configuration."""
+    parser = ConfigParser.SafeConfigParser()
+    # Read definitions and default values.
+    for mc in modules_configs:
+        try:
+            mcf = open(mc)
+        except IOError:
+            pass
+        else:
+            with mcf:
+                parser.readfp(mcf)
+    # Save the list of existing items for later check.
+    def config_items(parser):
+        return set('%s:%s' % (section, item)
+                for section in parser.sections()
+                for item in parser.options(section))
+    modules_items = config_items(parser)
+    # Now read project configuration.
+    if project_config is not None:
+        try:
+            pcf = open(project_config)
+        except IOError:
+            pass
+        else:
+            with pcf:
+                parser.readfp(pcf)
+        # Check for unknown items.
+        project_items = config_items(parser)
+        unknown_items = project_items - modules_items
+        if unknown_items:
+            raise RuntimeError("unknown configuration item: "
+                    + " ".join(unknown_items))
+        # Check for items with no default value.
+        for section in parser.sections():
+            for key, value in parser.items(section):
+                if value == '':
+                    raise RuntimeError("no value given for %s:%s"
+                            % (section, key))
+    # OK, convert to more natural structure.
+    return dict((section, parser.items(section))
+        for section in parser.sections())
+
+def write_header(filename, section, section_dict):
+    """Write (update) a section to a C header file."""
+    # Prepare new content.
+    items = [ ]
+    section = section.replace('/', '_').upper()
+    for key, value in section_dict:
+        items.append('#define UCOO_CONFIG_%s_%s (%s)'
+                % (section, key.upper(), value))
+    guard = re.sub(r'\W', '_', filename)
+    content = '\n'.join([
+        '#ifndef %s' % guard,
+        '#define %s' % guard,
+        '// Generated from configuration.',
+        ] + items + [
+        '#endif',
+        '' ])
+    # Check old content.
+    old_content = ''
+    try:
+        hf = open(filename)
+    except IOError:
+        pass
+    else:
+        with hf:
+            old_content = hf.read()
+    if old_content == content:
+        return
+    # Create output directory if needed.
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    # Write new content.
+    with open(filename, 'w') as hf:
+        hf.write(content)
+
+def write_headers(filename_pattern, config):
+    """Write (update) all sections to C header files."""
+    for section, section_dict in config.iteritems():
+        filename = filename_pattern.replace('%', section)
+        write_header(filename, section, section_dict)
+
+if __name__ == '__main__':
+    parser = optparse.OptionParser(
+            usage='%prog [options] modules configuration files...')
+    parser.add_option('-p', '--project-config', metavar='FILE',
+            help="project configuration file")
+    parser.add_option('-H', '--c-header-template', metavar='TEMPLATE',
+            help="name template for C header files"
+            + " (use % as section placeholder)")
+    options, modules_configs = parser.parse_args()
+
+    try:
+        config = read_config(modules_configs, options.project_config)
+        if options.c_header_template:
+            write_headers(options.c_header_template, config)
+    except RuntimeError, e:
+        print >> sys.stderr, e
+        sys.exit(1)
+    except EnvironmentError, e:
+        print >> sys.stderr, e
+        sys.exit(1)
