@@ -79,6 +79,37 @@ $1_EXTRA_CLEAN += $$($1_PROGS:%=%.$1.lst)
 endef
 
 
+# Define binary rules.
+define arch_bin_rules
+
+hex: hex.$1
+srec: srec.$1
+bin: bin.$1
+all.$1: hex.$1
+
+.PHONY: hex.$1 srec.$1 bin.$1
+
+hex.$1: $$($1_PROGS:%=%.$1.hex)
+srec.$1: $$($1_PROGS:%=%.$1.srec)
+bin.$1: $$($1_PROGS:%=%.$1.bin)
+
+%.$1.hex: %.$1$$($1_ELF_SUFFIX)
+	@echo "HEX  [$1] $$@"
+	$$Q$$($1_OBJCOPY) -O ihex $$< $$@
+%.$1.srec: %.$1$$($1_ELF_SUFFIX)
+	@echo "SREC [$1] $$@"
+	$$Q$$($1_OBJCOPY) -O srec $$< $$@
+%.$1.bin: %.$1$$($1_ELF_SUFFIX)
+	@echo "BIN  [$1] $$@"
+	$$Q$$($1_OBJCOPY) -O binary $$< $$@
+
+$1_EXTRA_CLEAN += $$($1_PROGS:%=%.$1.hex) \
+	$$($1_PROGS:%=%.$1.srec) \
+	$$($1_PROGS:%=%.$1.bin)
+
+endef
+
+
 # Define size report rules.
 define arch_size_rules
 

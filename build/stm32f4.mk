@@ -31,5 +31,6 @@ stm32f4_ELF_SUFFIX = .elf
 
 $(eval $(call arch_build_rules,stm32f4))
 $(eval $(call arch_lst_rules,stm32f4))
+$(eval $(call arch_bin_rules,stm32f4))
 $(eval $(call arch_size_rules,stm32f4))
 $(eval $(call arch_misc_rules,stm32f4))

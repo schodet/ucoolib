@@ -30,11 +30,14 @@ Q = @
 all:
 lst:
 size:
+hex:
+srec:
+bin:
 
 clean:
 	rmdir $(OBJDIR) 2> /dev/null || true
 
-.PHONY: all lst size clean
+.PHONY: all lst size hex srec bin clean
 
 # Modules and sources setup.
 
