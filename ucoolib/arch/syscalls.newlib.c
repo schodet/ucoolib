@@ -25,3 +25,14 @@
 /** This is needed by C++ ABI, this simple definition will do.  See:
  * http://lists.debian.org/debian-gcc/2003/07/msg00057.html */
 void *__dso_handle = (void*) &__dso_handle;
+
+/** This function is called when a pure virtual function is called.  This is
+ * needed by linker because when a abstrat class constructor or destructor is
+ * called, object is not complete.  Replace the one provided by the toolchain
+ * to avoid including the world. */
+void
+__cxa_pure_virtual (void)
+{
+    while (1)
+	;
+}
