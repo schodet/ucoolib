@@ -1,0 +1,6 @@
+[hal/uart]
+# Size of reception buffer.
+rx_buffer = 32
+# Size of transmission buffer.
+tx_buffer = 32
+

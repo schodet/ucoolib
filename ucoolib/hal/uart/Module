@@ -1,0 +1,1 @@
+hal_uart_SOURCES = uart.stm32.cc
