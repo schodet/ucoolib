@@ -31,8 +31,6 @@ namespace ucoo {
 class Stream
 {
   public:
-    /// Default constructor.
-    Stream ();
     /// Set whether operations on this stream should block when no data is
     /// available.
     virtual void block (bool block = true);
@@ -52,6 +50,9 @@ class Stream
     int getc ();
     /// Shortcut to write one character.  Return -1 on error.
     int putc (int c);
+  protected:
+    /// Default constructor.
+    Stream ();
   protected:
     /// Current blocking operation flag.
     bool block_;
