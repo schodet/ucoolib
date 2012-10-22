@@ -1,0 +1,3 @@
+[submodule "lib/libopencm3"]
+	path = lib/libopencm3
+	url = http://git.ni.fr.eu.org/apbteam/libopencm3.git
