@@ -5,7 +5,7 @@
 PROJECT_CONFIG ?= Config
 MODULES_CONFIG := $(wildcard $(ALL_MODULES:%=$(BASE)/ucoolib/%/Config))
 
-CONFIG_LIST := $(wildcard $(PROJECT_CONFIG)) $(MODULES_CONFIG)
+CONFIG_LIST := $(strip $(wildcard $(PROJECT_CONFIG)) $(MODULES_CONFIG))
 
 # Ensure that configuration is up to date, using two mechanisms:
 #  - make will make sure config.list is up to date as it is included.
