@@ -26,7 +26,7 @@
 namespace ucoo {
 
 Stream::Stream ()
-    : block_ (false)
+    : block_ (true)
 {
 }
 
