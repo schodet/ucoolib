@@ -1,0 +1,5 @@
+[hal/usb]
+# Taken from LUFA IDs, not for commercial use.
+vendor_id = 0x03eb
+product_id = 0x204e
+stream_nb = 1

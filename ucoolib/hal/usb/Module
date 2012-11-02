@@ -1,0 +1,1 @@
+hal_usb_SOURCES = usb.stm32.cc usb_desc.stm32.c

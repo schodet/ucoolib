@@ -1,0 +1,15 @@
+[hal/usb]
+# Taken from LUFA IDs, not for commercial use.  Do not use them as default so
+# that comment is not missed.
+#vendor_id = 0x03eb
+#product_id = 0x204e
+vendor_id =
+product_id =
+# Number of streams, interfaces, or pair of endpoints.
+stream_nb = 1
+# Set to 0 if powered from USB cable, 1 if device has its own power supply.
+self_powered = 0
+# Maximum power consumed from USB cable (mA).
+max_power = 100
+# End point size, you should use 64.
+ep_size = 64
