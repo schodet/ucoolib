@@ -52,4 +52,10 @@ Uart::write (const char *buf, int count)
     return -1;
 }
 
+int
+Uart::poll ()
+{
+    return 0;
+}
+
 } // namespace ucoo

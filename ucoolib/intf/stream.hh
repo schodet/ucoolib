@@ -50,6 +50,8 @@ class Stream
     int getc ();
     /// Shortcut to write one character.  Return -1 on error.
     int putc (int c);
+    /// Return the number of available bytes to be read.
+    virtual int poll () = 0;
   protected:
     /// Default constructor.
     Stream ();

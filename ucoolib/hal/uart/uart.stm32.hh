@@ -44,6 +44,8 @@ class Uart : public Stream
     int read (char *buf, int count);
     /// See Stream::write.
     int write (const char *buf, int count);
+    /// See Stream::poll.
+    int poll ();
 };
 
 } // namespace ucoo
