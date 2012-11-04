@@ -65,13 +65,14 @@ endef
 define arch_lst_rules
 
 lst: lst.$1
+all.$1: lst.$1
 
 .PHONY: lst.$1
 
 lst.$1: $$($1_PROGS:%=%.$1.lst)
 
 %.$1.lst: %.$1.elf
-	@echo "LST  [$1] $$<"
+	@echo "LST  [$1] $$@"
 	$$Q$$($1_OBJDUMP) -h -S $$< > $$@
 
 $1_EXTRA_CLEAN += $$($1_PROGS:%=%.$1.lst)
