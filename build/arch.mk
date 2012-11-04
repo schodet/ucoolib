@@ -88,6 +88,13 @@ srec: srec.$1
 bin: bin.$1
 all.$1: hex.$1
 
+ifneq ($$(wildcard *.$1.srec),)
+all.$1: srec.$1
+endif
+ifneq ($$(wildcard *.$1.bin),)
+all.$1: bin.$1
+endif
+
 .PHONY: hex.$1 srec.$1 bin.$1
 
 hex.$1: $$($1_PROGS:%=%.$1.hex)
