@@ -22,14 +22,15 @@
 //
 // }}}
 #include "ucoolib/hal/usb/usb.hh"
+#include "ucoolib/arch/arch.hh"
 
 #include <libopencm3/stm32/f4/rcc.h>
 #include <libopencm3/stm32/f4/gpio.h>
 
 int
-main ()
+main (int argc, const char **argv)
 {
-    rcc_clock_setup_hse_3v3 (&hse_8mhz_3v3[CLOCK_3V3_120MHZ]);
+    ucoo::arch_init (argc, argv);
     rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPDEN);
     ucoo::UsbStreamControl usc ("APBTeam", "USB test");
     ucoo::UsbStream us[] = {
