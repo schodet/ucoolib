@@ -22,7 +22,7 @@ clean: config-clean
 
 .PHONY: config-clean CONFIG_FORCE
 
-$(OBJDIR)/config.list: $(CONFIG_LIST) $(CONFIG_FORCE)
+$(OBJDIR)/config.list: $(CONFIG_LIST) $(CONFIG_FORCE) | $(OBJDIR)
 	@echo "CONF $(PROJECT_CONFIG)"
 	$Q$(BASE)/build/tools/config-gen -H $(OBJDIR)/config/%.hh \
 		-p $(PROJECT_CONFIG) $(MODULES_CONFIG)
