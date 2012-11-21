@@ -60,7 +60,7 @@ UsbStreamControl::RxBuffer::RxBuffer (void)
 UsbStreamControl::UsbStreamControl (const char *vendor, const char *product)
     : configured_ (false)
 {
-    //assert (!instance_);
+    assert (!instance_);
     instance_ = this;
     strings[1] = vendor;
     strings[2] = product;
@@ -92,10 +92,10 @@ UsbStreamControl::set_config (uint16_t configured)
 void
 UsbStreamControl::rx_callback (uint8_t ep)
 {
-    //assert (ep > 0 && ep <= stream_nb_);
+    assert (ep > 0 && ep <= stream_nb_);
     int num = ep - 1;
     RxBuffer &rb = instance_->rx_buffer_[num];
-    //assert (rb.size == 0 && rb.offset == 0);
+    assert (rb.size == 0 && rb.offset == 0);
     usbd_ep_nak_set (ep, 1);
     rb.size = usbd_ep_read_packet (ep, rb.buf, ep_size_);
 }
@@ -103,7 +103,7 @@ UsbStreamControl::rx_callback (uint8_t ep)
 UsbStream::UsbStream (UsbStreamControl &control, int num)
     : control_ (control), num_ (num)
 {
-    //assert (num < UsbStreamControl::stream_nb_);
+    assert (num < UsbStreamControl::stream_nb_);
 }
 
 int
