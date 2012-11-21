@@ -18,7 +18,7 @@ CPPFLAGS := $(DEFS) $(INCLUDES) -MP -MMD
 OPTIMIZE ?= -Os
 CFLAGS := -g -Wall -W -Wundef -Wno-unused-parameter \
 	-fno-exceptions $(OPTIMIZE)
-CXXFLAGS := $(CFLAGS) -fno-rtti -fno-threadsafe-statics -fno-implicit-templates
+CXXFLAGS := $(CFLAGS) -fno-rtti -fno-threadsafe-statics
 LDFLAGS :=
 LDLIBS := $(LIBS)
 
