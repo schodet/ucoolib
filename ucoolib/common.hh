@@ -35,6 +35,41 @@ barrier ()
     __asm__ __volatile__("": : : "memory");
 }
 
+/// Stop, abruptly.
+void
+halt () __attribute__ ((noreturn));
+
+/// Stop, try to output error description corresponding to errno.
+void
+halt_perror () __attribute__ ((noreturn));
+
+/// To be used to swear that the given condition is true.  If this is not the
+/// case... well... you swore!
+extern inline void
+assert (bool condition)
+{
+    if (!condition)
+        halt ();
+}
+
+/// To be used to swear that this code can never be reached.
+void
+assert_unreachable () __attribute__ ((noreturn));
+extern inline void
+assert_unreachable ()
+{
+    halt ();
+}
+
+/// To be used to swear that the given condition is true, but print errno
+/// description anyway in case you lied.
+extern inline void
+assert_perror (bool condition)
+{
+    if (!condition)
+        halt_perror ();
+}
+
 } // namespace ucoo
 
 #endif // ucoolib_common_h

@@ -22,6 +22,7 @@
 //
 // }}}
 #include "ucoolib/arch/arch.hh"
+#include "ucoolib/common.hh"
 
 #include <libopencm3/stm32/f4/rcc.h>
 
@@ -31,6 +32,19 @@ void
 arch_init (int argc, const char **argv)
 {
     rcc_clock_setup_hse_3v3 (&hse_8mhz_3v3[CLOCK_3V3_120MHZ]);
+}
+
+void
+halt ()
+{
+    while (1)
+        ;
+}
+
+void
+halt_perror ()
+{
+    halt ();
 }
 
 } // namespace ucoo

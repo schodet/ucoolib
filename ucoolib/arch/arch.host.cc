@@ -22,12 +22,29 @@
 //
 // }}}
 #include "ucoolib/arch/arch.hh"
+#include "ucoolib/common.hh"
+
+#include <cstdlib>
+#include <cstdio>
 
 namespace ucoo {
 
 void
 arch_init (int argc, const char **argv)
 {
+}
+
+void
+halt ()
+{
+    abort ();
+}
+
+void
+halt_perror ()
+{
+    perror ("halt");
+    halt ();
 }
 
 } // namespace ucoo
