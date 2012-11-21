@@ -31,7 +31,6 @@ int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPDEN);
     ucoo::UsbStreamControl usc ("APBTeam", "USB test");
     ucoo::UsbStream us[] = {
         ucoo::UsbStream (usc, 0),
