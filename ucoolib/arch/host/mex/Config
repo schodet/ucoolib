@@ -1,0 +1,2 @@
+[arch/host/mex]
+default_address = "localhost", "2442"

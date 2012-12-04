@@ -1,0 +1,2 @@
+arch_host_mex_SOURCES := mex_msg.host.cc mex_node.host.cc mex_socket.host.cc \
+			 socket.host.c
