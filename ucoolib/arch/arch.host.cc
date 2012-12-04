@@ -37,6 +37,7 @@ arch_init (int argc, const char **argv)
 void
 halt ()
 {
+    fprintf (stderr, "halt\n");
     abort ();
 }
 
@@ -44,7 +45,7 @@ void
 halt_perror ()
 {
     perror ("halt");
-    halt ();
+    abort ();
 }
 
 } // namespace ucoo
