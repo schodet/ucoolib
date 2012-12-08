@@ -28,7 +28,8 @@ clean: config-clean
 $(OBJDIR)/config.list: $(CONFIG_LIST) $(CONFIG_FORCE) | $(OBJDIR)
 	@echo "CONF $(PROJECT_CONFIG)"
 	$Q$(BASE)/build/tools/config-gen -H $(OBJDIR)/config/%.hh \
-		-p $(PROJECT_CONFIG) $(MODULES_CONFIG)
+		-p $(PROJECT_CONFIG) -T '$(TARGETS_SUBTARGETS)' \
+		$(MODULES_CONFIG)
 	$Qecho "CONFIG_LIST_OLD = $(CONFIG_LIST)" > $@
 
 config-clean:

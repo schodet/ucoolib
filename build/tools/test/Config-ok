@@ -1,0 +1,5 @@
+[a]
+bar = 2
+
+[a:host]
+bar = 3

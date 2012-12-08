@@ -1,0 +1,8 @@
+[a]
+bar = 2
+
+[a:stm32f4]
+bar = 3
+
+[a:arm]
+bar = 4

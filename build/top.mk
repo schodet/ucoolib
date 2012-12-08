@@ -63,3 +63,6 @@ define TARGETS_template
 include $$(BASE)/build/$1.mk
 endef
 $(foreach target,$(TARGETS),$(eval $(call TARGETS_template,$(target))))
+
+TARGETS_SUBTARGETS := $(foreach target,$(TARGETS),$(target):$(target) \
+	$(foreach subtarget,$($(target)_SUBTARGETS),$(target):$(subtarget)))

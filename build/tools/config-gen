@@ -2,6 +2,7 @@
 """Read build configuration and generate header files."""
 import optparse
 import ConfigParser
+import collections
 import sys
 import re
 import os
@@ -21,7 +22,7 @@ def read_config(modules_configs, project_config):
                 parser.readfp(mcf)
     # Save the list of existing items for later check.
     def config_items(parser):
-        return set('%s:%s' % (section, item)
+        return set('%s:%s' % (section.split(':')[0], item)
                 for section in parser.sections()
                 for item in parser.options(section))
     modules_items = config_items(parser)
@@ -40,24 +41,81 @@ def read_config(modules_configs, project_config):
         if unknown_items:
             raise RuntimeError("unknown configuration item: "
                     + " ".join(unknown_items))
-        # Check for items with no default value.
-        for section in parser.sections():
-            for key, value in parser.items(section):
-                if value == '':
+    # OK, convert to more natural structure.
+    config = collections.defaultdict (lambda: collections.defaultdict(dict))
+    for section in parser.sections():
+        items = parser.items(section)
+        if ':' in section:
+            section, target = section.split(':', 1)
+        else:
+            target = None
+        for k, v in items:
+            config[section][k][target] = v
+    return config
+
+def check_config(config, targets, subtargets):
+    """Run consistency checks on configuration."""
+    for section, section_dict in config.iteritems():
+        for key, values in section_dict.iteritems():
+            # Check targets.
+            for ts in values:
+                if ts is not None and ts not in subtargets:
+                    raise RuntimeError("unknown target %s" % ts)
+            values_targets = reduce(lambda a, b: a + b, (subtargets[ts]
+                    for ts in values if ts is not None), [ ])
+            values_targets_set = set(values_targets)
+            # Check for items with no default value.
+            if values[None] == '':
+                if not values_targets:
                     raise RuntimeError("no value given for %s:%s"
                             % (section, key))
-    # OK, convert to more natural structure.
-    return dict((section, parser.items(section))
-        for section in parser.sections())
+                else:
+                    if values_targets_set < targets:
+                        raise RuntimeError("no value given for %s:%s for"
+                                " targets: %s" % (section, key,
+                                    ', '.join (targets - values_targets_set)))
+            # Check for items overridden several times for the same target.
+            if len(values_targets) != len(values_targets_set):
+                raise RuntimeError("several values given for %s:%s for the"
+                        " same target" % (section, key))
+
+def parse_targets(targets_option):
+    """Parse a space separated target:subtarget list.  Return a set of
+    targets, and a mapping of each subtarget to a list of target."""
+    if targets_option is None:
+        targets_option = ''
+    targets = set()
+    subtargets = collections.defaultdict(list)
+    for tpair in targets_option.split():
+        tpairl = tpair.split(':')
+        if len(tpairl) != 2:
+            raise RuntimeError("bad target:subtarget pair %s" % tpair)
+        target, subtarget = tpairl
+        targets.add(target)
+        subtargets[subtarget].append(target)
+    return targets, dict(subtargets)
 
 def write_header(filename, section, section_dict):
     """Write (update) a section to a C header file."""
     # Prepare new content.
     items = [ ]
     section = section.replace('/', '_').upper()
-    for key, value in section_dict:
-        items.append('#define UCOO_CONFIG_%s_%s (%s)'
-                % (section, key.upper(), value))
+    for key, values in section_dict.iteritems():
+        cond = False
+        for target, value in values.iteritems():
+            if target is None: continue
+            item_fmt = ('#ifdef TARGET_{target}\n'
+                    '# define UCOO_CONFIG_{section}_{key} ({value})\n'
+                    '#endif')
+            items.append(item_fmt.format(section=section, key=key.upper(),
+                target=target, value=value))
+            cond = True
+        item_fmt = '#define UCOO_CONFIG_{section}_{key} ({value})'
+        if cond:
+            item_fmt = '#ifndef UCOO_CONFIG_{section}_{key}\n# ' \
+                    + item_fmt[1:] + '\n#endif'
+        items.append(item_fmt.format(section=section, key=key.upper(),
+            value=values[None]))
     guard = re.sub(r'\W', '_', filename)
     content = '\n'.join([
         '#ifndef %s' % guard,
@@ -99,10 +157,15 @@ if __name__ == '__main__':
     parser.add_option('-H', '--c-header-template', metavar='TEMPLATE',
             help="name template for C header files"
             + " (use % as section placeholder)")
+    parser.add_option('-T', '--targets', metavar='"LIST"',
+            help="space separated list of target:subtarget pairs (used for"
+            + " error checking)")
     options, modules_configs = parser.parse_args()
 
     try:
+        targets, subtargets = parse_targets(options.targets)
         config = read_config(modules_configs, options.project_config)
+        check_config(config, targets, subtargets)
         if options.c_header_template:
             write_headers(options.c_header_template, config)
     except RuntimeError, e:
