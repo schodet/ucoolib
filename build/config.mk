@@ -18,6 +18,9 @@ CONFIG_FORCE := CONFIG_FORCE
 endif
 endif
 
+# This configuration is really needed, make sure to stop here if it fails.
+COMPILE_ORDER_DEPS += $(OBJDIR)/config.list
+
 clean: config-clean
 
 .PHONY: config-clean CONFIG_FORCE

@@ -43,15 +43,15 @@ $$1.$1$$$$($1_ELF_SUFFIX): $$$$(patsubst %,$$(OBJDIR)/%.$1.o,\
 endef
 $$(foreach prog,$$($1_PROGS),$$(eval $$(call $1_PROG_template,$$(prog))))
 
-$$(OBJDIR)/%.$1.o: %.c $$(COMPILE_DEPS) | $$(OBJDIR)
+$$(OBJDIR)/%.$1.o: %.c $$(COMPILE_DEPS) | $$(OBJDIR) $$(COMPILE_ORDER_DEPS)
 	@echo "CC   [$1] $$<"
 	$$Q$$($1_COMPILE.c) -o $$@ $$<
 
-$$(OBJDIR)/%.$1.o: %.cc $$(COMPILE_DEPS) | $$(OBJDIR)
+$$(OBJDIR)/%.$1.o: %.cc $$(COMPILE_DEPS) | $$(OBJDIR) $$(COMPILE_ORDER_DEPS)
 	@echo "CXX  [$1] $$<"
 	$$Q$$($1_COMPILE.cc) -o $$@ $$<
 
-$$(OBJDIR)/%.$1.o: %.S $$(COMPILE_DEPS) | $$(OBJDIR)
+$$(OBJDIR)/%.$1.o: %.S $$(COMPILE_DEPS) | $$(OBJDIR) $$(COMPILE_ORDER_DEPS)
 	@echo "AS   [$1] $$<"
 	$$Q$$($1_COMPILE.S) -o $$@ $$<
 
