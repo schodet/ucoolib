@@ -6,6 +6,8 @@
 
 # Define standard commands.
 define arch_cmds
+$1_TARGET_DEFS := -DTARGET_$1=1 $$($1_SUBTARGETS:%=-DTARGET_%=1)
+$1_CPPFLAGS += $$($1_TARGET_DEFS)
 $1_CC := $$($1_PREFIX)gcc
 $1_CXX := $$($1_PREFIX)g++
 $1_OBJCOPY := $$($1_PREFIX)objcopy

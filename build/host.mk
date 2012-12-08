@@ -2,8 +2,7 @@
 #
 # Rules for Host.
 
-host_CPPFLAGS := $(CPPFLAGS) $(host_DEFS) \
-	-DTARGET_HOST=1
+host_CPPFLAGS := $(CPPFLAGS) $(host_DEFS)
 host_CFLAGS := $(CFLAGS)
 host_CXXFLAGS := $(sort $(host_CFLAGS) $(CXXFLAGS))
 host_ASFLAGS := $(ASFLAGS)

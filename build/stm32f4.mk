@@ -17,9 +17,7 @@ endif
 stm32f4_SUBTARGETS := stm32 arm newlib
 
 stm32f4_CPPFLAGS := $(CPPFLAGS) $(stm32f4_DEFS) \
-	-DSTM32F4 $(LIBOPENCM3_CPPFLAGS) \
-	-DTARGET_STM32F4=1 \
-	$(foreach sub,$(stm32f4_SUBTARGETS),-DTARGET_SUB_$(sub)=1)
+	-DSTM32F4 $(LIBOPENCM3_CPPFLAGS)
 stm32f4_CFLAGS := $(CFLAGS) \
 	-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
 	-Wl,--gc-sections -ffunction-sections

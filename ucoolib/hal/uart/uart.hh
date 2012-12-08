@@ -24,7 +24,7 @@
 //
 // }}}
 
-#ifdef TARGET_SUB_stm32
+#ifdef TARGET_stm32
 # include "uart.stm32.hh"
 #else
 # error "not implemented for this target"
