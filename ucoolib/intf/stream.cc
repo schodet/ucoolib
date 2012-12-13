@@ -43,7 +43,7 @@ Stream::getc ()
     char c;
     r = read (&c, 1);
     if (r == 1)
-        return c;
+        return static_cast<unsigned char> (c);
     else
         return -1;
 }
