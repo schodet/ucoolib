@@ -27,12 +27,23 @@
 
 namespace ucoo {
 
+/// Integer which is read and written atomically.
+typedef int int_atomic_t;
+
 /// Compiler barrier.  Prevents the compiler from moving the memory accesses
 /// from one side of it to the other side.
 extern inline void
 barrier ()
 {
     __asm__ __volatile__("": : : "memory");
+}
+
+/// Ensure a single access is done, avoid compiler optimisations.
+template<typename T>
+extern inline volatile T &
+access_once (T &x)
+{
+    return *static_cast<volatile T *> (&x);
 }
 
 /// Stop, abruptly.
