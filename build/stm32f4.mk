@@ -42,3 +42,12 @@ $(eval $(call arch_lst_rules,stm32f4))
 $(eval $(call arch_bin_rules,stm32f4))
 $(eval $(call arch_size_rules,stm32f4))
 $(eval $(call arch_misc_rules,stm32f4))
+
+.PHONY: program.stm32f4
+ifeq ($(words $(stm32f4_PROGS)),1)
+program.stm32f4: $(stm32f4_PROGS:%=%.stm32f4.program)
+endif
+
+%.stm32f4.program: %.stm32f4.bin
+	@echo "PROG [stm32f4] $<"
+	$Qst-flash write $< 0x8000000

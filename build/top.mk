@@ -66,3 +66,8 @@ $(foreach target,$(TARGETS),$(eval $(call TARGETS_template,$(target))))
 
 TARGETS_SUBTARGETS := $(foreach target,$(TARGETS),$(target):$(target) \
 	$(foreach subtarget,$($(target)_SUBTARGETS),$(target):$(subtarget)))
+
+.PHONY: program
+ifeq ($(words $(filter-out host,$(TARGETS))),1)
+program: $(patsubst %,program.%,$(filter-out host,$(TARGETS)))
+endif
