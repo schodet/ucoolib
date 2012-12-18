@@ -1,8 +1,8 @@
 [hal/usb]
-# Taken from LUFA IDs, not for commercial use.  Do not use them as default so
+# Theses are APBTeam IDs, given by Openmoko!  Do not use them as default so
 # that comment is not missed.
-#vendor_id = 0x03eb
-#product_id = 0x204e
+#vendor_id = 0x1d50
+#product_id = 0x6052
 vendor_id =
 product_id =
 # Number of streams, interfaces, or pair of endpoints.

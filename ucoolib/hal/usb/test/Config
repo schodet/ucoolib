@@ -1,5 +1,5 @@
 [hal/usb]
-# Taken from LUFA IDs, not for commercial use.
-vendor_id = 0x03eb
-product_id = 0x204e
+# Theses are APBTeam IDs, given by Openmoko!
+vendor_id = 0x1d50
+product_id = 0x6052
 stream_nb = 1
