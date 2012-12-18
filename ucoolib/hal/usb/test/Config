@@ -1,5 +1,2 @@
 [hal/usb]
-# Theses are APBTeam IDs, given by Openmoko!
-vendor_id = 0x1d50
-product_id = 0x6052
 stream_nb = 1
