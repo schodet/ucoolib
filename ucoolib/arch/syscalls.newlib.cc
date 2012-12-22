@@ -33,7 +33,7 @@ void *__dso_handle = (void*) &__dso_handle;
  * needed by linker because when a abstract class constructor or destructor is
  * called, object is not complete.  Replace the one provided by the toolchain
  * to avoid including the world. */
-void
+extern "C" void
 __cxa_pure_virtual (void)
 {
     while (1)
@@ -41,7 +41,7 @@ __cxa_pure_virtual (void)
 }
 
 /** Increase program data space. */
-void *
+extern "C" void *
 _sbrk_r (struct _reent *ptr, int incr)
 {
     extern char end; /* Defined in linker script. */
@@ -55,7 +55,7 @@ _sbrk_r (struct _reent *ptr, int incr)
 }
 
 /** Exit program, endless loop to stop program, to be improved. */
-void
+extern "C" void
 _exit (int n)
 {
     while (1)
@@ -63,14 +63,14 @@ _exit (int n)
 }
 
 /** Close a file, unimplemented. */
-int
+extern "C" int
 _close_r (struct _reent *ptr, int fd)
 {
     return -1;
 }
 
 /** Status of open file, consider all files as character devices. */
-int
+extern "C" int
 _fstat_r (struct _reent *ptr, int fd, struct stat *st)
 {
     st->st_mode = S_IFCHR;
@@ -78,21 +78,21 @@ _fstat_r (struct _reent *ptr, int fd, struct stat *st)
 }
 
 /** Get PID, minimal implementation. */
-int
+extern "C" int
 _getpid_r (struct _reent *ptr)
 {
     return 1;
 }
 
 /** Whether file is a terminal, consider this is always true. */
-int
+extern "C" int
 _isatty_r (struct _reent *ptr, int fd)
 {
     return 1;
 }
 
 /** Send a signal, no process, no signal. */
-int
+extern "C" int
 _kill_r (struct _reent *ptr, int pid, int sig)
 {
     ptr->_errno = EINVAL;
@@ -100,28 +100,28 @@ _kill_r (struct _reent *ptr, int pid, int sig)
 }
 
 /** Set position in a file, no-op. */
-off_t
+extern "C" off_t
 _lseek_r (struct _reent *ptr, int fd, off_t pos, int whence)
 {
     return 0;
 }
 
 /** Open a file, unimplemented. */
-int
+extern "C" int
 _open_r (struct _reent *ptr, const char *file, int flags, int mode)
 {
     return -1;
 }
 
 /** Read from file, to be improved to read from stream. */
-int
+extern "C" int
 _read_r (struct _reent *ptr, int fd, void *buf, size_t cnt)
 {
     return 0;
 }
 
 /** Write to file, to be improved to write to stream. */
-int
+extern "C" int
 _write_r (struct _reent *ptr, int fd, const void *buf, size_t cnt)
 {
     ptr->_errno = EBADF;
