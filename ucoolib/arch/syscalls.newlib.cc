@@ -21,6 +21,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * }}} */
+#include "ucoolib/common.hh"
+
 #include <reent.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -36,8 +38,7 @@ void *__dso_handle = (void*) &__dso_handle;
 extern "C" void
 __cxa_pure_virtual (void)
 {
-    while (1)
-        ;
+    ucoo::halt ();
 }
 
 /** Increase program data space. */
@@ -58,8 +59,7 @@ _sbrk_r (struct _reent *ptr, int incr)
 extern "C" void
 _exit (int n)
 {
-    while (1)
-        ;
+    ucoo::halt ();
 }
 
 /** Close a file, unimplemented. */
