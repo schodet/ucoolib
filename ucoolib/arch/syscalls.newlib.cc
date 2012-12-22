@@ -22,10 +22,13 @@
  *
  * }}} */
 #include "ucoolib/common.hh"
+#include "syscalls.newlib.hh"
 
 #include <reent.h>
 #include <sys/stat.h>
 #include <errno.h>
+
+ucoo::Stream *ucoo::syscalls_streams[3];
 
 /** This is needed by C++ ABI, this simple definition will do.  See:
  * http://lists.debian.org/debian-gcc/2003/07/msg00057.html */
@@ -117,14 +120,60 @@ _open_r (struct _reent *ptr, const char *file, int flags, int mode)
 extern "C" int
 _read_r (struct _reent *ptr, int fd, void *buf, size_t cnt)
 {
-    return 0;
+    if (fd == 0)
+    {
+        if (ucoo::syscalls_streams[0])
+        {
+            ucoo::Stream &s = *ucoo::syscalls_streams[0];
+            int r = s.read (reinterpret_cast<char *> (buf), cnt);
+            switch (r)
+            {
+            case -2:
+                return 0;
+            case -1:
+                ptr->_errno = EIO;
+                return -1;
+            case 0:
+                ptr->_errno = EAGAIN;
+                return -1;
+            default:
+                return r;
+            }
+        }
+        else
+            return 0;
+    }
+    else
+    {
+        ptr->_errno = EBADF;
+        return -1;
+    }
 }
 
 /** Write to file, to be improved to write to stream. */
 extern "C" int
 _write_r (struct _reent *ptr, int fd, const void *buf, size_t cnt)
 {
-    ptr->_errno = EBADF;
-    return -1;
+    if ((fd == 1 || fd == 2) && ucoo::syscalls_streams[fd])
+    {
+        ucoo::Stream &s = *ucoo::syscalls_streams[fd];
+        int r = s.write (reinterpret_cast<const char *> (buf), cnt);
+        switch (r)
+        {
+        case -1:
+            ptr->_errno = EIO;
+            return -1;
+        case 0:
+            ptr->_errno = EAGAIN;
+            return -1;
+        default:
+            return r;
+        }
+    }
+    else
+    {
+        ptr->_errno = EBADF;
+        return -1;
+    }
 }
 
