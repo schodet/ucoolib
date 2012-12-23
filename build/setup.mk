@@ -4,7 +4,7 @@
 
 TARGETS ?= host
 
-DEFAULT_MODULES ?= arch arch/host/mex
+DEFAULT_MODULES ?= intf arch arch/host/mex
 
 ALL_PROGS := $(PROGS) $(foreach target,$(TARGETS),$($(target)_PROGS))
 
