@@ -59,7 +59,7 @@ halt_perror () __attribute__ ((noreturn));
 extern inline void
 assert (bool condition)
 {
-    if (!condition)
+    if (!__builtin_expect (condition, 1))
         halt ();
 }
 
@@ -77,7 +77,7 @@ assert_unreachable ()
 extern inline void
 assert_perror (bool condition)
 {
-    if (!condition)
+    if (!__builtin_expect (condition, 1))
         halt_perror ();
 }
 
