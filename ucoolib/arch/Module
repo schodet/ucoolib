@@ -1,1 +1,2 @@
-arch_SOURCES := arch.host.cc arch.stm32.cc syscalls.newlib.cc syscalls.cc
+arch_SOURCES := arch.host.cc arch.stm32.cc syscalls.newlib.cc syscalls.cc \
+	host_stream.host.cc
