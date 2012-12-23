@@ -1,0 +1,5 @@
+[base/test]
+wait = false
+
+[base/test:stm32]
+wait = true
