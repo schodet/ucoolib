@@ -23,9 +23,103 @@
 // }}}
 #include "ucoolib/hal/uart/uart.hh"
 
-int
-main ()
+#include "ucoolib/arch/arch.hh"
+#include "ucoolib/base/test/test.hh"
+
+#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/f4/gpio.h>
+
+static void
+check_act (ucoo::Stream &ts, ucoo::Stream &u, char n)
 {
-    ucoo::Uart u (0, 38400, ucoo::Uart::EVEN, 1);
-    return 0;
+    char buf[3 + 16 + 1];
+    if (!u.poll ())
+        return;
+    int r = u.read (buf + 3, 16);
+    if (r <= 0)
+    {
+        buf[3] = '#';
+        r = 1;
+    }
+    buf[0] = '<';
+    buf[1] = n;
+    buf[2] = ':';
+    buf[3 + r] = '>';
+    ts.write (buf, 3 + r + 1);
+}
+
+int
+main (int argc, const char **argv)
+{
+    ucoo::arch_init (argc, argv);
+    ucoo::Stream &ts = ucoo::test_stream ();
+    ucoo::Uart u1 (0, 38400, ucoo::Uart::EVEN, 1);
+    ucoo::Uart u3 (2, 38400, ucoo::Uart::EVEN, 1);
+    ucoo::Uart u4 (3, 38400, ucoo::Uart::EVEN, 1);
+    // For this test, shorten B6 & B7 to have a loopback on UART1, shorten C10
+    // & C11 to connect UART3 to UART4.
+    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPBEN
+                                 | RCC_AHB1ENR_IOPCEN);
+    gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
+                     GPIO6 | GPIO7);
+    gpio_set_af (GPIOB, GPIO_AF7, GPIO6 | GPIO7);
+    gpio_mode_setup (GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE,
+                     GPIO10 | GPIO11);
+    gpio_set_af (GPIOC, GPIO_AF7, GPIO10);
+    gpio_set_af (GPIOC, GPIO_AF8, GPIO11);
+    // Loop to report any activity on ports and provide a simple UI.
+    char buf[64];
+    int buf_i = 0;
+    ucoo::Uart *u = &u1;
+    while (1)
+    {
+        check_act (ts, u1, '1');
+        check_act (ts, u3, '3');
+        check_act (ts, u4, '4');
+        while (ts.poll ())
+        {
+            char c = ts.getc ();
+            switch (c)
+            {
+            case '?':
+                static const char help[] =
+                    "? - help\n"
+                    "1, 3, 4 - set output uart\n"
+                    ": - reset output buffer index\n"
+                    "! - send output buffer\n"
+                    "O, E, N - change parity to Odd, Even or None\n"
+                    "any - fill output buffer\n";
+                ts.write (help, sizeof (help));
+                break;
+            case '1':
+                u = &u1;
+                break;
+            case '3':
+                u = &u3;
+                break;
+            case '4':
+                u = &u4;
+                break;
+            case ':':
+                buf_i = 0;
+                break;
+            case '!':
+                u->write (buf, buf_i);
+                break;
+            case 'O':
+                u->setup (38400, ucoo::Uart::ODD, 1);
+                break;
+            case 'E':
+                u->setup (38400, ucoo::Uart::EVEN, 1);
+                break;
+            case 'N':
+                u->setup (38400, ucoo::Uart::NONE, 1);
+                break;
+            default:
+                if (buf_i < static_cast<int> (sizeof (buf)))
+                    buf[buf_i++] = c;
+                break;
+            }
+        }
+    }
 }

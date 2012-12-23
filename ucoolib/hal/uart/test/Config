@@ -1,0 +1,4 @@
+[hal/uart]
+rx_buffer = 32
+tx_buffer = 8
+
