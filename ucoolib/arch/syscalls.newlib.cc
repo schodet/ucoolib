@@ -116,7 +116,7 @@ _open_r (struct _reent *ptr, const char *file, int flags, int mode)
     return -1;
 }
 
-/** Read from file, to be improved to read from stream. */
+/** Read from file. */
 extern "C" int
 _read_r (struct _reent *ptr, int fd, void *buf, size_t cnt)
 {
@@ -150,7 +150,7 @@ _read_r (struct _reent *ptr, int fd, void *buf, size_t cnt)
     }
 }
 
-/** Write to file, to be improved to write to stream. */
+/** Write to file. */
 extern "C" int
 _write_r (struct _reent *ptr, int fd, const void *buf, size_t cnt)
 {
