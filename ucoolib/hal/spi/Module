@@ -1,0 +1,1 @@
+hal_spi_SOURCES := spi_soft.cc
