@@ -1,0 +1,1 @@
+dev_avrisp_SOURCES := avrisp.cc avrisp_proto.cc avrisp_frame.cc
