@@ -1,1 +1,1 @@
-intf_SOURCES = stream.cc
+intf_SOURCES = stream.cc spi_master.cc
