@@ -30,7 +30,6 @@
 #include "ucoolib/utils/delay.hh"
 
 #include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/f4/gpio.h>
 
 class TestAvrIspIntf : public ucoo::AvrIspIntf
 {

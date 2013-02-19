@@ -24,10 +24,10 @@
 #include "ucoolib/hal/uart/uart.hh"
 
 #include "ucoolib/arch/arch.hh"
+#include "ucoolib/hal/gpio/gpio.hh"
 #include "ucoolib/base/test/test.hh"
 
 #include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/f4/gpio.h>
 
 static void
 check_act (ucoo::Stream &ts, ucoo::Stream &u, char n)
