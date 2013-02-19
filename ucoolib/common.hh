@@ -25,6 +25,8 @@
 // }}}
 #include <stdint.h>
 
+#include "ucoolib/arch/arch_common.hh"
+
 namespace ucoo {
 
 /// Integer which is read and written atomically.
