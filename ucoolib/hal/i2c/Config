@@ -1,0 +1,5 @@
+[hal/i2c]
+# Size of slave buffer, used for both reception and transmission.
+slave_buffer_size = 64
+# Activate debug trace.
+trace = false
