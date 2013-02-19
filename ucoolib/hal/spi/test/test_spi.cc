@@ -98,7 +98,7 @@ main (int argc, const char **argv)
             case 'o':
             case 'f':
                 {
-                    char cmd[] = { 0x20, c == 'o' ? 0x47 : 0x07 };
+                    char cmd[] = { 0x20, (char) (c == 'o' ? 0x47 : 0x07) };
                     ss.reset ();
                     spi.send (cmd, sizeof (cmd));
                     ss.set ();
