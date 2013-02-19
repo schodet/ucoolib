@@ -24,9 +24,6 @@
 #include "ucoolib/hal/usb/usb.hh"
 #include "ucoolib/arch/arch.hh"
 
-#include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/f4/gpio.h>
-
 int
 main (int argc, const char **argv)
 {
