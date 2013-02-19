@@ -28,17 +28,21 @@ int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    ucoo::Test test ("test_test");
+    ucoo::TestSuite test_suite ("test_test");
     // Really, what a dumb test!
-    test.group ("group one");
-    test.begin ("the first test");
-    test.fail ("Oh no! test %d!", 123);
-    test.begin ("try again");
-    test.info ("working harder...");
-    test.pass ();
-    test.group ("group two");
-    test.begin ("simple test");
-    test.pass ();
-    return test.report () ? 0 : 1;
+    test_suite.group ("group one");
+    {
+        ucoo::Test test (test_suite, "the first test");
+        test.fail ("Oh no! test %d!", 123);
+    }
+    {
+        ucoo::Test test (test_suite, "try again");
+        test.info ("working harder...");
+    }
+    test_suite.group ("group two");
+    {
+        ucoo::Test test (test_suite, "simple test");
+    }
+    return test_suite.report () ? 0 : 1;
 }
 

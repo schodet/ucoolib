@@ -29,20 +29,18 @@ int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    ucoo::Test test ("fifo");
+    ucoo::TestSuite tsuite ("fifo");
     {
-        test.begin ("push pop");
+        ucoo::Test test (tsuite, "push pop");
         ucoo::Fifo<int, 16> fifo;
         fifo.push (1);
         fifo.push (2);
         fifo.push (3);
         if (fifo.pop () != 1 || fifo.pop () != 2 || fifo.pop () != 3)
             test.fail ();
-        else
-            test.pass ();
     }
     {
-        test.begin ("full empty");
+        ucoo::Test test (tsuite, "full empty");
         ucoo::Fifo<int, 4> fifo;
         do
         {
@@ -53,11 +51,10 @@ main (int argc, const char **argv)
             test_fail_break_unless (test, !fifo.empty () && !fifo.full ());
             fifo.push (3);
             test_fail_break_unless (test, !fifo.empty () && fifo.full ());
-            test.pass ();
         } while (0);
     }
     {
-        test.begin ("write read");
+        ucoo::Test test (tsuite, "write read");
         ucoo::Fifo<int, 8> fifo;
         static const int b[] = { 1, 2, 3, 4, 5 };
         int c[8];
@@ -75,8 +72,7 @@ main (int argc, const char **argv)
             test_fail_break_unless (test, c[0] == 3 && c[1] == 4 && c[2] == 5);
             test_fail_break_unless (test, c[3] == 1 && c[4] == 2 && c[5] == 3
                                     && c[6] == 4);
-            test.pass ();
         } while (0);
     }
-    return test.report () ? 0 : 1;
+    return tsuite.report () ? 0 : 1;
 }

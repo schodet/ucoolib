@@ -33,9 +33,9 @@
 
 namespace ucoo {
 
-Test::Test (const char *test_suite)
-    : test_suite_ (test_suite), test_group_ ("none"), test_ (0),
-      test_nb_ (0), fail_nb_ (0)
+TestSuite::TestSuite (const char *test_suite)
+    : test_suite_ (test_suite), test_group_ ("none"),
+      test_nb_ (0), fail_nb_ (0), in_test_ (false)
 {
     test_stream_setup ();
     if (UCOO_CONFIG_BASE_TEST_WAIT)
@@ -55,33 +55,33 @@ Test::Test (const char *test_suite)
 }
 
 bool
-Test::report ()
+TestSuite::report ()
 {
-    assert (!test_);
+    assert (!in_test_);
     printf ("test results: %d tests, %d fails\n", test_nb_, fail_nb_);
     return fail_nb_ == 0;
 }
 
 void
-Test::group (const char *test_group)
+TestSuite::group (const char *test_group)
 {
     test_group_ = test_group;
 }
 
-void
-Test::begin (const char *test)
+Test::Test (TestSuite &suite, const char *test)
+    : suite_ (suite), test_ (test), failed_ (false)
 {
-    assert (!test_);
-    test_ = test;
-    test_nb_++;
+    assert (!suite_.in_test_);
+    suite_.in_test_ = true;
+    suite_.test_nb_++;
 }
 
-void
-Test::pass ()
+Test::~Test (void)
 {
-    assert (test_);
-    printf ("%s:%s:%s:P: pass\n", test_suite_, test_group_, test_);
-    test_ = 0;
+    if (!failed_)
+        printf ("%s:%s:%s:P: pass\n", suite_.test_suite_, suite_.test_group_,
+                test_);
+    suite_.in_test_ = false;
 }
 
 void
@@ -94,22 +94,21 @@ void
 Test::fail (const char *fail_fmt, ...)
 {
     va_list ap;
-    assert (test_);
-    printf ("%s:%s:%s:F: ", test_suite_, test_group_, test_);
+    assert (!failed_);
+    printf ("%s:%s:%s:F: ", suite_.test_suite_, suite_.test_group_, test_);
     va_start (ap, fail_fmt);
     vprintf (fail_fmt, ap);
     va_end (ap);
     putchar ('\n');
-    fail_nb_++;
-    test_ = 0;
+    suite_.fail_nb_++;
+    failed_ = true;
 }
 
 void
 Test::info (const char *info_fmt, ...)
 {
     va_list ap;
-    assert (test_);
-    printf ("%s:%s:%s:I: ", test_suite_, test_group_, test_);
+    printf ("%s:%s:%s:I: ", suite_.test_suite_, suite_.test_group_, test_);
     va_start (ap, info_fmt);
     vprintf (info_fmt, ap);
     va_end (ap);

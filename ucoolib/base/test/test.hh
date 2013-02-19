@@ -44,20 +44,39 @@ test_stream (void);
 void
 test_stream_setup (void);
 
-/// Test context.
-class Test
+/// Test suite context.
+class TestSuite
 {
   public:
     /// Create a new test suite.
-    Test (const char *test_suite);
+    TestSuite (const char *test_suite);
     /// Report the overall test results, return true if all tests passed.
     bool report ();
     /// Enter a new test group.
     void group (const char *test_group);
-    /// Start a new test, should be followed by pass or fail.
-    void begin (const char *test);
-    /// End the current test with a pass status.
-    void pass ();
+  private:
+    friend class Test;
+    /// Test suite name.
+    const char *test_suite_;
+    /// Test group name.
+    const char *test_group_;
+    /// Number of attempted tests.
+    int test_nb_;
+    /// Number of test failures.
+    int fail_nb_;
+    /// Running a test.
+    bool in_test_;
+};
+
+/// Test context.
+class Test
+{
+  public:
+    /// Start a new test, may be followed by fail, test stops at object
+    /// destruction.
+    Test (TestSuite &suite, const char *test);
+    /// Stop a test.
+    ~Test (void);
     /// End the current test with a fail status.
     void fail ();
     /// End the current test with a fail status and message.
@@ -67,16 +86,12 @@ class Test
     void __attribute__ ((format (printf, 2, 3)))
         info (const char *info_fmt, ...);
   private:
-    /// Test suite name.
-    const char *test_suite_;
-    /// Test group name.
-    const char *test_group_;
+    /// Attached test suite.
+    TestSuite &suite_;
     /// Test name.
     const char *test_;
-    /// Number of attempted tests.
-    int test_nb_;
-    /// Number of test failures.
-    int fail_nb_;
+    /// Failed yet.
+    bool failed_;
 };
 
 } // namespace ucoo
