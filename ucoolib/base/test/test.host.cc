@@ -23,7 +23,7 @@
 // }}}
 #include "test.hh"
 
-#include "ucoolib/arch/host_stream.hh"
+#include "ucoolib/arch/host/host_stream.hh"
 
 namespace ucoo {
 
