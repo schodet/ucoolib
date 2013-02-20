@@ -89,6 +89,65 @@ test_basic (ucoo::TestSuite &tsuite, ucoo::I2cMaster &m,
             test_fail_break_unless (test, std::count (buf, buf + r, c) == r);
         }
     }
+    do {
+        ucoo::Test test (tsuite, "callback");
+        // Callback object will start a reception, then a transmission of what
+        // was received.
+        class TestCallback : public ucoo::I2cMaster::FinishedHandler
+        {
+            ucoo::I2cMaster &m_;
+            uint8_t addr_;
+            int step_;
+            char buf_[buffer_size];
+          public:
+            bool failed;
+          public:
+            TestCallback (ucoo::I2cMaster &m, uint8_t addr)
+                : m_ (m), addr_ (addr), step_ (0), failed (false) { }
+            void finished (int status)
+            {
+                if (status != buffer_size)
+                    failed = true;
+                else
+                {
+                    switch (step_)
+                    {
+                    case 0:
+                        m_.recv (addr_, buf_, buffer_size);
+                        step_++;
+                        break;
+                    case 1:
+                        m_.send (addr_, buf_, buffer_size);
+                        step_++;
+                        break;
+                    case 2:
+                        // Nothing, stop.
+                        break;
+                    }
+                }
+            }
+        };
+        TestCallback callback (m, addr);
+        m.register_finished (callback);
+        // Set slave data.
+        char buf[buffer_size];
+        std::fill (buf, buf + sizeof (buf), 42);
+        d.update (buf, sizeof (buf));
+        // Start transfers.
+        std::fill (buf, buf + sizeof (buf), 21);
+        m.send (addr, buf, sizeof (buf));
+        // Will only return after the last transfer.
+        m.wait ();
+        m.unregister_finished ();
+        test_fail_break_unless (test, !callback.failed);
+        // Let some time for slave to finish reception.
+        ucoo::delay_ms (1);
+        // Check what is received by slave (master should have read 42 from
+        // slave and send it back).
+        int r = d.poll (buf, sizeof (buf));
+        test_fail_break_unless (test, r == buffer_size);
+        test_fail_break_unless (test, std::count (buf, buf + r, 42) == r);
+    } while (0);
 }
 
 int

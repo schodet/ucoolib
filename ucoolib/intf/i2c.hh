@@ -70,6 +70,9 @@ class I2cMaster
     /// Register a handler called when transfer is finished.
     void register_finished (FinishedHandler &finished_handler)
         { finished_handler_ = &finished_handler; }
+    /// Remove registered handler.
+    void unregister_finished (void)
+        { finished_handler_ = 0; }
   protected:
     /// Default constructor.
     I2cMaster () : finished_handler_ (0) { }

@@ -280,6 +280,8 @@ I2cHard::ev_isr (int n)
                     I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
                     i2c.master_ = false;
                     i2c.master_status_ = i2c.buf_index_;
+                    if (i2c.finished_handler_)
+                        i2c.finished_handler_->finished (i2c.master_status_);
                 }
                 else if (i2c.buf_count_ - i2c.buf_index_ == 3)
                 {
@@ -297,6 +299,8 @@ I2cHard::ev_isr (int n)
                     i2c.master_buf_[i2c.buf_index_++] = I2C_DR (base);
                     i2c.master_ = false;
                     i2c.master_status_ = i2c.buf_index_;
+                    if (i2c.finished_handler_)
+                        i2c.finished_handler_->finished (i2c.master_status_);
                 }
             }
             else
@@ -381,6 +385,8 @@ I2cHard::er_isr (int n)
             I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
             i2c.master_ = false;
             i2c.master_status_ = i2c.buf_index_;
+            if (i2c.finished_handler_)
+                i2c.finished_handler_->finished (i2c.master_status_);
         }
     }
     I2C_CR2 (base) &= ~I2C_CR2_ITBUFEN;
