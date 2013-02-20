@@ -252,20 +252,15 @@ I2cHard::ev_isr (int n)
                 }
                 i2c_trace ("<%d> master sr2=%04x", n, sr2);
             }
-            else if (sr1 & I2C_SR1_TxE)
+            else if (sr1 & I2C_SR1_TxE
+                     && i2c.buf_index_ < i2c.buf_count_)
             {
                 i2c_trace ("<%d> master tx index=%d", n, i2c.buf_index_);
-                // Send next byte or stop.
-                if (i2c.buf_index_ < i2c.buf_count_)
-                    I2C_DR (base) = i2c.master_buf_[i2c.buf_index_++];
-                else
-                {
-                    I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
+                // Send next byte.
+                I2C_DR (base) = i2c.master_buf_[i2c.buf_index_++];
+                // Wait for BTF if last one.
+                if (i2c.buf_index_ == i2c.buf_count_)
                     I2C_CR2 (base) &= ~I2C_CR2_ITBUFEN;
-                    I2C_DR (base) = 0xff;
-                    i2c.master_ = false;
-                    i2c.master_status_ = i2c.buf_index_;
-                }
             }
             else if (sr1 & I2C_SR1_RxNE
                      && i2c.buf_count_ - i2c.buf_index_ > 3)
@@ -279,14 +274,23 @@ I2cHard::ev_isr (int n)
             else if (sr1 & I2C_SR1_BTF)
             {
                 i2c_trace ("<%d> master btf index=%d", n, i2c.buf_index_);
-                if (i2c.buf_count_ - i2c.buf_index_ == 3)
+                if (!(i2c.master_slave_addr_ & 1))
                 {
+                    // End of transmission.
+                    I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
+                    i2c.master_ = false;
+                    i2c.master_status_ = i2c.buf_index_;
+                }
+                else if (i2c.buf_count_ - i2c.buf_index_ == 3)
+                {
+                    // Near end of reception.
                     I2C_CR1 (base) = I2C_CR1_PE;
                     i2c.master_buf_[i2c.buf_index_++] = I2C_DR (base);
                     // Wait for BTF.
                 }
                 else
                 {
+                    // End of reception.
                     I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
                     if (i2c.buf_count_ - i2c.buf_index_ == 2)
                         i2c.master_buf_[i2c.buf_index_++] = I2C_DR (base);
