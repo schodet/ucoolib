@@ -32,6 +32,9 @@ class DTrace(gdb.Command):
                 s = s % args
             except:
                 pass
+            if s.startswith('<'):
+                n = int(s[1:].partition('>')[0])
+                s = ' ' * (n * 10) + s
             print s
 
 DTrace()
