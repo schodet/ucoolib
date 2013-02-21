@@ -29,6 +29,7 @@
 
 #include <memory>
 #include <map>
+#include <string>
 
 namespace ucoo {
 namespace mex {
@@ -89,7 +90,7 @@ class Node
     /// Send a response while handling a request.
     void response (Msg &msg);
     /// Reserve a message type.
-    mtype_t reserve (const char *name);
+    mtype_t reserve (const std::string &name);
     /// Register an handler for a message type.
     void handler_register (mtype_t mtype, Handler &handler);
   private:

@@ -124,11 +124,11 @@ Node::response (Msg &msg)
 }
 
 mtype_t
-Node::reserve (const char *name)
+Node::reserve (const std::string &name)
 {
     // Send request.
     Msg msg (MTYPE_RES);
-    msg.push (name, std::strlen (name));
+    msg.push (name.data (), name.size ());
     send (msg);
     // Wait for response.
     std::auto_ptr<Msg> rsp;
