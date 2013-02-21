@@ -1,5 +1,5 @@
-#ifndef ucoolib_hal_i2c_i2c_hard_hh
-#define ucoolib_hal_i2c_i2c_hard_hh
+#ifndef ucoolib_hal_i2c_i2c_hh
+#define ucoolib_hal_i2c_i2c_hh
 // ucoolib - Microcontroller object oriented library. {{{
 //
 // Copyright (C) 2013 Nicolas Schodet
@@ -24,10 +24,11 @@
 //
 // }}}
 
-#ifdef TARGET_stm32
+#if defined (TARGET_stm32)
 # include "i2c_hard.stm32.hh"
 #else
 # error "not implemented for this target"
 #endif
+#include "i2c_slave_data_buffer.hh"
 
-#endif // ucoolib_hal_i2c_i2c_hard_hh
+#endif // ucoolib_hal_i2c_i2c_hh

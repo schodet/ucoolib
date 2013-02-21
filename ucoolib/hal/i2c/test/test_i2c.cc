@@ -21,8 +21,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 //
 // }}}
-#include "ucoolib/hal/i2c/i2c_hard.hh"
-#include "ucoolib/hal/i2c/i2c_slave_data_buffer.hh"
+#include "ucoolib/hal/i2c/i2c.hh"
 
 #include "ucoolib/arch/arch.hh"
 #include "ucoolib/hal/gpio/gpio.hh"
