@@ -30,6 +30,14 @@ namespace ucoo {
 void
 arch_init (int argc, const char **argv);
 
+#ifdef TARGET_host
+
+/// Retrieve program arguments.
+void
+arch_get_args (int &argc, const char **&argv);
+
+#endif
+
 } // namespace ucoo
 
 #endif // ucoolib_arch_arch_hh

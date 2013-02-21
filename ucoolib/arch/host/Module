@@ -1,1 +1,1 @@
-arch_host_SOURCES := host_stream.host.cc
+arch_host_SOURCES := host.host.cc host_stream.host.cc
