@@ -183,7 +183,7 @@ test_node_1 ()
 }
 
 void
-test_node_2_handle_hello (Msg &msg)
+test_node_2_handle_hello (Node &, Msg &msg)
 {
     int pass;
     msg.pop ("l") >> pass;
@@ -192,14 +192,14 @@ test_node_2_handle_hello (Msg &msg)
 }
 
 void
-test_node_2_handle_world (Msg &msg)
+test_node_2_handle_world (Node &node, Msg &msg)
 {
     int a, b;
     msg.pop ("bh") >> a >> b;
     printf ("world\n");
     Msg resp (msg.mtype ());
     resp.push ("l") << a + b;
-    Node::instance ()->response (resp);
+    node.response (resp);
 }
 
 void
@@ -209,10 +209,8 @@ test_node_2 ()
     mtype_t hello_mtype, world_mtype;
     hello_mtype = node.reserve ("hello");
     world_mtype = node.reserve ("world");
-    HandlerPtrfun hello_handler (test_node_2_handle_hello);
-    HandlerPtrfun world_handler (test_node_2_handle_world);
-    node.handler_register (hello_mtype, hello_handler);
-    node.handler_register (world_mtype, world_handler);
+    node.handler_register (hello_mtype, test_node_2_handle_hello);
+    node.handler_register (world_mtype, test_node_2_handle_world);
     node.wait ();
 }
 

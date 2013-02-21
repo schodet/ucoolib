@@ -30,53 +30,20 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <tr1/functional>
 
 namespace ucoo {
 namespace mex {
-
-class Node;
-
-/// Abstract message reception handler.
-class Handler
-{
-  public:
-    /// Handle a received message or request.
-    virtual void handle (Msg &msg) = 0;
-};
-
-/// Helper class for member function reception handler.
-template<class T>
-class HandlerMemfun : public Handler
-{
-  public:
-    HandlerMemfun (T &obj, void (T::*f) (Msg &))
-        : obj_ (obj), f_ (f) { }
-    void handle (Msg &msg) { (obj_.*f_) (msg); }
-  private:
-    T &obj_;
-    void (T::*f_) (Msg &);
-};
-
-/// Helper class for static function reception handler.
-class HandlerPtrfun : public Handler
-{
-  public:
-    HandlerPtrfun (void (*f) (Msg &)) : f_ (f) { }
-    void handle (Msg &msg) { f_ (msg); }
-  private:
-    void (*f_) (Msg &);
-};
 
 /// Mex node, singleton.
 class Node
 {
   public:
+    /// Message handler type.
+    typedef std::tr1::function<void (Node &, Msg &)> Handler;
+  public:
     /// Connect to mex hub.
     Node ();
-    /// Disconnect.
-    ~Node ();
-    /// Get single instance, may return NULL if none constructed.
-    static Node *instance () { return instance_; }
     /// Wait forever.
     void wait ();
     /// Wait until date is reached.
@@ -91,8 +58,25 @@ class Node
     void response (Msg &msg);
     /// Reserve a message type.
     mtype_t reserve (const std::string &name);
-    /// Register an handler for a message type.
-    void handler_register (mtype_t mtype, Handler &handler);
+    /// Register a handler for a message type.
+    void handler_register (mtype_t mtype, Handler handler);
+    /// Register a handler for a message type, member function version.
+    template<class T>
+    void handler_register (mtype_t mtype, T &obj,
+                           void (T::*handler) (Node &, Msg &))
+    {
+        using namespace std::tr1::placeholders;
+        handler_register (mtype, std::tr1::bind (handler, &obj, _1, _2));
+    }
+    /// Register a handler for a message type, member function version,
+    /// without Node parameter.
+    template<class T>
+    void handler_register (mtype_t mtype, T &obj,
+                           void (T::*handler) (Msg &))
+    {
+        using namespace std::tr1::placeholders;
+        handler_register (mtype, std::tr1::bind (handler, &obj, _2));
+    }
   private:
     /// Receive one message.
     std::auto_ptr<Msg> recv ();
@@ -103,8 +87,6 @@ class Node
     /// Handle an incomming REQ message.
     void handle_req (Msg &msg);
   private:
-    /// Pointer to single instance.
-    static Node *instance_;
     /// Connection to hub.
     Socket socket_;
     /// Current date.
@@ -112,10 +94,8 @@ class Node
     /// When handling a request, this is the request identifier, else -1.
     int req_;
     /// Registered handlers.
-    typedef std::map<mtype_t, Handler *> handlers_type;
-    handlers_type handlers_;
-    /// Handlers objects.
-    HandlerMemfun<Node> handler_date, handler_req;
+    typedef std::map<mtype_t, Handler> Handlers;
+    Handlers handlers_;
 };
 
 } // namespace mex

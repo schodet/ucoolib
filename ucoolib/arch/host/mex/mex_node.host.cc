@@ -28,21 +28,15 @@
 namespace ucoo {
 namespace mex {
 
-Node *Node::instance_;
-
 Node::Node ()
     : date_ (0),
-      req_ (-1),
-      handler_date (*this, &Node::handle_date),
-      handler_req (*this, &Node::handle_req)
+      req_ (-1)
 {
-    assert (!instance_);
-    instance_ = this;
     // Connect.
     socket_.connect ();
     // Setup default handlers.
-    handler_register (MTYPE_DATE, handler_date);
-    handler_register (MTYPE_REQ, handler_req);
+    handler_register (MTYPE_DATE, *this, &Node::handle_date);
+    handler_register (MTYPE_REQ, *this, &Node::handle_req);
     // Synchronise with the hub.
     bool sync = false;
     while (!sync)
@@ -52,11 +46,6 @@ Node::Node ()
             sync = true;
         dispatch (*msg);
     }
-}
-
-Node::~Node ()
-{
-    instance_ = 0;
 }
 
 void
@@ -145,10 +134,10 @@ Node::reserve (const std::string &name)
 }
 
 void
-Node::handler_register (mtype_t mtype, Handler &handler)
+Node::handler_register (mtype_t mtype, Handler handler)
 {
-    std::pair<handlers_type::iterator, bool> r =
-        handlers_.insert (handlers_type::value_type (mtype, &handler));
+    std::pair<Handlers::iterator, bool> r =
+        handlers_.insert (Handlers::value_type (mtype, handler));
     assert (r.second);
 }
 
@@ -161,9 +150,9 @@ Node::recv ()
 void
 Node::dispatch (Msg &msg)
 {
-    handlers_type::const_iterator it = handlers_.find (msg.mtype ());
+    Handlers::const_iterator it = handlers_.find (msg.mtype ());
     if (it != handlers_.end ())
-        it->second->handle (msg);
+        it->second (*this, msg);
 }
 
 void
