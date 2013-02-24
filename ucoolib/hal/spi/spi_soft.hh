@@ -32,13 +32,14 @@ namespace ucoo {
 class SpiSoftMaster : public SpiMaster
 {
   public:
-    /// Constructor, need all SPI pins.  Speed is given in Hz.
-    SpiSoftMaster (Io &sck, Io &mosi, Io &miso, int speed = 0,
-                   SpiMode mode = SPI_MODE_0);
-    /// Destructor, release SPI pins.
+    /// Constructor, need all SPI pins.
+    SpiSoftMaster (Io &sck, Io &mosi, Io &miso);
+    /// Destructor, disable.
     ~SpiSoftMaster ();
-    /// Change settings, use speed 0 to stop.
-    void setup (int speed, SpiMode mode = SPI_MODE_0);
+    /// Enable and setup.
+    void enable (int speed_hz, SpiMode mode = SPI_MODE_0);
+    /// Disable.
+    void disable ();
     /// See SpiMaster::send_and_recv.
     void send_and_recv (const char *tx_buf, char *rx_buf, int count);
     /// Send and receive one byte.
@@ -55,6 +56,7 @@ class SpiSoftMaster : public SpiMaster
     Io &sck_, &mosi_, &miso_;
     int half_period_ns_;
     bool cpha_;
+    bool enabled_;
 };
 
 } // namespace ucoo

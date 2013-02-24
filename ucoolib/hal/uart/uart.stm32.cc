@@ -83,57 +83,61 @@ void usart6_isr () { ucoo::Uart::isr (5); }
 
 namespace ucoo {
 
-Uart::Uart (int n, int speed, Parity parity, int stop_bits)
-    : n_ (n), error_char_ (default_error_char)
+Uart::Uart (int n)
+    : n_ (n), error_char_ (default_error_char), enabled_ (false)
 {
     assert (n < uart_nb);
     assert (!uart_instances[n]);
     uart_instances[n] = this;
-    setup (speed, parity, stop_bits);
 }
 
 Uart::~Uart ()
 {
-    setup (0);
+    disable ();
     uart_instances[n_] = 0;
 }
 
 void
-Uart::setup (int speed, Parity parity, int stop_bits)
+Uart::enable (int speed, Parity parity, int stop_bits)
 {
+    enabled_ = true;
     uint32_t base = uart_hardware[n_].base;
-    if (speed)
-    {
-        // Turn on.
-        rcc_peripheral_enable_clock
-            (uart_hardware[n_].apb == 1 ? &RCC_APB1ENR : &RCC_APB2ENR,
-             uart_hardware[n_].rcc_en);
-        // Set speed, rounded to nearest.
-        int apb_freq = uart_hardware[n_].apb == 1 ? rcc_ppre1_frequency
-            : rcc_ppre2_frequency;
-        USART_BRR (base) = (2 * apb_freq + speed) / (2 * speed);
-        // Set parameters and enable.
-        if (stop_bits == 1)
-            USART_CR2 (base) = USART_CR2_STOPBITS_1;
-        else if (stop_bits == 2)
-            USART_CR2 (base) = USART_CR2_STOPBITS_2;
-        else
-            assert_unreachable ();
-        USART_CR3 (base) = 0;
-        uint32_t cr1 = USART_CR1_UE | USART_CR1_RXNEIE | USART_CR1_TE | USART_CR1_RE;
-        if (parity != NONE)
-            cr1 |= USART_CR1_M | USART_CR1_PCE;
-        if (parity == ODD)
-            cr1 |= USART_CR1_PS;
-        USART_CR1 (base) = cr1;
-        // Reset status.
-        (void) USART_SR (base);
-        (void) USART_DR (base);
-        // Enable interrupts.
-        nvic_enable_irq (uart_hardware[n_].irq);
-    }
+    // Turn on.
+    rcc_peripheral_enable_clock
+        (uart_hardware[n_].apb == 1 ? &RCC_APB1ENR : &RCC_APB2ENR,
+         uart_hardware[n_].rcc_en);
+    // Set speed, rounded to nearest.
+    int apb_freq = uart_hardware[n_].apb == 1 ? rcc_ppre1_frequency
+        : rcc_ppre2_frequency;
+    USART_BRR (base) = (2 * apb_freq + speed) / (2 * speed);
+    // Set parameters and enable.
+    if (stop_bits == 1)
+        USART_CR2 (base) = USART_CR2_STOPBITS_1;
+    else if (stop_bits == 2)
+        USART_CR2 (base) = USART_CR2_STOPBITS_2;
     else
+        assert_unreachable ();
+    USART_CR3 (base) = 0;
+    uint32_t cr1 = USART_CR1_UE | USART_CR1_RXNEIE | USART_CR1_TE | USART_CR1_RE;
+    if (parity != NONE)
+        cr1 |= USART_CR1_M | USART_CR1_PCE;
+    if (parity == ODD)
+        cr1 |= USART_CR1_PS;
+    USART_CR1 (base) = cr1;
+    // Reset status.
+    (void) USART_SR (base);
+    (void) USART_DR (base);
+    // Enable interrupts.
+    nvic_enable_irq (uart_hardware[n_].irq);
+}
+
+void
+Uart::disable ()
+{
+    if (enabled_)
     {
+        enabled_ = false;
+        uint32_t base = uart_hardware[n_].base;
         // Stop UART.
         nvic_disable_irq (uart_hardware[n_].irq);
         USART_CR1 (base) = 0;
@@ -153,6 +157,7 @@ Uart::set_error_char (char c)
 int
 Uart::read (char *buf, int count)
 {
+    assert (enabled_);
     if (block_)
         while (rx_fifo_.empty ())
             barrier ();
@@ -162,6 +167,7 @@ Uart::read (char *buf, int count)
 int
 Uart::write (const char *buf, int count)
 {
+    assert (enabled_);
     int left = count;
     while (left)
     {

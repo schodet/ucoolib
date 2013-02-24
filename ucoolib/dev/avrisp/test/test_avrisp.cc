@@ -52,11 +52,11 @@ class TestAvrIspIntf : public ucoo::AvrIspIntf
         ucoo::delay_us (100);
         reset_.reset ();
         int freq = 1000000 / sck_duration_us;
-        spi_.setup (freq, ucoo::SPI_MODE_0);
+        spi_.enable (freq, ucoo::SPI_MODE_0);
     }
     void disable ()
     {
-        spi_.setup (0);
+        spi_.disable ();
         reset_.input ();
     }
     void sck_pulse ()

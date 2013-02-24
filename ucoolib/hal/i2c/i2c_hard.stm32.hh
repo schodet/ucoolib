@@ -33,12 +33,14 @@ namespace ucoo {
 class I2cHard : public I2c
 {
   public:
-    /// Initialise the Nth I2C.
-    I2cHard (int n, bool enable, int speed = 100000);
+    /// Constructor for the Nth I2C.
+    I2cHard (int n);
     /// Shutdown.
     ~I2cHard ();
-    /// Enable or disable.
-    void setup (bool enable, int speed = 100000);
+    /// Enable and setup
+    void enable (int speed = 100000);
+    /// Disable.
+    void disable ();
     /// See I2cMaster::send.
     void send (uint8_t addr, const char *buf, int count);
     /// See I2cMaster::recv.
@@ -60,7 +62,7 @@ class I2cHard : public I2c
     /// I2C number.
     int n_;
     /// Is it enabled?
-    bool enable_;
+    bool enabled_;
     /// Slave address.
     uint8_t slave_addr_;
     /// Handler called to source or sink data for slave exchanges.

@@ -43,9 +43,10 @@ main (int argc, const char **argv)
                                  | RCC_AHB1ENR_IOPEEN);
     ucoo::Gpio ss (GPIOE, 3);
     ss.set ();
-    gpio_mode_setup (GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO3);
+    ss.output ();
     ucoo::Gpio sck (GPIOA, 5), mosi (GPIOA, 7), miso (GPIOA, 6);
-    ucoo::SpiSoftMaster spi (sck, mosi, miso, 1000000, ucoo::SPI_MODE_3);
+    ucoo::SpiSoftMaster spi (sck, mosi, miso);
+    spi.enable (1000000, ucoo::SPI_MODE_3);
     // Loop with simple IU.
     char buf[64];
     unsigned int r;

@@ -78,82 +78,82 @@ void i2c3_er_isr () { ucoo::I2cHard::er_isr (2); }
 
 namespace ucoo {
 
-I2cHard::I2cHard (int n, bool enable, int speed)
-    : n_ (n), enable_ (false), slave_addr_ (0), slave_data_handler_ (0),
+I2cHard::I2cHard (int n)
+    : n_ (n), enabled_ (false), slave_addr_ (0), slave_data_handler_ (0),
       master_ (false), master_status_ (STATUS_ERROR), master_buf_ (0)
 {
     assert (n < i2c_nb);
     assert (!i2c_instances[n]);
     i2c_instances[n] = this;
-    setup (enable, speed);
 }
 
 I2cHard::~I2cHard ()
 {
-    setup (false);
+    disable ();
     i2c_instances[n_] = 0;
 }
 
 void
-I2cHard::setup (bool enable, int speed)
+I2cHard::enable (int speed)
 {
-    if (enable != enable_)
+    enabled_ = true;
+    uint32_t base = i2c_hardware[n_].base;
+    // Turn on.
+    rcc_peripheral_enable_clock (&RCC_APB1ENR, i2c_hardware[n_].rcc_en);
+    // Reset.
+    I2C_CR1 (base) = I2C_CR1_SWRST;
+    // TODO: make sure the bus is free!!! How!
+    I2C_CR1 (base) = 0;
+    // Compute clock parameters.
+    int pclk = rcc_ppre1_frequency;
+    int pclk_mhz = pclk / 1000000;
+    uint16_t ccr, tris;
+    if (speed <= 100000)
     {
+        ccr = pclk / speed / 2;
+        tris = pclk_mhz + 1;
+    }
+    else
+    {
+        assert (speed <= 400000);
+        ccr = I2C_CCR_FS | I2C_CCR_DUTY | (pclk / speed / 25);
+        tris = pclk_mhz * 3 / 10 + 1;
+    }
+    // Set all parameters.
+    I2C_CCR (base) = ccr;
+    I2C_TRISE (base) = tris;
+    I2C_OAR1 (base) = slave_addr_ | (1 << 14);
+    I2C_OAR2 (base) = 0;
+    I2C_CR2 (base) = I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | pclk_mhz;
+    // Enable.
+    nvic_enable_irq (i2c_hardware[n_].ev_irq);
+    nvic_enable_irq (i2c_hardware[n_].ev_irq + 1);
+    I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_PE;
+
+}
+
+void
+I2cHard::disable ()
+{
+    if (enabled_)
+    {
+        enabled_ = false;
         uint32_t base = i2c_hardware[n_].base;
-        if (enable)
-        {
-            // Turn on.
-            rcc_peripheral_enable_clock (&RCC_APB1ENR,
-                                         i2c_hardware[n_].rcc_en);
-            // Reset.
-            I2C_CR1 (base) = I2C_CR1_SWRST;
-            // TODO: make sure the bus is free!!! How!
-            I2C_CR1 (base) = 0;
-            // Compute clock parameters.
-            int pclk = rcc_ppre1_frequency;
-            int pclk_mhz = pclk / 1000000;
-            uint16_t ccr, tris;
-            if (speed <= 100000)
-            {
-                ccr = pclk / speed / 2;
-                tris = pclk_mhz + 1;
-            }
-            else
-            {
-                assert (speed <= 400000);
-                ccr = I2C_CCR_FS | I2C_CCR_DUTY | (pclk / speed / 25);
-                tris = pclk_mhz * 3 / 10 + 1;
-            }
-            // Set all parameters.
-            I2C_CCR (base) = ccr;
-            I2C_TRISE (base) = tris;
-            I2C_OAR1 (base) = slave_addr_ | (1 << 14);
-            I2C_OAR2 (base) = 0;
-            I2C_CR2 (base) = I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | pclk_mhz;
-            // Enable.
-            nvic_enable_irq (i2c_hardware[n_].ev_irq);
-            nvic_enable_irq (i2c_hardware[n_].ev_irq + 1);
-            I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_PE;
-        }
-        else
-        {
-            // TODO: wait for end of transfer?
-            // Disable.
-            nvic_disable_irq (i2c_hardware[n_].ev_irq);
-            nvic_disable_irq (i2c_hardware[n_].ev_irq + 1);
-            I2C_CR1 (base) = 0;
-            // Turn off.
-            rcc_peripheral_disable_clock (&RCC_APB1ENR,
-                                          i2c_hardware[n_].rcc_en);
-        }
-        enable_ = enable;
+        // TODO: wait for end of transfer?
+        // Disable.
+        nvic_disable_irq (i2c_hardware[n_].ev_irq);
+        nvic_disable_irq (i2c_hardware[n_].ev_irq + 1);
+        I2C_CR1 (base) = 0;
+        // Turn off.
+        rcc_peripheral_disable_clock (&RCC_APB1ENR,
+                                      i2c_hardware[n_].rcc_en);
     }
 }
 
 void
 I2cHard::transfer (uint8_t addr, char *buf, int count)
 {
-    assert (count);
+    assert (enabled_ && count);
     // No need to lock, master is not busy.
     assert (master_status_ != STATUS_BUSY);
     uint32_t base = i2c_hardware[n_].base;
@@ -203,7 +203,7 @@ I2cHard::register_data (uint8_t addr, DataHandler &data_handler)
     assert ((addr & 1) == 0);
     slave_addr_ = addr;
     slave_data_handler_ = &data_handler;
-    if (enable_)
+    if (enabled_)
     {
         uint32_t base = i2c_hardware[n_].base;
         // Just in case a transfer is triggered right now.

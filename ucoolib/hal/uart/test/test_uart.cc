@@ -53,9 +53,12 @@ main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
     ucoo::Stream &ts = ucoo::test_stream ();
-    ucoo::Uart u1 (0, 38400, ucoo::Uart::EVEN, 1);
-    ucoo::Uart u3 (2, 38400, ucoo::Uart::EVEN, 1);
-    ucoo::Uart u4 (3, 38400, ucoo::Uart::EVEN, 1);
+    ucoo::Uart u1 (0);
+    ucoo::Uart u3 (2);
+    ucoo::Uart u4 (3);
+    u1.enable (38400, ucoo::Uart::EVEN, 1);
+    u3.enable (38400, ucoo::Uart::EVEN, 1);
+    u4.enable (38400, ucoo::Uart::EVEN, 1);
     // For this test, shorten B6 & B7 to have a loopback on UART1, shorten C10
     // & C11 to connect UART3 to UART4.
     rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPBEN
@@ -107,13 +110,13 @@ main (int argc, const char **argv)
                 u->write (buf, buf_i);
                 break;
             case 'O':
-                u->setup (38400, ucoo::Uart::ODD, 1);
+                u->enable (38400, ucoo::Uart::ODD, 1);
                 break;
             case 'E':
-                u->setup (38400, ucoo::Uart::EVEN, 1);
+                u->enable (38400, ucoo::Uart::EVEN, 1);
                 break;
             case 'N':
-                u->setup (38400, ucoo::Uart::NONE, 1);
+                u->enable (38400, ucoo::Uart::NONE, 1);
                 break;
             default:
                 if (buf_i < static_cast<int> (sizeof (buf)))

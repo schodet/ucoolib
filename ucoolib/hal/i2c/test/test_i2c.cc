@@ -169,10 +169,12 @@ main (int argc, const char **argv)
     gpio_set_af (GPIOA, GPIO_AF4, GPIO8);
     gpio_set_af (GPIOC, GPIO_AF4, GPIO9);
     ucoo::I2cSlaveDataBufferSize<16, 16> data1, data2;
-    ucoo::I2cHard i2c1 (0, true);
-    ucoo::I2cHard i2c2 (2, true);
+    ucoo::I2cHard i2c1 (0);
+    ucoo::I2cHard i2c2 (2);
     i2c1.register_data (a1, data1);
     i2c2.register_data (a2, data2);
+    i2c1.enable ();
+    i2c2.enable ();
     // Run tests.
     test_basic (tsuite, i2c1, data2, a2);
     test_basic (tsuite, i2c2, data1, a1);

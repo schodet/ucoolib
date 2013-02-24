@@ -42,12 +42,14 @@ class Uart : public Stream
     /// Default error character.
     static const char default_error_char = '~';
   public:
-    /// Initialise the Nth UART with given parameters.
-    Uart (int n, int speed = 0, Parity parity = NONE, int stop_bits = 1);
+    /// Constructor for the Nth UART.
+    Uart (int n);
     /// Shutdown UART.
     ~Uart ();
-    /// Change UART settings, use speed 0 to stop UART.
-    void setup (int speed, Parity parity = NONE, int stop_bits = 1);
+    /// Enable and setup UART.
+    void enable (int speed, Parity parity = NONE, int stop_bits = 1);
+    /// Disable.
+    void disable ();
     /// Change the error character.
     void set_error_char (char c);
     /// See Stream::read.
@@ -67,6 +69,8 @@ class Uart : public Stream
     Fifo<char, UCOO_CONFIG_HAL_UART_TX_BUFFER> tx_fifo_;
     /// Error character, inserted in case of error.
     char error_char_;
+    /// Is it enabled?
+    bool enabled_;
 };
 
 } // namespace ucoo

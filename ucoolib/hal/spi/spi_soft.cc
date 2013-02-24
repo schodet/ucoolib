@@ -28,40 +28,39 @@
 
 namespace ucoo {
 
-SpiSoftMaster::SpiSoftMaster (Io &sck, Io &mosi, Io &miso, int speed,
-                              SpiMode mode)
-    : sck_ (sck), mosi_ (mosi), miso_ (miso)
+SpiSoftMaster::SpiSoftMaster (Io &sck, Io &mosi, Io &miso)
+    : sck_ (sck), mosi_ (mosi), miso_ (miso), enabled_ (false)
 {
-    setup (speed, mode);
 }
 
 SpiSoftMaster::~SpiSoftMaster ()
 {
-    setup (0);
+    disable ();
 }
 
 void
-SpiSoftMaster::setup (int speed, SpiMode mode)
+SpiSoftMaster::enable (int speed, SpiMode mode)
 {
-    if (speed)
-    {
-        // Take pins ownership, set SCK according to CPOL.
-        sck_.set (mode >= SPI_MODE_2);
-        sck_.output ();
-        mosi_.reset ();
-        mosi_.output ();
-        miso_.input ();
-        // Set clock period and clock phase.
-        half_period_ns_ = 1000 * 1000 * 1000 / 2 / speed;
-        cpha_ = mode & 1;
-    }
-    else
-    {
-        // Release pins.
-        sck_.input ();
-        sck_.reset ();
-        mosi_.input ();
-    }
+    enabled_ = true;
+    // Take pins ownership, set SCK according to CPOL.
+    sck_.set (mode >= SPI_MODE_2);
+    sck_.output ();
+    mosi_.reset ();
+    mosi_.output ();
+    miso_.input ();
+    // Set clock period and clock phase.
+    half_period_ns_ = 1000 * 1000 * 1000 / 2 / speed;
+    cpha_ = mode & 1;
+}
+
+void
+SpiSoftMaster::disable ()
+{
+    enabled_ = false;
+    // Release pins.
+    sck_.input ();
+    sck_.reset ();
+    mosi_.input ();
 }
 
 void
@@ -74,6 +73,7 @@ SpiSoftMaster::send_and_recv (const char *tx_buf, char *rx_buf, int count)
 char
 SpiSoftMaster::send_and_recv (char tx)
 {
+    assert (enabled_);
     uint8_t i, rx = 0;
     // Depending on clock phase, sample is done on first transition or second
     // transition.
