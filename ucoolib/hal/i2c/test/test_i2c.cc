@@ -31,6 +31,12 @@
 #  include "ucoolib/hal/gpio/gpio.hh"
 #endif
 
+#ifdef TARGET_host
+#  define TEST_NOT_THERE 0
+#else
+#  define TEST_NOT_THERE 1
+#endif
+
 #include "ucoolib/utils/delay.hh"
 
 #include <algorithm>
@@ -38,7 +44,7 @@
 
 static const int buffer_size = 16;
 static const int margin = 5;
-static const uint8_t a1 = 0x2c, a2 = 0x2e;
+static const uint8_t a1 = 0x2c, a2 = 0x2e, a3 = 0x42;
 
 void
 test_basic (ucoo::TestSuite &tsuite, ucoo::I2cMaster &m,
@@ -157,6 +163,27 @@ test_basic (ucoo::TestSuite &tsuite, ucoo::I2cMaster &m,
     } while (0);
 }
 
+void
+test_not_there (ucoo::TestSuite &tsuite, ucoo::I2cMaster &m, uint8_t addr)
+{
+    tsuite.group ("not there");
+    do {
+        ucoo::Test test (tsuite, "recv");
+        char buf[buffer_size];
+        m.recv (addr, buf, buffer_size);
+        int r = m.wait ();
+        test_fail_break_unless (test, r == ucoo::I2cMaster::STATUS_ERROR);
+    } while (0);
+    do {
+        ucoo::Test test (tsuite, "send");
+        char buf[buffer_size];
+        std::fill (buf, buf + buffer_size, 42);
+        m.send (addr, buf, buffer_size);
+        int r = m.wait ();
+        test_fail_break_unless (test, r == ucoo::I2cMaster::STATUS_ERROR);
+    } while (0);
+}
+
 int
 main (int argc, const char **argv)
 {
@@ -192,6 +219,8 @@ main (int argc, const char **argv)
     i2c2.register_data (a2, data2);
     // Run tests.
     test_basic (tsuite, i2c1, data2, a2);
+    if (TEST_NOT_THERE)
+        test_not_there (tsuite, i2c1, a3);
     test_basic (tsuite, i2c2, data1, a1);
     return tsuite.report () ? 0 : 1;
 }
