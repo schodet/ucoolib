@@ -24,11 +24,14 @@
 #include "ucoolib/hal/i2c/i2c.hh"
 
 #include "ucoolib/arch/arch.hh"
-#include "ucoolib/hal/gpio/gpio.hh"
-#include "ucoolib/utils/delay.hh"
 #include "ucoolib/base/test/test.hh"
 
-#include <libopencm3/stm32/f4/rcc.h>
+#ifdef TARGET_stm32
+#  include <libopencm3/stm32/f4/rcc.h>
+#  include "ucoolib/hal/gpio/gpio.hh"
+#endif
+
+#include "ucoolib/utils/delay.hh"
 
 #include <algorithm>
 #include <cstring>
@@ -44,23 +47,28 @@ test_basic (ucoo::TestSuite &tsuite, ucoo::I2cMaster &m,
     tsuite.group ("basic");
     {
         ucoo::Test test (tsuite, "recv");
-        // Slave is not able to signal its buffer end. Extra bytes will be
-        // read as 0xff.
         const char *hello = "Hello world!";
         char buf[buffer_size + margin];
         d.update (hello, std::strlen (hello) + 1);
         char ref[buffer_size + margin];
-        std::copy (hello, hello + std::strlen (hello) + 1, ref);
-        std::fill (ref + std::strlen (hello) + 1, ref + sizeof (ref), 0xff);
+        int ref_size = std::strlen (hello) + 1;
+        std::copy (hello, hello + ref_size, ref);
+#ifdef TARGET_stm32
+        // Slave is not able to signal its buffer end. Extra bytes will be
+        // read as 0xff.
+        std::fill (ref + ref_size, ref + sizeof (ref), 0xff);
+        ref_size = sizeof (ref);
+#endif
         for (int len = 2; len < (int) sizeof (buf); len++)
         {
             std::fill (buf, buf + sizeof (buf), 42);
             m.recv (addr, buf, len);
             int r = m.wait ();
-            test_fail_break_unless (test, r == len);
-            test_fail_break_unless (test, std::equal (buf, buf + len, ref));
+            int rexp = std::min (len, ref_size);
+            test_fail_break_unless (test, r == rexp);
+            test_fail_break_unless (test, std::equal (buf, buf + rexp, ref));
             test_fail_break_unless (test, std::count (buf, buf + sizeof (buf), 42)
-                                    == (int) sizeof (buf) - len);
+                                    == (int) sizeof (buf) - rexp);
         }
     }
     {
@@ -112,12 +120,12 @@ test_basic (ucoo::TestSuite &tsuite, ucoo::I2cMaster &m,
                     switch (step_)
                     {
                     case 0:
-                        m_.recv (addr_, buf_, buffer_size);
                         step_++;
+                        m_.recv (addr_, buf_, buffer_size);
                         break;
                     case 1:
-                        m_.send (addr_, buf_, buffer_size);
                         step_++;
+                        m_.send (addr_, buf_, buffer_size);
                         break;
                     case 2:
                         // Nothing, stop.
@@ -154,6 +162,12 @@ main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
     ucoo::TestSuite tsuite ("i2c");
+#if defined (TARGET_host)
+    ucoo::Host host ("test_i2c");
+    host.parse_options ();
+    ucoo::I2cHost i2c1 (host, 0);
+    ucoo::I2cHost i2c2 (host, 1);
+#elif defined (TARGET_stm32)
     // I2C1: B6: SCL, B9: SDA
     // I2C3: A8: SCL, C9: SDA
     rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN);
@@ -168,13 +182,14 @@ main (int argc, const char **argv)
     gpio_set_af (GPIOB, GPIO_AF4, GPIO6 | GPIO9);
     gpio_set_af (GPIOA, GPIO_AF4, GPIO8);
     gpio_set_af (GPIOC, GPIO_AF4, GPIO9);
-    ucoo::I2cSlaveDataBufferSize<16, 16> data1, data2;
     ucoo::I2cHard i2c1 (0);
     ucoo::I2cHard i2c2 (2);
-    i2c1.register_data (a1, data1);
-    i2c2.register_data (a2, data2);
     i2c1.enable ();
     i2c2.enable ();
+#endif
+    ucoo::I2cSlaveDataBufferSize<16, 16> data1, data2;
+    i2c1.register_data (a1, data1);
+    i2c2.register_data (a2, data2);
     // Run tests.
     test_basic (tsuite, i2c1, data2, a2);
     test_basic (tsuite, i2c2, data1, a1);

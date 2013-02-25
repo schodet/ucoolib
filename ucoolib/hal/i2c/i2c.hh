@@ -24,7 +24,9 @@
 //
 // }}}
 
-#if defined (TARGET_stm32)
+#if defined (TARGET_host)
+# include "i2c.host.hh"
+#elif defined (TARGET_stm32)
 # include "i2c_hard.stm32.hh"
 #else
 # error "not implemented for this target"

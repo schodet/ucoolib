@@ -1,6 +1,6 @@
 BASE = ../../../..
 
-TARGETS = stm32f4
+TARGETS = host stm32f4
 PROGS = test_i2c
 test_i2c_SOURCES = test_i2c.cc
 
