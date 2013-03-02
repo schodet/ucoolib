@@ -26,6 +26,8 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <time.h>
+#include <errno.h>
 
 namespace ucoo {
 
@@ -58,6 +60,17 @@ halt_perror ()
 {
     perror ("halt");
     abort ();
+}
+
+void
+yield ()
+{
+    // Do a small delay.
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 100 * 1000 * 1000;
+    while (nanosleep (&ts, &ts) == -1 && errno == EINTR)
+	;
 }
 
 } // namespace ucoo

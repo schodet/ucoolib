@@ -48,6 +48,12 @@ irq_restore (irq_flags_t flags)
                           : "memory", "cc");
 }
 
+inline void
+yield ()
+{
+    // Nothing, the CPU is ours!
+}
+
 } // namespace ucoo
 
 #endif // ucoolib_arch_arch_common_arm_hh
