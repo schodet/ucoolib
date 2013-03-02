@@ -25,24 +25,67 @@
 
 #include "ucoolib/common.hh"
 
+#include <stdlib.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <pty.h>
 #include <fcntl.h>
 #include <errno.h>
 
 namespace ucoo {
+
+/// Setup non canonical mode.
+static void
+setup_raw (int fd)
+{
+    struct termios tc;
+    tcgetattr (fd, &tc);
+    tc.c_iflag &= ~(IGNPAR | PARMRK | ISTRIP | IGNBRK | BRKINT | IGNCR |
+		    ICRNL | INLCR | IXON | IXOFF | IXANY | IMAXBEL);
+    tc.c_iflag |= INPCK;
+    tc.c_oflag &= ~(OPOST);
+    tc.c_cflag &= ~(HUPCL | CSTOPB | PARENB | PARODD | CSIZE);
+    tc.c_cflag |= CS8 | CLOCAL | CREAD;
+    tc.c_lflag &= ~(ICANON | ECHO | ISIG | IEXTEN | NOFLSH | TOSTOP);
+    tc.c_cc[VTIME] = 0;
+    tc.c_cc[VMIN] = 1;
+    tcflush (fd, TCIFLUSH);
+    tcsetattr (fd, TCSANOW, &tc);
+}
 
 HostStream::HostStream ()
     : fdi_ (0), fdo_ (1)
 {
 }
 
+HostStream::HostStream (const char *name)
+    : fdi_ (-1), fdo_ (-1)
+{
+    int fd, slave_fd, r;
+    // Open and unlock pt.
+    if (openpty (&fd, &slave_fd, 0, 0, 0) == -1
+        || grantpt (fd) == -1
+        || unlockpt (fd) == -1)
+        halt_perror ();
+    // Make a link to the slave pts.
+    unlink (name);
+    const char *slave_name = ptsname (fd);
+    assert (slave_name);
+    r = symlink (slave_name, name);
+    assert_perror (r != -1);
+    // Make slave raw.
+    setup_raw (slave_fd);
+    // Use as both in and out.
+    fdi_ = fdo_ = fd;
+    // slave_fd is left open.
+}
+
 HostStream::~HostStream ()
 {
     if (fdi_ != -1 && fdi_ != 0)
         close (fdi_);
-    if (fdo_ != -1 && fdo_ != 1)
+    if (fdo_ != -1 && fdo_ != 1 && fdo_ != fdi_)
         close (fdo_);
 }
 

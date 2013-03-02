@@ -32,6 +32,8 @@ class HostStream : public Stream
   public:
     /// Default constructor, use stdin/stdout.
     HostStream ();
+    /// PTY constructor, will make a link to PTY at the given name.
+    HostStream (const char *name);
     /// Close if needed.
     ~HostStream ();
     /// See Stream::block.
