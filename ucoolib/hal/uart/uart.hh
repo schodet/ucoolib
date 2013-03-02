@@ -24,7 +24,10 @@
 //
 // }}}
 
-#ifdef TARGET_stm32
+#if defined (TARGET_host)
+# include "ucoolib/arch/host/host_stream.hh"
+namespace ucoo { typedef HostStream Uart; }
+#elif defined (TARGET_stm32)
 # include "uart.stm32.hh"
 #else
 # error "not implemented for this target"

@@ -1,6 +1,6 @@
 // ucoolib - Microcontroller object oriented library. {{{
 //
-// Copyright (C) 2012 Nicolas Schodet
+// Copyright (C) 2013 Nicolas Schodet
 //
 // APBTeam:
 //        Web: http://apbteam.org/
@@ -24,105 +24,47 @@
 #include "ucoolib/hal/uart/uart.hh"
 
 #include "ucoolib/arch/arch.hh"
-#include "ucoolib/hal/gpio/gpio.hh"
-#include "ucoolib/base/test/test.hh"
 
-#include <libopencm3/stm32/f4/rcc.h>
+#if defined (TARGET_stm32)
+# include <libopencm3/stm32/f4/rcc.h>
+# include "ucoolib/hal/gpio/gpio.hh"
+#endif
 
-static void
-check_act (ucoo::Stream &ts, ucoo::Stream &u, char n)
-{
-    char buf[3 + 16 + 1];
-    if (!u.poll ())
-        return;
-    int r = u.read (buf + 3, 16);
-    if (r <= 0)
-    {
-        buf[3] = '#';
-        r = 1;
-    }
-    buf[0] = '<';
-    buf[1] = n;
-    buf[2] = ':';
-    buf[3 + r] = '>';
-    ts.write (buf, 3 + r + 1);
-}
+#include "ucoolib/common.hh"
 
 int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    ucoo::Stream &ts = ucoo::test_stream ();
-    ucoo::Uart u1 (0);
-    ucoo::Uart u3 (2);
-    ucoo::Uart u4 (3);
+#if defined (TARGET_host)
+    ucoo::Uart u0, u1 ("uart1");
+#elif defined (TARGET_stm32)
+    // D8, D9: UART3
+    // C12, D2: UART5
+    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPCEN);
+    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPDEN);
+    gpio_mode_setup (GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO12);
+    gpio_mode_setup (GPIOD, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO8 | GPIO9);
+    gpio_set_af (GPIOC, GPIO_AF8, GPIO12);
+    gpio_set_af (GPIOD, GPIO_AF8, GPIO2);
+    gpio_set_af (GPIOD, GPIO_AF7, GPIO8 | GPIO9);
+    ucoo::Uart u0 (2), u1 (4);
+    u0.enable (38400, ucoo::Uart::EVEN, 1);
     u1.enable (38400, ucoo::Uart::EVEN, 1);
-    u3.enable (38400, ucoo::Uart::EVEN, 1);
-    u4.enable (38400, ucoo::Uart::EVEN, 1);
-    // For this test, shorten B6 & B7 to have a loopback on UART1, shorten C10
-    // & C11 to connect UART3 to UART4.
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPBEN
-                                 | RCC_AHB1ENR_IOPCEN);
-    gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                     GPIO6 | GPIO7);
-    gpio_set_af (GPIOB, GPIO_AF7, GPIO6 | GPIO7);
-    gpio_mode_setup (GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                     GPIO10 | GPIO11);
-    gpio_set_af (GPIOC, GPIO_AF7, GPIO10);
-    gpio_set_af (GPIOC, GPIO_AF8, GPIO11);
-    // Loop to report any activity on ports and provide a simple UI.
+#endif
+    ucoo::Uart *u[] = { &u0, &u1 };
     char buf[64];
-    int buf_i = 0;
-    ucoo::Uart *u = &u1;
     while (1)
     {
-        check_act (ts, u1, '1');
-        check_act (ts, u3, '3');
-        check_act (ts, u4, '4');
-        while (ts.poll ())
+        for (int i = 0; i < (int) lengthof (u); i++)
         {
-            char c = ts.getc ();
-            switch (c)
+            if (u[i]->poll ())
             {
-            case '?':
-                static const char help[] =
-                    "? - help\n"
-                    "1, 3, 4 - set output uart\n"
-                    ": - reset output buffer index\n"
-                    "! - send output buffer\n"
-                    "O, E, N - change parity to Odd, Even or None\n"
-                    "any - fill output buffer\n";
-                ts.write (help, sizeof (help));
-                break;
-            case '1':
-                u = &u1;
-                break;
-            case '3':
-                u = &u3;
-                break;
-            case '4':
-                u = &u4;
-                break;
-            case ':':
-                buf_i = 0;
-                break;
-            case '!':
-                u->write (buf, buf_i);
-                break;
-            case 'O':
-                u->enable (38400, ucoo::Uart::ODD, 1);
-                break;
-            case 'E':
-                u->enable (38400, ucoo::Uart::EVEN, 1);
-                break;
-            case 'N':
-                u->enable (38400, ucoo::Uart::NONE, 1);
-                break;
-            default:
-                if (buf_i < static_cast<int> (sizeof (buf)))
-                    buf[buf_i++] = c;
-                break;
+                int len = u[i]->read (buf, sizeof (buf));
+                u[i]->write (buf, len);
             }
         }
+        ucoo::yield ();
     }
 }
+
