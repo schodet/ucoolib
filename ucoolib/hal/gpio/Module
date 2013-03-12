@@ -1,1 +1,1 @@
-hal_gpio_SOURCES = gpio.stm32f4.cc
+hal_gpio_SOURCES = gpio.host.cc gpio.stm32f4.cc

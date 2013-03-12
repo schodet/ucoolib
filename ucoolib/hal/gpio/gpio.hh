@@ -24,7 +24,9 @@
 //
 // }}}
 
-#ifdef TARGET_stm32f4
+#if defined (TARGET_host)
+# include "gpio.host.hh"
+#elif defined TARGET_stm32f4
 # include "gpio.stm32f4.hh"
 #else
 # error "not implemented for this target"
