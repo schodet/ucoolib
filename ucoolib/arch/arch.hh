@@ -30,6 +30,10 @@ namespace ucoo {
 void
 arch_init (int argc, const char **argv);
 
+/// Reset.
+void
+arch_reset ();
+
 #ifdef TARGET_host
 
 /// Retrieve program arguments.

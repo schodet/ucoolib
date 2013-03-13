@@ -25,6 +25,7 @@
 #include "ucoolib/common.hh"
 
 #include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/f4/scb.h>
 
 namespace ucoo {
 
@@ -32,6 +33,12 @@ void
 arch_init (int argc, const char **argv)
 {
     rcc_clock_setup_hse_3v3 (&hse_8mhz_3v3[CLOCK_3V3_120MHZ]);
+}
+
+void
+arch_reset ()
+{
+    SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
 }
 
 void

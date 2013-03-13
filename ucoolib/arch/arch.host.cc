@@ -42,6 +42,13 @@ arch_init (int argc, const char **argv)
 }
 
 void
+arch_reset ()
+{
+    // Not supported.
+    halt ();
+}
+
+void
 arch_get_args (int &argc, const char **&argv)
 {
     argc = arch_stored_argc;
