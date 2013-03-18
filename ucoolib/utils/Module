@@ -1,1 +1,1 @@
-utils_SOURCES := delay.arm.cc
+utils_SOURCES := delay.arm.cc crc.cc
