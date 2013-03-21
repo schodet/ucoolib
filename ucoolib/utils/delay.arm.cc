@@ -25,7 +25,7 @@
 
 #include <algorithm>
 
-#include <libopencm3/stm32/systick.h>
+#include <libopencm3/cm3/systick.h>
 #include <libopencm3/stm32/f4/rcc.h>
 
 namespace ucoo {

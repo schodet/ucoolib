@@ -25,7 +25,7 @@
 
 #include <libopencm3/stm32/i2c.h>
 #include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/nvic.h>
+#include <libopencm3/cm3/nvic.h>
 
 #include "ucoolib/utils/trace.hh"
 

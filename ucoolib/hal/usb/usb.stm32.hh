@@ -28,6 +28,8 @@
 
 #include "config/hal/usb.hh"
 
+#include <libopencm3/usb/usbd.h>
+
 namespace ucoo {
 
 class UsbStream;
@@ -47,9 +49,9 @@ class UsbStreamControl
   private:
     /// Called by USB stack when device is configured.  This is expected to
     /// setup endpoints.
-    static void set_config (uint16_t wValue);
+    static void set_config (usbd_device *usbdev, uint16_t wValue);
     /// Called by USB stack when a frame is received on a OUT endpoint.
-    static void rx_callback (uint8_t ep);
+    static void rx_callback (usbd_device *usbdev, uint8_t ep);
   private:
     /// Size of endpoints.
     static const int ep_size_ = UCOO_CONFIG_HAL_USB_EP_SIZE;

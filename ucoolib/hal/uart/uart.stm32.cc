@@ -25,7 +25,7 @@
 
 #include <libopencm3/stm32/f4/usart.h>
 #include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/nvic.h>
+#include <libopencm3/cm3/nvic.h>
 
 #ifndef TARGET_stm32f4
 // Need RCC adaptations and USART6 different handling for F1.

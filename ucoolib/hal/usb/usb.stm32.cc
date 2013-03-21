@@ -26,17 +26,18 @@
 
 #include <libopencm3/stm32/f4/rcc.h>
 #include <libopencm3/stm32/f4/gpio.h>
-#include <libopencm3/stm32/nvic.h>
-#include <libopencm3/usb/usbd.h>
+#include <libopencm3/cm3/nvic.h>
 
 #include "usb_desc.stm32.h"
+
+static usbd_device *usbdev;
 
 extern "C" {
 
 void
 otg_fs_isr ()
 {
-    usbd_poll ();
+    usbd_poll (usbdev);
 }
 
 }
@@ -46,8 +47,6 @@ namespace ucoo {
 UsbStreamControl *UsbStreamControl::instance_;
 
 const char *strings[] = {
-    "x",
-    NULL,
     NULL,
     NULL
 };
@@ -62,42 +61,44 @@ UsbStreamControl::UsbStreamControl (const char *vendor, const char *product)
 {
     assert (!instance_);
     instance_ = this;
-    strings[1] = vendor;
-    strings[2] = product;
+    strings[0] = vendor;
+    strings[1] = product;
     rcc_peripheral_enable_clock (&RCC_AHB2ENR, RCC_AHB2ENR_OTGFSEN);
     rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN);
     gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
                      GPIO9 | GPIO11 | GPIO12);
     gpio_set_af (GPIOA, GPIO_AF10, GPIO9 | GPIO11 | GPIO12);
-    usbd_init (&otgfs_usb_driver, &usb_desc_dev, &usb_desc_config, strings);
-    usbd_register_set_config_callback (set_config);
+    usbdev = usbd_init (&otgfs_usb_driver, &usb_desc_dev, &usb_desc_config,
+                        strings, lengthof (strings));
+    usbd_register_set_config_callback (usbdev, set_config);
     nvic_enable_irq (NVIC_OTG_FS_IRQ);
 }
 
 void
-UsbStreamControl::set_config (uint16_t configured)
+UsbStreamControl::set_config (usbd_device *usbdev, uint16_t configured)
 {
     instance_->configured_ = configured;
     if (configured)
     {
         for (int i = 0; i < stream_nb_; i++)
         {
-            usbd_ep_setup (0x01 + i, USB_ENDPOINT_ATTR_BULK, ep_size_,
+            usbd_ep_setup (usbdev, 0x01 + i, USB_ENDPOINT_ATTR_BULK, ep_size_,
                            rx_callback);
-            usbd_ep_setup (0x81 + i, USB_ENDPOINT_ATTR_BULK, ep_size_, NULL);
+            usbd_ep_setup (usbdev, 0x81 + i, USB_ENDPOINT_ATTR_BULK, ep_size_,
+                           NULL);
         }
     }
 }
 
 void
-UsbStreamControl::rx_callback (uint8_t ep)
+UsbStreamControl::rx_callback (usbd_device *usbdev, uint8_t ep)
 {
     assert (ep > 0 && ep <= stream_nb_);
     int num = ep - 1;
     RxBuffer &rb = instance_->rx_buffer_[num];
     assert (rb.size == 0 && rb.offset == 0);
-    usbd_ep_nak_set (ep, 1);
-    rb.size = usbd_ep_read_packet (ep, rb.buf, ep_size_);
+    usbd_ep_nak_set (usbdev, ep, 1);
+    rb.size = usbd_ep_read_packet (usbdev, ep, rb.buf, ep_size_);
 }
 
 UsbStream::UsbStream (UsbStreamControl &control, int num)
@@ -124,7 +125,7 @@ UsbStream::read (char *buf, int count)
     {
         rb.offset = rb.size = 0;
         barrier ();
-        usbd_ep_nak_set (num_ + 1, 0);
+        usbd_ep_nak_set (usbdev, num_ + 1, 0);
     }
     /* Done. */
     return len;
@@ -139,7 +140,7 @@ UsbStream::write (const char *buf, int count)
         if (control_.configured_)
         {
             int len = std::min (left, UsbStreamControl::ep_size_);
-            len = usbd_ep_write_packet (num_ + 0x81, buf, len);
+            len = usbd_ep_write_packet (usbdev, num_ + 0x81, buf, len);
             buf += len;
             left -= len;
         }
