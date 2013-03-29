@@ -30,6 +30,7 @@ namespace ucoo {
 /// should be enough for simple needs.
 class Adc
 {
+  public:
     /// Make a conversion and return the value.
     virtual int read () = 0;
     /// Get resolution (number of possible different values).
