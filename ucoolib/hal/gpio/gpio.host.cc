@@ -125,28 +125,37 @@ Gpio::Gpio (Host &host, const char *name)
     shared_->register_instance (host, *this);
 }
 
+Gpio::Gpio ()
+    : name_ (0), input_ (false), output_ (false), direction_output_ (false)
+{
+}
+
 void
 Gpio::set ()
 {
-    shared_->set (*this, true);
+    if (name_)
+        shared_->set (*this, true);
 }
 
 void
 Gpio::reset ()
 {
-    shared_->set (*this, false);
+    if (name_)
+        shared_->set (*this, false);
 }
 
 void
 Gpio::set (bool state)
 {
-    shared_->set (*this, state);
+    if (name_)
+        shared_->set (*this, state);
 }
 
 void
 Gpio::toggle ()
 {
-    shared_->set (*this, !output_);
+    if (name_)
+        shared_->set (*this, !output_);
 }
 
 bool
@@ -158,13 +167,15 @@ Gpio::get () const
 void
 Gpio::input ()
 {
-    shared_->output (*this, false);
+    if (name_)
+        shared_->output (*this, false);
 }
 
 void
 Gpio::output ()
 {
-    shared_->output (*this, true);
+    if (name_)
+        shared_->output (*this, true);
 }
 
 } // namespace ucoo

@@ -36,6 +36,8 @@ class Gpio : public Io
   public:
     /// Initialise GPIO.
     Gpio (Host &host, const char *name);
+    /// Initialise GPIO, with no mex support.
+    Gpio ();
     /// See Io::set.
     void set ();
     /// See Io::reset.
