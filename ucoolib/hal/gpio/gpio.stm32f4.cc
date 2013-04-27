@@ -66,20 +66,40 @@ Gpio::get () const
     return GPIO_IDR (port_) & mask_;
 }
 
+/// Set two bits in a register for the corresponding one-bit mask.
+static uint32_t
+dmask_set (uint32_t mask, uint32_t reg, uint32_t bits)
+{
+    uint32_t dmask = mask * mask;
+    reg &= ~(dmask | dmask << 1);
+    reg |= bits * dmask;
+    return reg;
+}
+
 void
 Gpio::input ()
 {
-    uint32_t mask = mask_;
-    uint32_t dmask = mask * mask;
-    GPIO_MODER (port_) &= ~(dmask | dmask << 1);
+    GPIO_MODER (port_) = dmask_set (mask_, GPIO_MODER (port_),
+                                    GPIO_MODE_INPUT);
 }
 
 void
 Gpio::output ()
 {
-    uint32_t mask = mask_;
-    uint32_t dmask = mask * mask;
-    GPIO_MODER (port_) = (GPIO_MODER (port_) & ~(dmask << 1)) | dmask;
+    GPIO_MODER (port_) = dmask_set (mask_, GPIO_MODER (port_),
+                                    GPIO_MODE_OUTPUT);
+}
+
+void
+Gpio::pull (Pull dir)
+{
+    GPIO_PUPDR (port_) = dmask_set (mask_, GPIO_PUPDR (port_), dir);
+}
+
+void
+Gpio::speed (Speed s)
+{
+    GPIO_OSPEEDR (port_) = dmask_set (mask_, GPIO_OSPEEDR (port_), s);
 }
 
 } // namespace ucoo

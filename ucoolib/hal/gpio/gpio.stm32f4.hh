@@ -33,6 +33,20 @@ namespace ucoo {
 class Gpio : public Io
 {
   public:
+    enum Pull
+    {
+        PULL_NONE = GPIO_PUPD_NONE,
+        PULL_UP = GPIO_PUPD_PULLUP,
+        PULL_DOWN = GPIO_PUPD_PULLDOWN,
+    };
+    enum Speed
+    {
+        SPEED_2MHZ = GPIO_OSPEED_2MHZ,
+        SPEED_25MHZ = GPIO_OSPEED_25MHZ,
+        SPEED_50MHZ = GPIO_OSPEED_50MHZ,
+        SPEED_100MHZ = GPIO_OSPEED_100MHZ,
+    };
+  public:
     /// Constructor, take the PORT base address, and pin BIT number.
     Gpio (uint32_t port, int bit);
     /// See Io::set.
@@ -49,6 +63,10 @@ class Gpio : public Io
     void input ();
     /// See Io::output.
     void output ();
+    /// Set pull-up or pull-down.
+    void pull (Pull dir);
+    /// Set output speed.
+    void speed (Speed s);
   private:
     /// Port register base address.
     const uint32_t port_;
