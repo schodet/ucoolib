@@ -27,13 +27,17 @@ namespace ucoo {
 
 
 UsDist::UsDist (UsDistControl &ctrl, Adc &adc, Io &io,
-                int distance_min, int distance_max, int distance_too_far)
+                int distance_min, int distance_max, int distance_too_far,
+                int resolution)
     : adc_ (adc), io_ (io), next_ (0),
       distance_min_ (distance_min), distance_max_ (distance_max),
-      distance_too_far_ (distance_too_far), distance_ (-1)
+      distance_too_far_ (distance_too_far), resolution_ (resolution),
+      distance_ (-1)
 {
     next_ = ctrl.sensors_;
     ctrl.sensors_ = this;
+    if (resolution_ == -1)
+        resolution_ = adc_.get_resolution ();
 }
 
 void
@@ -54,7 +58,7 @@ UsDist::read ()
     int v = adc_.read ();
     // The sensor returns a value between 4 and 20 mA proportional to the
     // distance between calibrated values.  Ignore faulty sensors.
-    const int max = adc_.get_resolution ();
+    const int max = resolution_;
     const int min = max / 5;
     if (v <= min / 4)
         distance_ = -1;

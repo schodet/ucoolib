@@ -36,7 +36,8 @@ class UsDist
   public:
     /// Constructor.
     UsDist (UsDistControl &ctrl, Adc &adc, Io &io,
-            int distance_min, int distance_max, int distance_too_far = -1);
+            int distance_min, int distance_max, int distance_too_far = -1,
+            int resolution = -1);
     /// Enable measure.
     void enable ();
     /// Disable measure.
@@ -49,7 +50,7 @@ class UsDist
     Adc &adc_;
     Io &io_;
     UsDist *next_;
-    int distance_min_, distance_max_, distance_too_far_;
+    int distance_min_, distance_max_, distance_too_far_, resolution_;
     int distance_;
     friend class UsDistControl;
 };
