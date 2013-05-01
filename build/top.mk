@@ -33,11 +33,12 @@ size:
 hex:
 srec:
 bin:
+crc:
 
 clean:
 	rmdir $(OBJDIR) 2> /dev/null || true
 
-.PHONY: all lst size hex srec bin clean
+.PHONY: all lst size hex srec bin crc clean
 
 # Modules and sources setup.
 

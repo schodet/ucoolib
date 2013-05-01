@@ -88,16 +88,17 @@ define arch_bin_rules
 hex: hex.$1
 srec: srec.$1
 bin: bin.$1
+crc: crc.$1
 all.$1: hex.$1
 
 ifneq ($$(wildcard *.$1.srec),)
 all.$1: srec.$1
 endif
 ifneq ($$(wildcard *.$1.bin),)
-all.$1: bin.$1
+all.$1: bin.$1 crc.$1
 endif
 
-.PHONY: hex.$1 srec.$1 bin.$1
+.PHONY: hex.$1 srec.$1 bin.$1 crc.$1
 
 hex.$1: $$($1_PROGS:%=%.$1.hex)
 srec.$1: $$($1_PROGS:%=%.$1.srec)
@@ -112,6 +113,9 @@ bin.$1: $$($1_PROGS:%=%.$1.bin)
 %.$1.bin: %.$1$$($1_ELF_SUFFIX)
 	@echo "BIN  [$1] $$@"
 	$$Q$$($1_OBJCOPY) -O binary $$< $$@
+
+crc.$1: $$($1_PROGS:%=%.$1.bin)
+	$Q$$(BASE)/build/tools/crc $$^
 
 $1_EXTRA_CLEAN += $$($1_PROGS:%=%.$1.hex) \
 	$$($1_PROGS:%=%.$1.srec) \

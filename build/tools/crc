@@ -1,0 +1,13 @@
+#!/usr/bin/python
+"""Output CRC32 of files."""
+import optparse
+import zlib
+
+parser = optparse.OptionParser(usage='%prog [options] files...')
+options, args = parser.parse_args()
+
+for f in args:
+    with open(f) as fd:
+        content = fd.read()
+        crc = zlib.crc32(content) & 0xffffffff
+        print '%08x  %s' % (crc, f)
