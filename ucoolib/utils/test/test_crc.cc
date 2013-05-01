@@ -25,15 +25,24 @@
 #include "ucoolib/arch/arch.hh"
 #include "ucoolib/base/test/test.hh"
 
+#include <cstring>
+
 int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
     ucoo::TestSuite tsuite ("crc");
     {
-        ucoo::Test test (tsuite, "test vector");
+        ucoo::Test test (tsuite, "crc8 test vector");
         static const uint8_t test_vector[] = { 0x02, 0x1c, 0xb8, 0x01, 0, 0, 0, 0xa2 };
         if (ucoo::crc8_compute (test_vector, lengthof (test_vector)) != 0)
+            test.fail ();
+    }
+    {
+        ucoo::Test test (tsuite, "crc32 test vector");
+        const char *check_str = "123456789";
+        if (ucoo::crc32_compute ((const uint8_t *) check_str,
+                                 std::strlen (check_str)) != 0xCBF43926)
             test.fail ();
     }
     return tsuite.report () ? 0 : 1;

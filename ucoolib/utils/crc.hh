@@ -25,6 +25,9 @@
 // }}}
 #include "ucoolib/common.hh"
 
+/// Please read "A PAINLESS GUIDE TO CRC ERROR DETECTION ALGORITHMS",
+/// http://www.ross.net/crc/download/crc_v3.txt
+
 namespace ucoo {
 
 /// Dallas/Maxim iButton 8bit CRC.
@@ -47,6 +50,20 @@ crc8_update (uint8_t crc, uint8_t data)
 
 uint8_t
 crc8_compute (const uint8_t *data, int size);
+
+/// Name   : "CRC-32"
+/// Width  : 32
+/// Poly   : 04C11DB7
+/// Init   : FFFFFFFF
+/// RefIn  : True
+/// RefOut : True
+/// XorOut : FFFFFFFF
+/// Check  : CBF43926
+uint32_t
+crc32_update (uint32_t crc, uint8_t data);
+
+uint32_t
+crc32_compute (const uint8_t *data, int size);
 
 } // namespace ucoo
 
