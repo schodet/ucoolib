@@ -27,7 +27,7 @@
 #include "ucoo/hal/gpio/gpio.hh"
 #include "ucoo/base/test/test.hh"
 
-#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/rcc.h>
 
 static void
 check_act (ucoo::Stream &ts, ucoo::Stream &u, char n)

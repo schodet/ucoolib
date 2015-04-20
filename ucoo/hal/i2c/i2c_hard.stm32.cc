@@ -24,7 +24,7 @@
 #include "i2c_hard.stm32.hh"
 
 #include <libopencm3/stm32/i2c.h>
-#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
 
 #include "ucoo/utils/trace.hh"
@@ -105,7 +105,7 @@ I2cHard::enable (int speed)
     // TODO: make sure the bus is free!!! How!
     I2C_CR1 (base) = 0;
     // Compute clock parameters.
-    int pclk = rcc_ppre1_frequency;
+    int pclk = rcc_apb1_frequency;
     int pclk_mhz = pclk / 1000000;
     uint16_t ccr, tris;
     if (speed <= 100000)

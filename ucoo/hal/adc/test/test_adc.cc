@@ -27,7 +27,7 @@
 #include "ucoo/base/test/test.hh"
 #include "ucoo/utils/delay.hh"
 
-#include <libopencm3/stm32/f4/adc.h>
+#include <libopencm3/stm32/adc.h>
 #include "ucoo/hal/gpio/gpio.hh"
 
 #include <cstdio>

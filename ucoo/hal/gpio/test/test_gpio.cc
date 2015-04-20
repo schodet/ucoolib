@@ -25,7 +25,7 @@
 #include "ucoo/hal/gpio/gpio.hh"
 #include "ucoo/utils/delay.hh"
 
-#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/rcc.h>
 
 void
 test (ucoo::Io &loop_out, ucoo::Io &loop_in, ucoo::Io &led3, ucoo::Io &led4,

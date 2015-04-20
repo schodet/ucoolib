@@ -25,7 +25,7 @@
 // }}}
 #include "ucoo/intf/io.hh"
 
-#include <libopencm3/stm32/f4/gpio.h>
+#include <libopencm3/stm32/gpio.h>
 
 namespace ucoo {
 

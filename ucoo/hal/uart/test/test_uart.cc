@@ -26,7 +26,7 @@
 #include "ucoo/arch/arch.hh"
 
 #if defined (TARGET_stm32)
-# include <libopencm3/stm32/f4/rcc.h>
+# include <libopencm3/stm32/rcc.h>
 # include "ucoo/hal/gpio/gpio.hh"
 #endif
 

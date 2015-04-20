@@ -24,7 +24,7 @@
 #include "ucoo/arch/arch.hh"
 #include "ucoo/common.hh"
 
-#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/scb.h>
 
 namespace ucoo {

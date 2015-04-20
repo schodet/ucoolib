@@ -24,13 +24,16 @@
 #include "usb.stm32.hh"
 #include <algorithm>
 
-#include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/f4/gpio.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
 #include <libopencm3/cm3/nvic.h>
 
 #include "usb_desc.stm32.h"
 
 static usbd_device *usbdev;
+
+// Buffer for control requests.
+static uint8_t usb_control_buffer[128];
 
 extern "C" {
 
@@ -69,7 +72,8 @@ UsbStreamControl::UsbStreamControl (const char *vendor, const char *product)
                      GPIO9 | GPIO11 | GPIO12);
     gpio_set_af (GPIOA, GPIO_AF10, GPIO9 | GPIO11 | GPIO12);
     usbdev = usbd_init (&otgfs_usb_driver, &usb_desc_dev, &usb_desc_config,
-                        strings, lengthof (strings));
+                        strings, lengthof (strings),
+                        usb_control_buffer, sizeof (usb_control_buffer));
     usbd_register_set_config_callback (usbdev, set_config);
     nvic_enable_irq (NVIC_OTG_FS_IRQ);
 }

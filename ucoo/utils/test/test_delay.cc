@@ -24,8 +24,8 @@
 #include "ucoo/utils/delay.hh"
 #include "ucoo/arch/arch.hh"
 
-#include <libopencm3/stm32/f4/rcc.h>
-#include <libopencm3/stm32/f4/gpio.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
 
 int
 main (int argc, const char **argv)

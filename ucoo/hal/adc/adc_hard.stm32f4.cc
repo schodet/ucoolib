@@ -23,8 +23,8 @@
 // }}}
 #include "adc_hard.stm32f4.hh"
 
-#include <libopencm3/stm32/f4/adc.h>
-#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/adc.h>
+#include <libopencm3/stm32/rcc.h>
 
 namespace ucoo {
 

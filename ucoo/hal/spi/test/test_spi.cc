@@ -28,7 +28,7 @@
 #include "ucoo/arch/arch.hh"
 #include "ucoo/base/test/test.hh"
 
-#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/rcc.h>
 
 #include <algorithm>
 #include <cstdio>

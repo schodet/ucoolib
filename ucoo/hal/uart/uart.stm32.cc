@@ -23,8 +23,8 @@
 // }}}
 #include "uart.stm32.hh"
 
-#include <libopencm3/stm32/f4/usart.h>
-#include <libopencm3/stm32/f4/rcc.h>
+#include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
 
 #ifndef TARGET_stm32f4
@@ -107,8 +107,8 @@ Uart::enable (int speed, Parity parity, int stop_bits)
         (uart_hardware[n_].apb == 1 ? &RCC_APB1ENR : &RCC_APB2ENR,
          uart_hardware[n_].rcc_en);
     // Set speed, rounded to nearest.
-    int apb_freq = uart_hardware[n_].apb == 1 ? rcc_ppre1_frequency
-        : rcc_ppre2_frequency;
+    int apb_freq = uart_hardware[n_].apb == 1 ? rcc_apb1_frequency
+        : rcc_apb2_frequency;
     USART_BRR (base) = (2 * apb_freq + speed) / (2 * speed);
     // Set parameters and enable.
     if (stop_bits == 1)
