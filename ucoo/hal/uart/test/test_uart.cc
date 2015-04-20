@@ -56,7 +56,7 @@ main (int argc, const char **argv)
     char buf[64];
     while (1)
     {
-        for (int i = 0; i < (int) lengthof (u); i++)
+        for (int i = 0; i < (int) ucoo::lengthof (u); i++)
         {
             if (u[i]->poll ())
             {

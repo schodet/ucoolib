@@ -35,7 +35,7 @@ main (int argc, const char **argv)
     {
         ucoo::Test test (tsuite, "crc8 test vector");
         static const uint8_t test_vector[] = { 0x02, 0x1c, 0xb8, 0x01, 0, 0, 0, 0xa2 };
-        if (ucoo::crc8_compute (test_vector, lengthof (test_vector)) != 0)
+        if (ucoo::crc8_compute (test_vector, ucoo::lengthof (test_vector)) != 0)
             test.fail ();
     }
     {

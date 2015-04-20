@@ -83,9 +83,14 @@ assert_perror (bool condition)
         halt_perror ();
 }
 
-} // namespace ucoo
+/// Get array length at compile time.
+template<class T, int N>
+constexpr int
+lengthof (T (&)[N])
+{
+    return N;
+}
 
-/// Get array length at compile time, must be a macro until c++11.
-#define lengthof(array) (sizeof (array) / sizeof((array)[0]))
+} // namespace ucoo
 
 #endif // ucoo_common_h
