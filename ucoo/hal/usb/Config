@@ -10,3 +10,5 @@ self_powered = 0
 max_power = 100
 # End point size, you should use 64.
 ep_size = 64
+# Use HS driver instead of FS
+driver_hs = false
