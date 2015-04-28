@@ -23,7 +23,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include <stdint.h>
+#include <cstdint>
 
 #include "ucoo/arch/arch_common.hh"
 

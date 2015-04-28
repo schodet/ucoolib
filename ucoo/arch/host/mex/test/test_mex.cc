@@ -50,12 +50,12 @@ printbuf (const char *head, const char *buf, int count)
 
 /// Helper function, check for equality.
 static void
-check (int64_t a, int64_t b, const char *name = NULL)
+check (intmax_t a, intmax_t b, const char *name = NULL)
 {
-    printf ("%s: %Lx\n", name ? name : "pop", a);
+    printf ("%s: %jd\n", name ? name : "pop", a);
     if (a != b)
     {
-        printf (" expected: %Lx\n", b);
+        printf (" expected: %jd\n", b);
         error++;
     }
 }
