@@ -195,6 +195,7 @@ main (int argc, const char **argv)
     ucoo::I2cHost i2c1 (host, 0);
     ucoo::I2cHost i2c2 (host, 1);
 #elif defined (TARGET_stm32)
+    // Connect I2C1 to I2C3 for the test.
     // I2C1: B6: SCL, B9: SDA
     // I2C3: A8: SCL, C9: SDA
     rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN);
