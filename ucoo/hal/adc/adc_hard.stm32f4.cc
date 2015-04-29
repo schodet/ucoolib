@@ -28,6 +28,10 @@
 
 namespace ucoo {
 
+static const enum rcc_periph_clken adc_clken[] = {
+    RCC_ADC1, RCC_ADC2, RCC_ADC3
+};
+
 AdcHard::AdcHard (int n)
     : n_ (n)
 {
@@ -44,7 +48,7 @@ AdcHard::~AdcHard ()
 void
 AdcHard::enable ()
 {
-    rcc_peripheral_enable_clock (&RCC_APB2ENR, RCC_APB2ENR_ADC1EN << n_);
+    rcc_periph_clock_enable (adc_clken[n_]);
     ADC_CR2 (base_) = ADC_CR2_ADON;
 }
 
@@ -52,7 +56,7 @@ void
 AdcHard::disable ()
 {
     ADC_CR2 (base_) = 0;
-    rcc_peripheral_disable_clock (&RCC_APB2ENR, RCC_APB2ENR_ADC1EN << n_);
+    rcc_periph_clock_disable (adc_clken[n_]);
 }
 
 int

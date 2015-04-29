@@ -41,8 +41,8 @@ struct i2c_hardware_t
 {
     /// I2C base address.
     uint32_t base;
-    /// RCC enable bit.
-    uint32_t rcc_en;
+    /// Clock enable identifier.
+    enum rcc_periph_clken clken;
     /// Corresponding event IRQ (error IRQ is next one).
     int ev_irq;
 };
@@ -51,9 +51,9 @@ struct i2c_hardware_t
 /// 0.
 static const i2c_hardware_t i2c_hardware[i2c_nb] =
 {
-    { I2C1_BASE, RCC_APB1ENR_I2C1EN, NVIC_I2C1_EV_IRQ },
-    { I2C2_BASE, RCC_APB1ENR_I2C2EN, NVIC_I2C2_EV_IRQ },
-    { I2C3_BASE, RCC_APB1ENR_I2C3EN, NVIC_I2C3_EV_IRQ },
+    { I2C1_BASE, RCC_I2C1, NVIC_I2C1_EV_IRQ },
+    { I2C2_BASE, RCC_I2C2, NVIC_I2C2_EV_IRQ },
+    { I2C3_BASE, RCC_I2C3, NVIC_I2C3_EV_IRQ },
 };
 
 static I2cHard *i2c_instances[i2c_nb];
@@ -99,7 +99,7 @@ I2cHard::enable (int speed)
     enabled_ = true;
     uint32_t base = i2c_hardware[n_].base;
     // Turn on.
-    rcc_peripheral_enable_clock (&RCC_APB1ENR, i2c_hardware[n_].rcc_en);
+    rcc_periph_clock_enable (i2c_hardware[n_].clken);
     // Reset.
     I2C_CR1 (base) = I2C_CR1_SWRST;
     // TODO: make sure the bus is free!!! How!
@@ -145,8 +145,7 @@ I2cHard::disable ()
         nvic_disable_irq (i2c_hardware[n_].ev_irq + 1);
         I2C_CR1 (base) = 0;
         // Turn off.
-        rcc_peripheral_disable_clock (&RCC_APB1ENR,
-                                      i2c_hardware[n_].rcc_en);
+        rcc_periph_clock_disable (i2c_hardware[n_].clken);
     }
 }
 

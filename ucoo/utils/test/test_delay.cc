@@ -31,7 +31,7 @@ int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPDEN);
+    rcc_periph_clock_enable (RCC_GPIOD);
     gpio_mode_setup (GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
                      GPIO12 | GPIO13 | GPIO14 | GPIO15);
     gpio_clear (GPIOD, GPIO12 | GPIO13 | GPIO14 | GPIO15);

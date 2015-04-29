@@ -66,8 +66,8 @@ UsbStreamControl::UsbStreamControl (const char *vendor, const char *product)
     instance_ = this;
     strings[0] = vendor;
     strings[1] = product;
-    rcc_peripheral_enable_clock (&RCC_AHB2ENR, RCC_AHB2ENR_OTGFSEN);
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN);
+    rcc_periph_clock_enable (RCC_OTGFS);
+    rcc_periph_clock_enable (RCC_GPIOA);
     gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
                      GPIO9 | GPIO11 | GPIO12);
     gpio_set_af (GPIOA, GPIO_AF10, GPIO9 | GPIO11 | GPIO12);

@@ -198,9 +198,9 @@ main (int argc, const char **argv)
     // Connect I2C1 to I2C3 for the test.
     // I2C1: B6: SCL, B9: SDA
     // I2C3: A8: SCL, C9: SDA
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN);
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPBEN);
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPCEN);
+    rcc_periph_clock_enable (RCC_GPIOA);
+    rcc_periph_clock_enable (RCC_GPIOB);
+    rcc_periph_clock_enable (RCC_GPIOC);
     gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO6 | GPIO9);
     gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO8);
     gpio_mode_setup (GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);

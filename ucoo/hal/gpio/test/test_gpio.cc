@@ -56,8 +56,8 @@ int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPBEN
-                                 | RCC_AHB1ENR_IOPDEN);
+    rcc_periph_clock_enable (RCC_GPIOB);
+    rcc_periph_clock_enable (RCC_GPIOD);
     // For this test, shorten B6 & B7 to have loopback.
     gpio_mode_setup (GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO7);
     ucoo::Gpio loop_out (GPIOB, 6);

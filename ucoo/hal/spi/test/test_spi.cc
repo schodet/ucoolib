@@ -40,8 +40,8 @@ main (int argc, const char **argv)
     ucoo::Stream &ts = ucoo::test_stream ();
     // Use connection to LIS302DL device on discovery board revision MB997B.
     // Revision MB997C uses a different device.
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN
-                                 | RCC_AHB1ENR_IOPEEN);
+    rcc_periph_clock_enable (RCC_GPIOA);
+    rcc_periph_clock_enable (RCC_GPIOE);
     ucoo::Gpio ss (GPIOE, 3);
     ss.set ();
     ss.output ();

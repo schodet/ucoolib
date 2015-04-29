@@ -61,8 +61,8 @@ main (int argc, const char **argv)
     u4.enable (38400, ucoo::Uart::EVEN, 1);
     // For this test, shorten B6 & B7 to have a loopback on UART1, shorten C10
     // & C11 to connect UART3 to UART4.
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPBEN
-                                 | RCC_AHB1ENR_IOPCEN);
+    rcc_periph_clock_enable (RCC_GPIOB);
+    rcc_periph_clock_enable (RCC_GPIOC);
     gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
                      GPIO6 | GPIO7);
     gpio_set_af (GPIOB, GPIO_AF7, GPIO6 | GPIO7);

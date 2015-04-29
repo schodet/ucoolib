@@ -43,8 +43,8 @@ struct uart_hardware_t
     uint32_t base;
     /// APB number.
     int apb;
-    /// RCC enable bit.
-    uint32_t rcc_en;
+    /// Clock enable identifier.
+    enum rcc_periph_clken clken;
     /// Corresponding IRQ.
     int irq;
 };
@@ -53,12 +53,12 @@ struct uart_hardware_t
 /// index 0.
 static const uart_hardware_t uart_hardware[uart_nb] =
 {
-    { USART1, 2, RCC_APB2ENR_USART1EN, NVIC_USART1_IRQ },
-    { USART2, 1, RCC_APB1ENR_USART2EN, NVIC_USART2_IRQ },
-    { USART3, 1, RCC_APB1ENR_USART3EN, NVIC_USART3_IRQ },
-    { UART4, 1, RCC_APB1ENR_UART4EN, NVIC_UART4_IRQ },
-    { UART5, 1, RCC_APB1ENR_UART5EN, NVIC_UART5_IRQ },
-    { USART6, 2, RCC_APB2ENR_USART6EN, NVIC_USART6_IRQ },
+    { USART1, 2, RCC_USART1, NVIC_USART1_IRQ },
+    { USART2, 1, RCC_USART2, NVIC_USART2_IRQ },
+    { USART3, 1, RCC_USART3, NVIC_USART3_IRQ },
+    { UART4, 1, RCC_UART4, NVIC_UART4_IRQ },
+    { UART5, 1, RCC_UART5, NVIC_UART5_IRQ },
+    { USART6, 2, RCC_USART6, NVIC_USART6_IRQ },
 };
 
 static Uart *uart_instances[uart_nb];
@@ -103,9 +103,7 @@ Uart::enable (int speed, Parity parity, int stop_bits)
     enabled_ = true;
     uint32_t base = uart_hardware[n_].base;
     // Turn on.
-    rcc_peripheral_enable_clock
-        (uart_hardware[n_].apb == 1 ? &RCC_APB1ENR : &RCC_APB2ENR,
-         uart_hardware[n_].rcc_en);
+    rcc_periph_clock_enable (uart_hardware[n_].clken);
     // Set speed, rounded to nearest.
     int apb_freq = uart_hardware[n_].apb == 1 ? rcc_apb1_frequency
         : rcc_apb2_frequency;
@@ -142,9 +140,7 @@ Uart::disable ()
         nvic_disable_irq (uart_hardware[n_].irq);
         USART_CR1 (base) = 0;
         // Turn off.
-        rcc_peripheral_disable_clock
-            (uart_hardware[n_].apb == 1 ? &RCC_APB1ENR : &RCC_APB2ENR,
-             uart_hardware[n_].rcc_en);
+        rcc_periph_clock_disable (uart_hardware[n_].clken);
     }
 }
 

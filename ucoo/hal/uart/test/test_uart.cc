@@ -41,8 +41,8 @@ main (int argc, const char **argv)
 #elif defined (TARGET_stm32)
     // D8, D9: UART3
     // C12, D2: UART5
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPCEN);
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPDEN);
+    rcc_periph_clock_enable (RCC_GPIOC);
+    rcc_periph_clock_enable (RCC_GPIOD);
     gpio_mode_setup (GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO12);
     gpio_mode_setup (GPIOD, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO8 | GPIO9);
     gpio_set_af (GPIOC, GPIO_AF8, GPIO12);
