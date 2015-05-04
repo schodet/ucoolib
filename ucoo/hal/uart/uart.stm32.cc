@@ -27,14 +27,7 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
 
-#ifndef TARGET_stm32f4
-// Need RCC adaptations and USART6 different handling for F1.
-# error "it's a trap, only implemented for F4 for the moment"
-#endif
-
 namespace ucoo {
-
-static const int uart_nb = 6;
 
 /// Information on UART hardware structure.
 struct uart_hardware_t
@@ -51,17 +44,19 @@ struct uart_hardware_t
 
 /// Information on UART hardware array, this is zero indexed, USART1 is at
 /// index 0.
-static const uart_hardware_t uart_hardware[uart_nb] =
+static const uart_hardware_t uart_hardware[] =
 {
     { USART1, 2, RCC_USART1, NVIC_USART1_IRQ },
     { USART2, 1, RCC_USART2, NVIC_USART2_IRQ },
     { USART3, 1, RCC_USART3, NVIC_USART3_IRQ },
     { UART4, 1, RCC_UART4, NVIC_UART4_IRQ },
     { UART5, 1, RCC_UART5, NVIC_UART5_IRQ },
+#ifdef USART6
     { USART6, 2, RCC_USART6, NVIC_USART6_IRQ },
+#endif
 };
 
-static Uart *uart_instances[uart_nb];
+static Uart *uart_instances[lengthof (uart_hardware)];
 
 } // namespace ucoo
 
@@ -86,7 +81,7 @@ namespace ucoo {
 Uart::Uart (int n)
     : n_ (n), error_char_ (default_error_char), enabled_ (false)
 {
-    assert (n < uart_nb);
+    assert (n < lengthof (uart_instances));
     assert (!uart_instances[n]);
     uart_instances[n] = this;
 }

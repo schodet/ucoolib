@@ -34,8 +34,6 @@ namespace ucoo {
 /// Local trace.
 static Trace<UCOO_CONFIG_HAL_I2C_TRACE> i2c_trace;
 
-static const int i2c_nb = 3;
-
 /// Information on I2C hardware structure.
 struct i2c_hardware_t
 {
@@ -49,14 +47,16 @@ struct i2c_hardware_t
 
 /// Information on I2C hardware array, this is zero indexed, I2C1 is at index
 /// 0.
-static const i2c_hardware_t i2c_hardware[i2c_nb] =
+static const i2c_hardware_t i2c_hardware[] =
 {
     { I2C1_BASE, RCC_I2C1, NVIC_I2C1_EV_IRQ },
     { I2C2_BASE, RCC_I2C2, NVIC_I2C2_EV_IRQ },
+#ifdef I2C3_BASE
     { I2C3_BASE, RCC_I2C3, NVIC_I2C3_EV_IRQ },
+#endif
 };
 
-static I2cHard *i2c_instances[i2c_nb];
+static I2cHard *i2c_instances[lengthof (i2c_hardware)];
 
 } // namespace ucoo
 
@@ -82,7 +82,7 @@ I2cHard::I2cHard (int n)
     : n_ (n), enabled_ (false), slave_addr_ (0), slave_data_handler_ (0),
       master_ (false), master_status_ (STATUS_ERROR), master_buf_ (0)
 {
-    assert (n < i2c_nb);
+    assert (n < lengthof (i2c_instances));
     assert (!i2c_instances[n]);
     i2c_instances[n] = this;
 }

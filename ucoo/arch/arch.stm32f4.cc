@@ -21,54 +21,18 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "delay.arm.hh"
+#include "ucoo/arch/arch.hh"
+#include "ucoo/common.hh"
 
-#include <algorithm>
-
-#include <libopencm3/cm3/systick.h>
 #include <libopencm3/stm32/rcc.h>
 
 namespace ucoo {
 
 void
-delay_us (int us)
+arch_init (int argc, const char **argv)
 {
-    // Suppose that frequency is a multiple of 8 MHz (to avoid 64 bit
-    // division).
-    int systick_mhz = rcc_ahb_frequency / (8 * 1000000);
-    int cycles = systick_mhz * us;
-    STK_CSR = 0;
-    // Loop several times if cycles is too big for the systick timer. Some
-    // nanoseconds are lost every second, I can live with that, it simplifies
-    // code.
-    while (cycles)
-    {
-        int loop_cycles = std::min (1 << 24, cycles);
-        STK_RVR = loop_cycles - 1;
-        STK_CVR = 0;
-        STK_CSR = STK_CSR_ENABLE;
-        while (!(STK_CSR & STK_CSR_COUNTFLAG))
-            ;
-        STK_CSR = 0;
-        cycles -= loop_cycles;
-    }
-}
-
-void
-delay_ns (int ns)
-{
-    // Suppose that frequency is a multiple of 1 MHz (to avoid 64 bit
-    // division).
-    int hclock_mhz = rcc_ahb_frequency / 1000000;
-    int cycles = (hclock_mhz * ns + 999) / 1000;
-    STK_CSR = 0;
-    // Loop once, ns is supposed to be small.
-    STK_RVR = cycles - 1;
-    STK_CVR = 0;
-    STK_CSR = STK_CSR_CLKSOURCE_AHB | STK_CSR_ENABLE;
-    while (!(STK_CSR & STK_CSR_COUNTFLAG))
-        ;
-    STK_CSR = 0;
+    rcc_clock_setup_hse_3v3 (&hse_8mhz_3v3[CLOCK_3V3_120MHZ]);
+    rcc_ahb_frequency = 120000000;
 }
 
 } // namespace ucoo

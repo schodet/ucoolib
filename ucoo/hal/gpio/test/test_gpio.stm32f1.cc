@@ -1,8 +1,6 @@
-#ifndef ucoo_hal_gpio_gpio_hh
-#define ucoo_hal_gpio_gpio_hh
 // ucoolib - Microcontroller object oriented library. {{{
 //
-// Copyright (C) 2012 Nicolas Schodet
+// Copyright (C) 2015 Nicolas Schodet
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -23,15 +21,45 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
+#include "ucoo/arch/arch.hh"
+#include "ucoo/hal/gpio/gpio.hh"
+#include "ucoo/utils/delay.hh"
 
-#if defined (TARGET_host)
-# include "gpio.host.hh"
-#elif defined TARGET_stm32f4
-# include "gpio.stm32f4.hh"
-#elif defined TARGET_stm32f1
-# include "gpio.stm32f1.hh"
-#else
-# error "not implemented for this target"
-#endif
+#include <libopencm3/stm32/rcc.h>
 
-#endif // ucoo_hal_gpio_gpio_hh
+void
+test (ucoo::Io &loop_in, ucoo::Io &led1, ucoo::Io &led2, ucoo::Io &led3,
+      ucoo::Io &led4)
+{
+    loop_in.input ();
+    led1.output ();
+    led2.output ();
+    led3.output ();
+    led4.output ();
+    led1.set ();
+    led4.reset ();
+    bool state = false;
+    while (1)
+    {
+        led1.toggle ();
+        led2.set (state);
+        led3.set (loop_in.get ());
+        led4.toggle ();
+        state = !state;
+        ucoo::delay (1);
+    }
+}
+
+int
+main (int argc, const char **argv)
+{
+    ucoo::arch_init (argc, argv);
+    rcc_periph_clock_enable (RCC_GPIOC);
+    ucoo::Gpio loop_in (GPIOC, 5);
+    ucoo::Gpio led1 (GPIOC, 6);
+    ucoo::Gpio led2 (GPIOC, 7);
+    ucoo::Gpio led3 (GPIOC, 8);
+    ucoo::Gpio led4 (GPIOC, 9);
+    test (loop_in, led1, led2, led3, led4);
+    return 0;
+}

@@ -1,8 +1,6 @@
-#ifndef ucoo_hal_gpio_gpio_hh
-#define ucoo_hal_gpio_gpio_hh
 // ucoolib - Microcontroller object oriented library. {{{
 //
-// Copyright (C) 2012 Nicolas Schodet
+// Copyright (C) 2015 Nicolas Schodet
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -23,15 +21,17 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
+#include "ucoo/arch/arch.hh"
+#include "ucoo/common.hh"
 
-#if defined (TARGET_host)
-# include "gpio.host.hh"
-#elif defined TARGET_stm32f4
-# include "gpio.stm32f4.hh"
-#elif defined TARGET_stm32f1
-# include "gpio.stm32f1.hh"
-#else
-# error "not implemented for this target"
-#endif
+#include <libopencm3/stm32/rcc.h>
 
-#endif // ucoo_hal_gpio_gpio_hh
+namespace ucoo {
+
+void
+arch_init (int argc, const char **argv)
+{
+    rcc_clock_setup_in_hse_12mhz_out_72mhz ();
+}
+
+} // namespace ucoo
