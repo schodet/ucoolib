@@ -33,13 +33,13 @@ namespace ucoo {
 class Gpio : public Io
 {
   public:
-    enum Pull
+    enum class Pull : uint32_t
     {
-        PULL_NONE = GPIO_PUPD_NONE,
-        PULL_UP = GPIO_PUPD_PULLUP,
-        PULL_DOWN = GPIO_PUPD_PULLDOWN,
+        NONE = GPIO_PUPD_NONE,
+        UP = GPIO_PUPD_PULLUP,
+        DOWN = GPIO_PUPD_PULLDOWN,
     };
-    enum Speed
+    enum class Speed : uint32_t
     {
         SPEED_2MHZ = GPIO_OSPEED_2MHZ,
         SPEED_25MHZ = GPIO_OSPEED_25MHZ,

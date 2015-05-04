@@ -56,9 +56,9 @@ main (int argc, const char **argv)
     ucoo::Uart u1 (0);
     ucoo::Uart u3 (2);
     ucoo::Uart u4 (3);
-    u1.enable (38400, ucoo::Uart::EVEN, 1);
-    u3.enable (38400, ucoo::Uart::EVEN, 1);
-    u4.enable (38400, ucoo::Uart::EVEN, 1);
+    u1.enable (38400, ucoo::Uart::Parity::EVEN, 1);
+    u3.enable (38400, ucoo::Uart::Parity::EVEN, 1);
+    u4.enable (38400, ucoo::Uart::Parity::EVEN, 1);
     // For this test, shorten B6 & B7 to have a loopback on UART1, shorten C10
     // & C11 to connect UART3 to UART4.
     rcc_periph_clock_enable (RCC_GPIOB);
@@ -110,13 +110,13 @@ main (int argc, const char **argv)
                 u->write (buf, buf_i);
                 break;
             case 'O':
-                u->enable (38400, ucoo::Uart::ODD, 1);
+                u->enable (38400, ucoo::Uart::Parity::ODD, 1);
                 break;
             case 'E':
-                u->enable (38400, ucoo::Uart::EVEN, 1);
+                u->enable (38400, ucoo::Uart::Parity::EVEN, 1);
                 break;
             case 'N':
-                u->enable (38400, ucoo::Uart::NONE, 1);
+                u->enable (38400, ucoo::Uart::Parity::NONE, 1);
                 break;
             default:
                 if (buf_i < static_cast<int> (sizeof (buf)))

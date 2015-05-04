@@ -49,8 +49,8 @@ main (int argc, const char **argv)
     gpio_set_af (GPIOD, GPIO_AF8, GPIO2);
     gpio_set_af (GPIOD, GPIO_AF7, GPIO8 | GPIO9);
     ucoo::Uart u0 (2), u1 (4);
-    u0.enable (38400, ucoo::Uart::EVEN, 1);
-    u1.enable (38400, ucoo::Uart::EVEN, 1);
+    u0.enable (38400, ucoo::Uart::Parity::EVEN, 1);
+    u1.enable (38400, ucoo::Uart::Parity::EVEN, 1);
 #endif
     ucoo::Uart *u[] = { &u0, &u1 };
     char buf[64];

@@ -38,7 +38,7 @@ class Uart : public Stream
 {
   public:
     /// Parity setting.
-    enum Parity { ODD, EVEN, NONE };
+    enum class Parity { ODD, EVEN, NONE };
     /// Default error character.
     static const char default_error_char = '~';
   public:
@@ -47,7 +47,7 @@ class Uart : public Stream
     /// Shutdown UART.
     ~Uart ();
     /// Enable and setup UART.
-    void enable (int speed, Parity parity = NONE, int stop_bits = 1);
+    void enable (int speed, Parity parity = Parity::NONE, int stop_bits = 1);
     /// Disable.
     void disable ();
     /// Change the error character.

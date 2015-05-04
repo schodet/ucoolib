@@ -117,9 +117,9 @@ Uart::enable (int speed, Parity parity, int stop_bits)
         assert_unreachable ();
     USART_CR3 (base) = 0;
     uint32_t cr1 = USART_CR1_UE | USART_CR1_RXNEIE | USART_CR1_TE | USART_CR1_RE;
-    if (parity != NONE)
+    if (parity != Parity::NONE)
         cr1 |= USART_CR1_M | USART_CR1_PCE;
-    if (parity == ODD)
+    if (parity == Parity::ODD)
         cr1 |= USART_CR1_PS;
     USART_CR1 (base) = cr1;
     // Reset status.

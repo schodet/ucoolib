@@ -93,13 +93,15 @@ Gpio::output ()
 void
 Gpio::pull (Pull dir)
 {
-    GPIO_PUPDR (port_) = dmask_set (mask_, GPIO_PUPDR (port_), dir);
+    GPIO_PUPDR (port_) = dmask_set (mask_, GPIO_PUPDR (port_),
+                                    static_cast<uint32_t> (dir));
 }
 
 void
 Gpio::speed (Speed s)
 {
-    GPIO_OSPEEDR (port_) = dmask_set (mask_, GPIO_OSPEEDR (port_), s);
+    GPIO_OSPEEDR (port_) = dmask_set (mask_, GPIO_OSPEEDR (port_),
+                                      static_cast<uint32_t> (s));
 }
 
 } // namespace ucoo
