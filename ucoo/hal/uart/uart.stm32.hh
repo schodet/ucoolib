@@ -26,7 +26,7 @@
 #include "ucoo/intf/stream.hh"
 #include "ucoo/utils/fifo.hh"
 
-#include "config/hal/uart.hh"
+#include "config/ucoo/hal/uart.hh"
 
 namespace ucoo {
 
@@ -64,9 +64,9 @@ class Uart : public Stream
     /// UART number.
     int n_;
     /// RX FIFO, filled by interrupt handler.
-    Fifo<char, UCOO_CONFIG_HAL_UART_RX_BUFFER> rx_fifo_;
+    Fifo<char, CONFIG_UCOO_HAL_UART_RX_BUFFER> rx_fifo_;
     /// TX FIFO, emptied by interrupt handler.
-    Fifo<char, UCOO_CONFIG_HAL_UART_TX_BUFFER> tx_fifo_;
+    Fifo<char, CONFIG_UCOO_HAL_UART_TX_BUFFER> tx_fifo_;
     /// Error character, inserted in case of error.
     char error_char_;
     /// Is it enabled?

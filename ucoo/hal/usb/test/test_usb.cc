@@ -31,22 +31,22 @@ main (int argc, const char **argv)
     ucoo::UsbStreamControl usc ("APBTeam", "USB test");
     ucoo::UsbStream us[] = {
         ucoo::UsbStream (usc, 0),
-#if UCOO_CONFIG_HAL_USB_STREAM_NB >= 2
+#if CONFIG_UCOO_HAL_USB_STREAM_NB >= 2
         ucoo::UsbStream (usc, 1),
 #endif
-#if UCOO_CONFIG_HAL_USB_STREAM_NB >= 3
+#if CONFIG_UCOO_HAL_USB_STREAM_NB >= 3
         ucoo::UsbStream (usc, 2),
 #endif
     };
-    if (UCOO_CONFIG_HAL_USB_STREAM_NB > 1)
+    if (CONFIG_UCOO_HAL_USB_STREAM_NB > 1)
     {
-        for (int i = 0; i < UCOO_CONFIG_HAL_USB_STREAM_NB; i++)
+        for (int i = 0; i < CONFIG_UCOO_HAL_USB_STREAM_NB; i++)
             us[i].block (false);
     }
     char buf[6];
     while (1)
     {
-        for (int i = 0; i < UCOO_CONFIG_HAL_USB_STREAM_NB; i++)
+        for (int i = 0; i < CONFIG_UCOO_HAL_USB_STREAM_NB; i++)
         {
             int len = us[i].read (buf + 2, sizeof (buf) - 2);
             if (len)
@@ -54,7 +54,7 @@ main (int argc, const char **argv)
                 buf[0] = i + '0';
                 buf[1] = '>';
                 len += 2;
-                if (UCOO_CONFIG_HAL_USB_STREAM_NB == 1)
+                if (CONFIG_UCOO_HAL_USB_STREAM_NB == 1)
                     us[i].write (buf, len);
                 else
                 {

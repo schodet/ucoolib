@@ -7,7 +7,7 @@ stm32_once := 1
 
 
 # Check for libopencm3.
-LIBOPENCM3_PATH ?= $(BASE)/lib/libopencm3
+LIBOPENCM3_PATH ?= $(UCOO_BASE)/lib/libopencm3
 define stm32_libopencm3
 ifneq ($$(LIBOPENCM3_PATH),)
   $1_LIBOPENCM3_LIB := $$(LIBOPENCM3_PATH)/lib/libopencm3_$1.a
@@ -37,7 +37,7 @@ $1_CXXFLAGS := $$(sort $$($1_CFLAGS) $$(CXXFLAGS))
 $1_ASFLAGS := $$(ASFLAGS)
 $1_LDSCRIPT := $1.ld
 $1_LDFLAGS := $$(LDFLAGS) -T$$($1_LDSCRIPT) \
-	-L$$(BASE)/ucoo/arch/$1 \
+	-L$$(UCOO_BASE)/ucoo/arch/$1 \
 	$$($1_LIBOPENCM3_LDFLAGS)
 $1_LDLIBS := -nostartfiles $$(LDLIBS) $$($1_LIBS) \
 	-lopencm3_$1

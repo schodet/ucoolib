@@ -1,19 +1,21 @@
 # ucoolib - Microcontroller object oriented library.
 #
-# Build system top file. To be included with $(BASE) pointing to the ucoolib
+# Build system top file. To be included with $(BASE) pointing to the project
 # root.
 
 ifeq ($(BASE),)
 $(error BASE is not defined)
 endif
 
-include $(BASE)/build/macros.mk
+UCOO_BASE := $(patsubst %/build/top.mk,%,$(lastword $(MAKEFILE_LIST)))
+
+include $(UCOO_BASE)/build/macros.mk
 
 # General parameters.
 
 OBJDIR := obj
 
-INCLUDES := $(INCLUDES) -I$(BASE) -I$(OBJDIR)
+INCLUDES := $(INCLUDES) -I$(UCOO_BASE) -I$(BASE) -I$(OBJDIR)
 CPPFLAGS := $(DEFS) $(INCLUDES) -MP -MMD
 OPTIMIZE ?= -Os
 CFLAGS := -g -Wall -W -Wundef -Wno-unused-parameter \
@@ -36,32 +38,33 @@ bin:
 crc:
 
 clean:
-	rmdir $(OBJDIR) 2> /dev/null || true
+	@echo rmdir '$(OBJDIR)/.../'
+	$(call rmdir_as_needed,$(OBJDIRS),$(OBJDIR))
 
 .PHONY: all lst size hex srec bin crc clean
 
 # Modules and sources setup.
 
-include $(BASE)/build/setup.mk
+include $(UCOO_BASE)/build/setup.mk
 
-vpath %.cc $(ALL_MODULES:%=$(BASE)/ucoo/%)
-vpath %.c $(ALL_MODULES:%=$(BASE)/ucoo/%)
-vpath %.S $(ALL_MODULES:%=$(BASE)/ucoo/%)
+vpath %.cc $(UCOO_BASE) $(BASE)
+vpath %.c $(UCOO_BASE) $(BASE)
+vpath %.S $(UCOO_BASE) $(BASE)
 
 # Configuration.
 
-include $(BASE)/build/config.mk
+include $(UCOO_BASE)/build/config.mk
 
 # Objects directory.
 
 $(OBJDIR):
-	$Qmkdir -p $(OBJDIR)
+	$Qmkdir -p $@
 
 # Arch specific.
 
-include $(BASE)/build/arch.mk
+include $(UCOO_BASE)/build/arch.mk
 define TARGETS_template
-include $$(BASE)/build/$1.mk
+include $$(UCOO_BASE)/build/$1.mk
 endef
 $(foreach target,$(TARGETS),$(eval $(call TARGETS_template,$(target))))
 

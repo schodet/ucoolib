@@ -25,7 +25,7 @@
 // }}}
 #include "ucoo/intf/i2c.hh"
 
-#include "config/hal/i2c.hh"
+#include "config/ucoo/hal/i2c.hh"
 
 namespace ucoo {
 
@@ -68,7 +68,7 @@ class I2cHard : public I2c
     /// Handler called to source or sink data for slave exchanges.
     DataHandler *slave_data_handler_;
     /// Slave buffer.
-    char slave_buf_[UCOO_CONFIG_HAL_I2C_SLAVE_BUFFER_SIZE];
+    char slave_buf_[CONFIG_UCOO_HAL_I2C_SLAVE_BUFFER_SIZE];
     /// Current buffer count (bytes to send), or buffer size (available room).
     int buf_count_;
     /// Current buffer index (position to read byte to send or write received

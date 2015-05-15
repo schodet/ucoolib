@@ -1,1 +1,1 @@
-dev_usdist_SOURCES = usdist.cc
+ucoo_dev_usdist_SOURCES = usdist.cc

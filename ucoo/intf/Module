@@ -1,1 +1,1 @@
-intf_SOURCES = stream.cc spi_master.cc lcd.cc
+ucoo_intf_SOURCES = stream.cc spi_master.cc lcd.cc

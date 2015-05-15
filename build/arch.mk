@@ -40,21 +40,24 @@ elf.$1: $$($1_ELFS)
 define $1_PROG_template
 $$1.$1$$$$($1_ELF_SUFFIX): $$$$(patsubst %,$$(OBJDIR)/%.$1.o,\
 	$$$$(call filter_sources,$1,$$$$($$1_SOURCES)))
-	@echo "LINK [$1] $$$$@: $$$$(notdir $$$$^)"
+	@echo "LINK [$1] $$$$@"
 	$$$$Q$$$$($1_LINK.$$(call iscxx,$$($$1_SOURCES))) $$$$^ $$$$($1_LDLIBS) -o $$$$@
 endef
 $$(foreach prog,$$($1_PROGS),$$(eval $$(call $1_PROG_template,$$(prog))))
 
-$$(OBJDIR)/%.$1.o: %.c $$(COMPILE_DEPS) | $$(OBJDIR) $$(COMPILE_ORDER_DEPS)
+$$(OBJDIR)/%.$1.o: %.c $$(COMPILE_DEPS) | $$(COMPILE_ORDER_DEPS)
 	@echo "CC   [$1] $$<"
+	$$(call mkdir_if_needed,$$@)
 	$$Q$$($1_COMPILE.c) -o $$@ $$<
 
-$$(OBJDIR)/%.$1.o: %.cc $$(COMPILE_DEPS) | $$(OBJDIR) $$(COMPILE_ORDER_DEPS)
+$$(OBJDIR)/%.$1.o: %.cc $$(COMPILE_DEPS) | $$(COMPILE_ORDER_DEPS)
 	@echo "CXX  [$1] $$<"
+	$$(call mkdir_if_needed,$$@)
 	$$Q$$($1_COMPILE.cc) -o $$@ $$<
 
-$$(OBJDIR)/%.$1.o: %.S $$(COMPILE_DEPS) | $$(OBJDIR) $$(COMPILE_ORDER_DEPS)
+$$(OBJDIR)/%.$1.o: %.S $$(COMPILE_DEPS) | $$(COMPILE_ORDER_DEPS)
 	@echo "AS   [$1] $$<"
+	$$(call mkdir_if_needed,$$@)
 	$$Q$$($1_COMPILE.S) -o $$@ $$<
 
 # Dependency checking.
@@ -115,7 +118,7 @@ bin.$1: $$($1_PROGS:%=%.$1.bin)
 	$$Q$$($1_OBJCOPY) -O binary $$< $$@
 
 crc.$1: $$($1_PROGS:%=%.$1.bin)
-	$Q$$(BASE)/build/tools/crc $$^
+	$$Q$$(UCOO_BASE)/build/tools/crc $$^
 
 $1_EXTRA_CLEAN += $$($1_PROGS:%=%.$1.hex) \
 	$$($1_PROGS:%=%.$1.srec) \
@@ -146,6 +149,9 @@ define arch_misc_rules
 clean: clean.$1
 
 clean.$1:
-	rm -f $$(OBJDIR)/*.$1.[od] $$($1_ELFS) $$($1_EXTRA_CLEAN)
+	@echo rm -f '$$(OBJDIR)/.../*.$1.[od]' $$($1_ELFS) $$($1_EXTRA_CLEAN)
+	$$Qrm -f $$(patsubst %,$$(OBJDIR)/%.$1.[od],\
+		$$(call filter_sources,$1,$$(ALL_SOURCES))) \
+		$$($1_ELFS) $$($1_EXTRA_CLEAN)
 
 endef

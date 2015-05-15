@@ -3,7 +3,8 @@
 # Build time configuration system.
 
 PROJECT_CONFIG ?= Config
-MODULES_CONFIG := $(wildcard $(ALL_MODULES:%=$(BASE)/ucoo/%/Config))
+MODULES_CONFIG := $(wildcard $(ALL_UCOO_MODULES:%=$(UCOO_BASE)/%/Config)) \
+	$(wildcard $(ALL_EXT_MODULES:%=$(BASE)/%/Config))
 
 CONFIG_LIST := $(strip $(wildcard $(PROJECT_CONFIG)) $(MODULES_CONFIG))
 
@@ -27,7 +28,7 @@ clean: config-clean
 
 $(OBJDIR)/config.list: $(CONFIG_LIST) $(CONFIG_FORCE) | $(OBJDIR)
 	@echo "CONF $(PROJECT_CONFIG)"
-	$Q$(BASE)/build/tools/config-gen -H $(OBJDIR)/config/%.hh \
+	$Q$(UCOO_BASE)/build/tools/config-gen -H $(OBJDIR)/config/%.hh \
 		-p $(PROJECT_CONFIG) -T '$(TARGETS_SUBTARGETS)' \
 		$(MODULES_CONFIG)
 	$Qecho "CONFIG_LIST_OLD = $(CONFIG_LIST)" > $@

@@ -101,7 +101,7 @@ AvrIspFrame::accept_char (uint8_t c)
         len_ |= c;
         buffer_len_ = 0;
         if (len_ == 0
-            || len_ > (UCOO_CONFIG_DEV_AVRISP_FRAME_BUFFER_SIZE - proto_head_
+            || len_ > (CONFIG_UCOO_DEV_AVRISP_FRAME_BUFFER_SIZE - proto_head_
                        - proto_tail_))
             state_ = AVRISP_FRAME_STATE_START;
         else

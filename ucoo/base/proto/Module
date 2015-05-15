@@ -1,1 +1,1 @@
-base_proto_SOURCES = proto.cc
+ucoo_base_proto_SOURCES = proto.cc

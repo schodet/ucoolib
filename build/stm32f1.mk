@@ -2,7 +2,7 @@
 #
 # Rules for STM32F1.
 
-include $(BASE)/build/stm32.mk
+include $(UCOO_BASE)/build/stm32.mk
 
 $(eval $(call stm32_libopencm3,stm32f1))
 

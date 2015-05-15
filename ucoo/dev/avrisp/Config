@@ -1,4 +1,4 @@
-[dev/avrisp]
+[ucoo/dev/avrisp]
 frame_buffer_size = 281
 proto_signature = "APBisp_2"
 proto_build_number = 0x0100

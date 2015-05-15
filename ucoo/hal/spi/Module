@@ -1,1 +1,1 @@
-hal_spi_SOURCES := spi_soft.cc spi_hard.stm32.cc
+ucoo_hal_spi_SOURCES := spi_soft.cc spi_hard.stm32.cc

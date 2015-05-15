@@ -213,7 +213,7 @@ void
 Proto::accept_digit (int c)
 {
     // Test for argument list overflow.
-    if (size_ >= UCOO_CONFIG_BASE_PROTO_ARGS_MAX_SIZE)
+    if (size_ >= CONFIG_UCOO_BASE_PROTO_ARGS_MAX_SIZE)
       {
 	handler_.proto_handle (*this, '?', 0, 0);
 	step_ = IDLE;
@@ -243,7 +243,7 @@ void
 Proto::accept_char (int c)
 {
     // Test for argument list overflow or unwanted char.
-    if (size_ >= UCOO_CONFIG_BASE_PROTO_ARGS_MAX_SIZE || !std::isprint (c))
+    if (size_ >= CONFIG_UCOO_BASE_PROTO_ARGS_MAX_SIZE || !std::isprint (c))
       {
 	handler_.proto_handle (*this, '?', 0, 0);
 	step_ = IDLE;

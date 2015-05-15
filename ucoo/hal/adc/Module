@@ -1,1 +1,1 @@
-hal_adc_SOURCES = adc.host.cc adc_hard.stm32f4.cc
+ucoo_hal_adc_SOURCES = adc.host.cc adc_hard.stm32f4.cc

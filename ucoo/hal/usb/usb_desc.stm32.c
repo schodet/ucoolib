@@ -23,7 +23,7 @@
  * }}} */
 #include "usb_desc.stm32.h"
 
-#include "config/hal/usb.hh"
+#include "config/ucoo/hal/usb.hh"
 
 const struct usb_device_descriptor usb_desc_dev = {
     .bLength = USB_DT_DEVICE_SIZE,
@@ -33,8 +33,8 @@ const struct usb_device_descriptor usb_desc_dev = {
     .bDeviceSubClass = 0,
     .bDeviceProtocol = 0,
     .bMaxPacketSize0 = 64,
-    .idVendor = UCOO_CONFIG_HAL_USB_VENDOR_ID,
-    .idProduct = UCOO_CONFIG_HAL_USB_PRODUCT_ID,
+    .idVendor = CONFIG_UCOO_HAL_USB_VENDOR_ID,
+    .idProduct = CONFIG_UCOO_HAL_USB_PRODUCT_ID,
     .bcdDevice = 0x0000,
     .iManufacturer = 1,
     .iProduct = 2,
@@ -48,7 +48,7 @@ static const struct usb_endpoint_descriptor usb_desc_endp_1[] = {
 	.bDescriptorType = USB_DT_ENDPOINT,
 	.bEndpointAddress = 0x01,
 	.bmAttributes = USB_ENDPOINT_ATTR_BULK,
-	.wMaxPacketSize = UCOO_CONFIG_HAL_USB_EP_SIZE,
+	.wMaxPacketSize = CONFIG_UCOO_HAL_USB_EP_SIZE,
 	.bInterval = 0,
     },
     {
@@ -56,7 +56,7 @@ static const struct usb_endpoint_descriptor usb_desc_endp_1[] = {
 	.bDescriptorType = USB_DT_ENDPOINT,
 	.bEndpointAddress = 0x81,
 	.bmAttributes = USB_ENDPOINT_ATTR_BULK,
-	.wMaxPacketSize = UCOO_CONFIG_HAL_USB_EP_SIZE,
+	.wMaxPacketSize = CONFIG_UCOO_HAL_USB_EP_SIZE,
 	.bInterval = 0,
     },
 };
@@ -77,7 +77,7 @@ static const struct usb_interface_descriptor usb_desc_iface_1[] = {
     },
 };
 
-#if UCOO_CONFIG_HAL_USB_STREAM_NB >= 2
+#if CONFIG_UCOO_HAL_USB_STREAM_NB >= 2
 
 static const struct usb_endpoint_descriptor usb_desc_endp_2[] = {
     {
@@ -85,7 +85,7 @@ static const struct usb_endpoint_descriptor usb_desc_endp_2[] = {
 	.bDescriptorType = USB_DT_ENDPOINT,
 	.bEndpointAddress = 0x02,
 	.bmAttributes = USB_ENDPOINT_ATTR_BULK,
-	.wMaxPacketSize = UCOO_CONFIG_HAL_USB_EP_SIZE,
+	.wMaxPacketSize = CONFIG_UCOO_HAL_USB_EP_SIZE,
 	.bInterval = 0,
     },
     {
@@ -93,7 +93,7 @@ static const struct usb_endpoint_descriptor usb_desc_endp_2[] = {
 	.bDescriptorType = USB_DT_ENDPOINT,
 	.bEndpointAddress = 0x82,
 	.bmAttributes = USB_ENDPOINT_ATTR_BULK,
-	.wMaxPacketSize = UCOO_CONFIG_HAL_USB_EP_SIZE,
+	.wMaxPacketSize = CONFIG_UCOO_HAL_USB_EP_SIZE,
 	.bInterval = 0,
     },
 };
@@ -114,9 +114,9 @@ static const struct usb_interface_descriptor usb_desc_iface_2[] = {
     },
 };
 
-#endif /* UCOO_CONFIG_HAL_USB_STREAM_NB >= 2 */
+#endif /* CONFIG_UCOO_HAL_USB_STREAM_NB >= 2 */
 
-#if UCOO_CONFIG_HAL_USB_STREAM_NB >= 3
+#if CONFIG_UCOO_HAL_USB_STREAM_NB >= 3
 
 static const struct usb_endpoint_descriptor usb_desc_endp_3[] = {
     {
@@ -124,7 +124,7 @@ static const struct usb_endpoint_descriptor usb_desc_endp_3[] = {
 	.bDescriptorType = USB_DT_ENDPOINT,
 	.bEndpointAddress = 0x03,
 	.bmAttributes = USB_ENDPOINT_ATTR_BULK,
-	.wMaxPacketSize = UCOO_CONFIG_HAL_USB_EP_SIZE,
+	.wMaxPacketSize = CONFIG_UCOO_HAL_USB_EP_SIZE,
 	.bInterval = 0,
     },
     {
@@ -132,7 +132,7 @@ static const struct usb_endpoint_descriptor usb_desc_endp_3[] = {
 	.bDescriptorType = USB_DT_ENDPOINT,
 	.bEndpointAddress = 0x83,
 	.bmAttributes = USB_ENDPOINT_ATTR_BULK,
-	.wMaxPacketSize = UCOO_CONFIG_HAL_USB_EP_SIZE,
+	.wMaxPacketSize = CONFIG_UCOO_HAL_USB_EP_SIZE,
 	.bInterval = 0,
     },
 };
@@ -153,9 +153,9 @@ static const struct usb_interface_descriptor usb_desc_iface_3[] = {
     },
 };
 
-#endif /* UCOO_CONFIG_HAL_USB_STREAM_NB >= 3 */
+#endif /* CONFIG_UCOO_HAL_USB_STREAM_NB >= 3 */
 
-#if UCOO_CONFIG_HAL_USB_STREAM_NB > 3
+#if CONFIG_UCOO_HAL_USB_STREAM_NB > 3
 # error "too many streams requested"
 #endif
 
@@ -164,13 +164,13 @@ static const struct usb_interface usb_desc_ifaces[] = {
 	.num_altsetting = 1,
 	.altsetting = usb_desc_iface_1,
     },
-#if UCOO_CONFIG_HAL_USB_STREAM_NB >= 2
+#if CONFIG_UCOO_HAL_USB_STREAM_NB >= 2
     {
 	.num_altsetting = 1,
 	.altsetting = usb_desc_iface_2,
     },
 #endif
-#if UCOO_CONFIG_HAL_USB_STREAM_NB >= 3
+#if CONFIG_UCOO_HAL_USB_STREAM_NB >= 3
     {
 	.num_altsetting = 1,
 	.altsetting = usb_desc_iface_3,
@@ -182,11 +182,11 @@ const struct usb_config_descriptor usb_desc_config = {
     .bLength = USB_DT_CONFIGURATION_SIZE,
     .bDescriptorType = USB_DT_CONFIGURATION,
     .wTotalLength = 0,
-    .bNumInterfaces = UCOO_CONFIG_HAL_USB_STREAM_NB,
+    .bNumInterfaces = CONFIG_UCOO_HAL_USB_STREAM_NB,
     .bConfigurationValue = 1,
     .iConfiguration = 0,
-    .bmAttributes = 0x80 | (UCOO_CONFIG_HAL_USB_SELF_POWERED ? 0x40 : 0),
-    .bMaxPower = UCOO_CONFIG_HAL_USB_MAX_POWER / 2,
+    .bmAttributes = 0x80 | (CONFIG_UCOO_HAL_USB_SELF_POWERED ? 0x40 : 0),
+    .bMaxPower = CONFIG_UCOO_HAL_USB_MAX_POWER / 2,
 
     .interface = usb_desc_ifaces,
 };

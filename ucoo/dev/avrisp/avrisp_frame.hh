@@ -27,7 +27,7 @@
 
 #include "ucoo/intf/stream.hh"
 
-#include "config/dev/avrisp.hh"
+#include "config/ucoo/dev/avrisp.hh"
 
 namespace ucoo {
 
@@ -79,7 +79,7 @@ class AvrIspFrame
     /// Checksum current value.
     uint8_t cksum_;
     /// Buffer to store frame until validated.
-    uint8_t buffer_[UCOO_CONFIG_DEV_AVRISP_FRAME_BUFFER_SIZE];
+    uint8_t buffer_[CONFIG_UCOO_DEV_AVRISP_FRAME_BUFFER_SIZE];
     /// Used buffer length.
     int buffer_len_;
     /// Index to first byte to send from buffer, or -1 if not sending.

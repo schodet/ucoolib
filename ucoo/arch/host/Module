@@ -1,2 +1,2 @@
-arch_host_SOURCES := host.host.cc host_stream.host.cc
+ucoo_arch_host_SOURCES := host.host.cc host_stream.host.cc
 host_LIBS += -lutil

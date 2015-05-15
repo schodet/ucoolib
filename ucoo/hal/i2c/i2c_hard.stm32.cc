@@ -32,7 +32,7 @@
 namespace ucoo {
 
 /// Local trace.
-static Trace<UCOO_CONFIG_HAL_I2C_TRACE> i2c_trace;
+static Trace<CONFIG_UCOO_HAL_I2C_TRACE> i2c_trace;
 
 /// Information on I2C hardware structure.
 struct i2c_hardware_t

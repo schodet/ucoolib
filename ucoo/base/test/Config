@@ -1,5 +1,5 @@
-[base/test]
+[ucoo/base/test]
 wait = false
 
-[base/test:stm32]
+[ucoo/base/test:stm32]
 wait = true

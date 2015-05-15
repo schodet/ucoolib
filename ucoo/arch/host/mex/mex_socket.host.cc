@@ -25,7 +25,7 @@
 
 #include "ucoo/common.hh"
 
-#include "config/arch/host/mex.hh"
+#include "config/ucoo/arch/host/mex.hh"
 #include "socket.h"
 
 #include <unistd.h>
@@ -43,7 +43,7 @@ Socket::~Socket ()
 void
 Socket::connect ()
 {
-    fd_ = socket_client UCOO_CONFIG_ARCH_HOST_MEX_DEFAULT_ADDRESS;
+    fd_ = socket_client CONFIG_UCOO_ARCH_HOST_MEX_DEFAULT_ADDRESS;
 }
 
 int

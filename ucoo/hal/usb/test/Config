@@ -1,2 +1,2 @@
-[hal/usb]
+[ucoo/hal/usb]
 stream_nb = 1

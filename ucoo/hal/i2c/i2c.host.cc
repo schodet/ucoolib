@@ -23,7 +23,7 @@
 // }}}
 #include "i2c.host.hh"
 
-#include "config/hal/i2c.hh"
+#include "config/ucoo/hal/i2c.hh"
 
 namespace ucoo {
 
@@ -77,7 +77,7 @@ I2cHostShared::send (uint8_t addr, const char *buf, int count)
     {
         if (addr == (*i)->slave_addr_)
         {
-            assert (count <= UCOO_CONFIG_HAL_I2C_SLAVE_BUFFER_SIZE);
+            assert (count <= CONFIG_UCOO_HAL_I2C_SLAVE_BUFFER_SIZE);
             (*i)->slave_data_handler_->to_recv (buf, count);
             return count;
         }
@@ -99,7 +99,7 @@ I2cHostShared::recv (uint8_t addr, char *buf, int count)
     {
         if (addr == (*i)->slave_addr_)
         {
-            assert (count <= UCOO_CONFIG_HAL_I2C_SLAVE_BUFFER_SIZE);
+            assert (count <= CONFIG_UCOO_HAL_I2C_SLAVE_BUFFER_SIZE);
             return (*i)->slave_data_handler_->to_send (buf, count);
         }
     }
@@ -125,7 +125,7 @@ I2cHostShared::handle_read (mex::Msg &msg)
     {
         if (addr == (*i)->slave_addr_)
         {
-            assert (size <= UCOO_CONFIG_HAL_I2C_SLAVE_BUFFER_SIZE);
+            assert (size <= CONFIG_UCOO_HAL_I2C_SLAVE_BUFFER_SIZE);
             char buf[size];
             int n = (*i)->slave_data_handler_->to_send (buf, size);
             mex::Msg rsp (read_mtype_);
@@ -147,7 +147,7 @@ I2cHostShared::handle_write (mex::Msg &msg)
         if (addr == (*i)->slave_addr_)
         {
             int size = msg.len ();
-            assert (size <= UCOO_CONFIG_HAL_I2C_SLAVE_BUFFER_SIZE);
+            assert (size <= CONFIG_UCOO_HAL_I2C_SLAVE_BUFFER_SIZE);
             (*i)->slave_data_handler_->to_recv (msg.pop (size), size);
             break;
         }

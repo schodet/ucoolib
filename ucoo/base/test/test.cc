@@ -27,7 +27,7 @@
 #include "ucoo/base/stdio/stdio.hh"
 #include "ucoo/utils/delay.hh"
 
-#include "config/base/test.hh"
+#include "config/ucoo/base/test.hh"
 
 #include <cstdarg>
 
@@ -38,7 +38,7 @@ TestSuite::TestSuite (const char *test_suite)
       test_nb_ (0), fail_nb_ (0), in_test_ (false)
 {
     test_stream_setup ();
-    if (UCOO_CONFIG_BASE_TEST_WAIT)
+    if (CONFIG_UCOO_BASE_TEST_WAIT)
     {
         Stream &s = test_stream ();
         int n;

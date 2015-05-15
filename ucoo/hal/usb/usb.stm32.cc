@@ -31,7 +31,7 @@
 #include "usb_desc.stm32.h"
 
 #if defined (TARGET_stm32f4)
-# if UCOO_CONFIG_HAL_USB_DRIVER_HS
+# if CONFIG_UCOO_HAL_USB_DRIVER_HS
 #  define usb_isr otg_hs_isr
 #  define usb_driver otghs_usb_driver
 # else
@@ -82,7 +82,7 @@ UsbStreamControl::UsbStreamControl (const char *vendor, const char *product)
     strings[0] = vendor;
     strings[1] = product;
 #if defined (TARGET_stm32f4)
-# if UCOO_CONFIG_HAL_USB_DRIVER_HS
+# if CONFIG_UCOO_HAL_USB_DRIVER_HS
     rcc_periph_clock_enable (RCC_OTGHS);
     rcc_periph_clock_enable (RCC_GPIOB);
     gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
@@ -103,7 +103,7 @@ UsbStreamControl::UsbStreamControl (const char *vendor, const char *product)
                         strings, lengthof (strings),
                         usb_control_buffer, sizeof (usb_control_buffer));
     usbd_register_set_config_callback (usbdev, set_config);
-#if UCOO_CONFIG_HAL_USB_DRIVER_HS
+#if CONFIG_UCOO_HAL_USB_DRIVER_HS
     nvic_enable_irq (NVIC_OTG_HS_IRQ);
 #else
     nvic_enable_irq (NVIC_OTG_FS_IRQ);

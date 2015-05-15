@@ -25,7 +25,7 @@
 
 #include "ucoo/utils/bytes.hh"
 
-#include "config/dev/avrisp.hh"
+#include "config/ucoo/dev/avrisp.hh"
 
 #include <cstring>
 #include <algorithm>
@@ -121,10 +121,10 @@ AvrIspProto::accept (uint8_t *data, int len)
     case AVRISP_PROTO_CMD_SIGN_ON:
         if (len != 1) break;
         data[1] = AVRISP_PROTO_STATUS_CMD_OK;
-        data[2] = sizeof (UCOO_CONFIG_DEV_AVRISP_PROTO_SIGNATURE);
-        memcpy (&data[3], UCOO_CONFIG_DEV_AVRISP_PROTO_SIGNATURE,
-                sizeof (UCOO_CONFIG_DEV_AVRISP_PROTO_SIGNATURE));
-        return 3 + sizeof (UCOO_CONFIG_DEV_AVRISP_PROTO_SIGNATURE);
+        data[2] = sizeof (CONFIG_UCOO_DEV_AVRISP_PROTO_SIGNATURE);
+        memcpy (&data[3], CONFIG_UCOO_DEV_AVRISP_PROTO_SIGNATURE,
+                sizeof (CONFIG_UCOO_DEV_AVRISP_PROTO_SIGNATURE));
+        return 3 + sizeof (CONFIG_UCOO_DEV_AVRISP_PROTO_SIGNATURE);
     case AVRISP_PROTO_CMD_SET_PARAMETER:
         if (len != 3) break;
         status = AVRISP_PROTO_STATUS_CMD_OK;
@@ -155,19 +155,19 @@ AvrIspProto::accept (uint8_t *data, int len)
             data[2] = 1;
             break;
         case AVRISP_PROTO_PARAM_BUILD_NUMBER_LOW:
-            data[2] = bytes_unpack (UCOO_CONFIG_DEV_AVRISP_PROTO_BUILD_NUMBER, 0);
+            data[2] = bytes_unpack (CONFIG_UCOO_DEV_AVRISP_PROTO_BUILD_NUMBER, 0);
             break;
         case AVRISP_PROTO_PARAM_BUILD_NUMBER_HIGH:
-            data[2] = bytes_unpack (UCOO_CONFIG_DEV_AVRISP_PROTO_BUILD_NUMBER, 1);
+            data[2] = bytes_unpack (CONFIG_UCOO_DEV_AVRISP_PROTO_BUILD_NUMBER, 1);
             break;
         case AVRISP_PROTO_PARAM_HW_VER:
-            data[2] = UCOO_CONFIG_DEV_AVRISP_PROTO_HW_VERSION;
+            data[2] = CONFIG_UCOO_DEV_AVRISP_PROTO_HW_VERSION;
             break;
         case AVRISP_PROTO_PARAM_SW_MAJOR:
-            data[2] = bytes_unpack (UCOO_CONFIG_DEV_AVRISP_PROTO_SW_VERSION, 1);
+            data[2] = bytes_unpack (CONFIG_UCOO_DEV_AVRISP_PROTO_SW_VERSION, 1);
             break;
         case AVRISP_PROTO_PARAM_SW_MINOR:
-            data[2] = bytes_unpack (UCOO_CONFIG_DEV_AVRISP_PROTO_SW_VERSION, 0);
+            data[2] = bytes_unpack (CONFIG_UCOO_DEV_AVRISP_PROTO_SW_VERSION, 0);
             break;
         default:
             status = AVRISP_PROTO_STATUS_CMD_FAILED;

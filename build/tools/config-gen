@@ -105,14 +105,14 @@ def write_header(filename, section, section_dict):
         for target, value in values.iteritems():
             if target is None: continue
             item_fmt = ('#ifdef TARGET_{target}\n'
-                    '# define UCOO_CONFIG_{section}_{key} ({value})\n'
+                    '# define CONFIG_{section}_{key} ({value})\n'
                     '#endif')
             items.append(item_fmt.format(section=section, key=key.upper(),
                 target=target, value=value))
             cond = True
-        item_fmt = '#define UCOO_CONFIG_{section}_{key} ({value})'
+        item_fmt = '#define CONFIG_{section}_{key} ({value})'
         if cond:
-            item_fmt = '#ifndef UCOO_CONFIG_{section}_{key}\n# ' \
+            item_fmt = '#ifndef CONFIG_{section}_{key}\n# ' \
                     + item_fmt[1:] + '\n#endif'
         items.append(item_fmt.format(section=section, key=key.upper(),
             value=values[None]))

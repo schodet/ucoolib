@@ -26,7 +26,7 @@
 #include "ucoo/intf/stream.hh"
 #include "ucoo/common.hh"
 
-#include "config/hal/usb.hh"
+#include "config/ucoo/hal/usb.hh"
 
 #include <libopencm3/usb/usbd.h>
 
@@ -54,9 +54,9 @@ class UsbStreamControl
     static void rx_callback (usbd_device *usbdev, uint8_t ep);
   private:
     /// Size of endpoints.
-    static const int ep_size_ = UCOO_CONFIG_HAL_USB_EP_SIZE;
+    static const int ep_size_ = CONFIG_UCOO_HAL_USB_EP_SIZE;
     /// Number of streams (also interfaces or pair of endpoints).
-    static const int stream_nb_ = UCOO_CONFIG_HAL_USB_STREAM_NB;
+    static const int stream_nb_ = CONFIG_UCOO_HAL_USB_STREAM_NB;
     /// Pointer to the one and only instance.
     static UsbStreamControl *instance_;
     /// Whether device is currently configured.

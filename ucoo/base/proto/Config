@@ -1,2 +1,2 @@
-[base/proto]
+[ucoo/base/proto]
 args_max_size = 16

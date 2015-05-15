@@ -26,7 +26,7 @@
 #include "ucoo/common.hh"
 #include "ucoo/intf/stream.hh"
 
-#include "config/base/proto.hh"
+#include "config/ucoo/base/proto.hh"
 
 namespace ucoo {
 
@@ -89,7 +89,7 @@ class Proto
     /// Received message current size.
     int size_;
     /// Message arguments being received.
-    uint8_t args_[UCOO_CONFIG_BASE_PROTO_ARGS_MAX_SIZE];
+    uint8_t args_[CONFIG_UCOO_BASE_PROTO_ARGS_MAX_SIZE];
     /// Command being received.
     char cmd_;
 };

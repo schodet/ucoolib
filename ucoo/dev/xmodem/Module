@@ -1,1 +1,1 @@
-dev_xmodem_SOURCES = xmodem.cc
+ucoo_dev_xmodem_SOURCES = xmodem.cc

@@ -1,2 +1,3 @@
-arch_SOURCES := arch.host.cc arch.stm32.cc arch.stm32f1.cc arch.stm32f4.cc \
+ucoo_arch_SOURCES := arch.host.cc \
+	arch.stm32.cc arch.stm32f1.cc arch.stm32f4.cc \
 	syscalls.newlib.cc syscalls.cc
