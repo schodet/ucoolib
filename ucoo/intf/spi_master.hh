@@ -30,12 +30,16 @@ namespace ucoo {
 enum SpiMode
 {
     /// Mode 0, sample on rising edge, setup on falling edge.
+    /// CPOL = 0, CPHA = 0
     SPI_MODE_0,
     /// Mode 1, setup on rising edge, sample on falling edge.
+    /// CPOL = 0, CPHA = 1
     SPI_MODE_1,
     /// Mode 2, sample on falling edge, setup on rising edge.
+    /// CPOL = 1, CPHA = 0
     SPI_MODE_2,
     /// Mode 3, setup on falling edge, sample on rising edge.
+    /// CPOL = 1, CPHA = 1
     SPI_MODE_3,
 };
 
