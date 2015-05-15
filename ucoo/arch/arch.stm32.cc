@@ -37,6 +37,7 @@ arch_reset ()
 void
 halt ()
 {
+    asm volatile ("bkpt");
     while (1)
         ;
 }
