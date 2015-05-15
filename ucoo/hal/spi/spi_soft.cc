@@ -85,9 +85,9 @@ SpiSoftMaster::send_and_recv (char tx)
         mosi_.set (tx & i);
         delay_ns (half_period_ns_);
         // Sample stage.
-        sck_.toggle ();
         if (miso_.get ())
             rx |= i;
+        sck_.toggle ();
         delay_ns (half_period_ns_);
         // SCK toggle for next setup stage.
         if (!cpha_)
