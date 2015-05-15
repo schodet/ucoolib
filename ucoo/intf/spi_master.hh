@@ -48,6 +48,10 @@ enum SpiMode
 class SpiMaster
 {
   public:
+    /// Enable and setup.
+    virtual void enable (int speed_hz, SpiMode mode = SPI_MODE_0) = 0;
+    /// Disable.
+    virtual void disable () = 0;
     /// Send and receive COUNT bytes of data.  Send data from TX_BUF, store
     /// received data in RX_BUF.  TX_BUF and RX_BUF can be the same memory.
     virtual void send_and_recv (const char *tx_buf, char *rx_buf, int count)

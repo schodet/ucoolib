@@ -36,9 +36,9 @@ class SpiSoftMaster : public SpiMaster
     SpiSoftMaster (Io &sck, Io &mosi, Io &miso);
     /// Destructor, disable.
     ~SpiSoftMaster ();
-    /// Enable and setup.
+    /// See SpiMaster::enable.
     void enable (int speed_hz, SpiMode mode = SPI_MODE_0);
-    /// Disable.
+    /// See SpiMaster::disable.
     void disable ();
     /// See SpiMaster::send_and_recv.
     void send_and_recv (const char *tx_buf, char *rx_buf, int count);
