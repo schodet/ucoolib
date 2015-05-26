@@ -21,6 +21,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
+#include "ucoo/hal/spi/spi.hh"
 #include "ucoo/hal/spi/spi_soft.hh"
 #include "ucoo/hal/gpio/gpio.hh"
 #include "ucoo/utils/delay.hh"
@@ -46,8 +47,10 @@ main (int argc, const char **argv)
     ss.set ();
     ss.output ();
     ucoo::Gpio sck (GPIOA, 5), mosi (GPIOA, 7), miso (GPIOA, 6);
-    ucoo::SpiSoftMaster spi (sck, mosi, miso);
-    spi.enable (1000000, ucoo::SPI_MODE_3);
+    ucoo::SpiSoftMaster spis (sck, mosi, miso);
+    spis.enable (1000000, ucoo::SPI_MODE_3);
+    ucoo::SpiHardMaster spih (0);
+    ucoo::SpiMaster *spi = &spis;
     // Loop with simple IU.
     char buf[64];
     unsigned int r;
@@ -57,12 +60,12 @@ main (int argc, const char **argv)
         ucoo::delay_ms (200);
         // Read X, Y, Z.
         ss.reset ();
-        spi.send (0xe9);
-        x = spi.recv ();
-        spi.recv ();
-        y = spi.recv ();
-        spi.recv ();
-        z = spi.recv ();
+        spi->send (0xe9);
+        x = spi->recv ();
+        spi->recv ();
+        y = spi->recv ();
+        spi->recv ();
+        z = spi->recv ();
         ss.set ();
         ucoo::delay_ns (100);
         r = snprintf (buf, sizeof (buf), "x: %4d, y: %4d, z: %4d\r", x, y, z);
@@ -79,15 +82,17 @@ main (int argc, const char **argv)
                     "\n? - help\n"
                     "w - who am I\n"
                     "o - turn on\n"
-                    "f - turn off\n";
+                    "f - turn off\n"
+                    "h - use hardware SPI\n"
+                    "s - use software SPI\n";
                 ts.write (help, sizeof (help));
                 break;
             case 'w':
                 {
                     // Read Who am I register.
                     ss.reset ();
-                    spi.send (0x8f);
-                    char rsp = spi.recv ();
+                    spi->send (0x8f);
+                    char rsp = spi->recv ();
                     ss.set ();
                     ucoo::delay_ns (100);
                     // Report result.
@@ -102,10 +107,23 @@ main (int argc, const char **argv)
                 {
                     char cmd[] = { 0x20, (char) (c == 'o' ? 0x47 : 0x07) };
                     ss.reset ();
-                    spi.send (cmd, sizeof (cmd));
+                    spi->send (cmd, sizeof (cmd));
                     ss.set ();
                     ucoo::delay_ns (100);
                 }
+                break;
+            case 'h':
+                spi->disable ();
+                spi = &spih;
+                gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
+                                 GPIO5 | GPIO6 | GPIO7);
+                gpio_set_af (GPIOA, GPIO_AF5, GPIO5 | GPIO6 | GPIO7);
+                spi->enable (1000000, ucoo::SPI_MODE_3);
+                break;
+            case 's':
+                spi->disable ();
+                spi = &spis;
+                spi->enable (1000000, ucoo::SPI_MODE_3);
                 break;
             }
         }
