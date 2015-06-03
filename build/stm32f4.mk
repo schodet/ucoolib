@@ -25,7 +25,7 @@ stm32f4_CXXFLAGS := $(sort $(stm32f4_CFLAGS) $(CXXFLAGS))
 stm32f4_ASFLAGS := $(ASFLAGS)
 stm32f4_LDSCRIPT := stm32f4.ld
 stm32f4_LDFLAGS := $(LDFLAGS) -T$(stm32f4_LDSCRIPT) \
-	-L$(BASE)/ucoolib/arch/stm32f4 \
+	-L$(BASE)/ucoo/arch/stm32f4 \
 	$(LIBOPENCM3_LDFLAGS)
 stm32f4_LDLIBS := -nostartfiles $(LDLIBS) $(stm32f4_LIBS) \
 	-lopencm3_stm32f4

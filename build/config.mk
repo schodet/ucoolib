@@ -3,7 +3,7 @@
 # Build time configuration system.
 
 PROJECT_CONFIG ?= Config
-MODULES_CONFIG := $(wildcard $(ALL_MODULES:%=$(BASE)/ucoolib/%/Config))
+MODULES_CONFIG := $(wildcard $(ALL_MODULES:%=$(BASE)/ucoo/%/Config))
 
 CONFIG_LIST := $(strip $(wildcard $(PROJECT_CONFIG)) $(MODULES_CONFIG))
 

@@ -44,9 +44,9 @@ clean:
 
 include $(BASE)/build/setup.mk
 
-vpath %.cc $(ALL_MODULES:%=$(BASE)/ucoolib/%)
-vpath %.c $(ALL_MODULES:%=$(BASE)/ucoolib/%)
-vpath %.S $(ALL_MODULES:%=$(BASE)/ucoolib/%)
+vpath %.cc $(ALL_MODULES:%=$(BASE)/ucoo/%)
+vpath %.c $(ALL_MODULES:%=$(BASE)/ucoo/%)
+vpath %.S $(ALL_MODULES:%=$(BASE)/ucoo/%)
 
 # Configuration.
 

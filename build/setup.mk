@@ -11,7 +11,7 @@ ALL_PROGS := $(PROGS) $(foreach target,$(TARGETS),$($(target)_PROGS))
 ALL_MODULES := $(sort $(DEFAULT_MODULES) $(MODULES) \
 	$(foreach prog,$(ALL_PROGS),$($(prog)_MODULES)))
 
-include $(ALL_MODULES:%=$(BASE)/ucoolib/%/Module)
+include $(ALL_MODULES:%=$(BASE)/ucoo/%/Module)
 
 define MODULES_template
 $1_SOURCES += $$(foreach module,\
