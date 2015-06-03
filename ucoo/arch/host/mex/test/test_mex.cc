@@ -116,7 +116,12 @@ test_msg ()
     {
         uint32_t ua, ub, uc;
         int32_t a, b, c;
-        const char rb[] = { 0x01, 0xff, 0xfe, 0xfd, 0xfc, 1, 2, 3, 4 };
+        const char rb[] = { 0x01,
+            static_cast<char> (0xff),
+            static_cast<char> (0xfe),
+            static_cast<char> (0xfd),
+            static_cast<char> (0xfc),
+            1, 2, 3, 4 };
         TestReader r (rb);
         Msg m (r);
         check (m.mtype (), 1, "mtype");
