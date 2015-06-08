@@ -58,6 +58,8 @@ halt_perror () __attribute__ ((noreturn));
 
 /// To be used to swear that the given condition is true.  If this is not the
 /// case... well... you swore!
+void
+assert (bool condition) __attribute__ ((always_inline));
 extern inline void
 assert (bool condition)
 {
