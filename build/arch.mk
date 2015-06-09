@@ -141,6 +141,26 @@ size.$1: $$($1_ELFS)
 endef
 
 
+# Define test rules.
+define arch_test_rules
+
+.PHONY: test.$1
+
+test: test.$1
+
+ifeq ($$(origin $1_RUN),undefined)
+test.$1: elf.$1
+else
+test.$1: $$($1_PROGS:%=%.$1.test)
+
+%.$1.test: %.$1$$($1_ELF_SUFFIX)
+	@echo "TEST [$1] $$<"
+	$$Q$$($1_RUN) ./$$<
+endif
+
+endef
+
+
 # Define miscellaneous rules.
 define arch_misc_rules
 

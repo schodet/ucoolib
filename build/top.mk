@@ -36,12 +36,13 @@ hex:
 srec:
 bin:
 crc:
+test:
 
 clean:
 	@echo rmdir '$(OBJDIR)/.../'
 	$(call rmdir_as_needed,$(OBJDIRS),$(OBJDIR))
 
-.PHONY: all lst size hex srec bin crc clean
+.PHONY: all lst size hex srec bin crc test clean
 
 # Modules and sources setup.
 
