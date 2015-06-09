@@ -3,7 +3,7 @@
 # Rules for Host.
 
 host_CPPFLAGS := $(CPPFLAGS) $(host_DEFS)
-host_CFLAGS := $(CFLAGS)
+host_CFLAGS := $(CFLAGS) -Wl,--gc-sections -ffunction-sections
 host_CXXFLAGS := $(sort $(host_CFLAGS) $(CXXFLAGS))
 host_ASFLAGS := $(ASFLAGS)
 host_LDFLAGS := $(LDFLAGS)
