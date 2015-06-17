@@ -10,7 +10,7 @@ stm32_once := 1
 LIBOPENCM3_PATH ?= $(UCOO_BASE)/lib/libopencm3
 define stm32_libopencm3
 ifneq ($$(LIBOPENCM3_PATH),)
-  $1_LIBOPENCM3_LIB := $$(LIBOPENCM3_PATH)/lib/libopencm3_$1.a
+  $1_LIBOPENCM3_LIB := $$(LIBOPENCM3_PATH)/lib/libopencm3_$(if $2,$2,$1).a
   ifeq ($$(wildcard $$($1_LIBOPENCM3_LIB)),)
     $$(error Can not find libopencm3 library, please run "make lib" in \
 	    $$(LIBOPENCM3_PATH) or change LIBOPENCM3_PATH (you can set it to \
@@ -35,12 +35,12 @@ $1_CFLAGS := $$(CFLAGS) \
 	-Wl,--gc-sections -ffunction-sections
 $1_CXXFLAGS := $$(sort $$($1_CFLAGS) $$(CXXFLAGS))
 $1_ASFLAGS := $$(ASFLAGS)
-$1_LDSCRIPT := $1.ld
-$1_LDFLAGS := $$(LDFLAGS) -T$$($1_LDSCRIPT) \
-	-L$$(UCOO_BASE)/ucoo/arch/$1 \
+$1_LDSCRIPT ?= $(if $2,$2,$1).ld
+$1_LDSCRIPT_PATH ?= $$(UCOO_BASE)/ucoo/arch/$(if $2,$2,$1)
+$1_LDFLAGS := $$(LDFLAGS) -T$$($1_LDSCRIPT) -L$$($1_LDSCRIPT_PATH) \
 	$$($1_LIBOPENCM3_LDFLAGS)
 $1_LDLIBS := -nostartfiles $$(LDLIBS) $$($1_LIBS) \
-	-lopencm3_$1
+	-lopencm3_$(if $2,$2,$1)
 endef
 
 

@@ -65,7 +65,7 @@ $(OBJDIR):
 
 include $(UCOO_BASE)/build/arch.mk
 define TARGETS_template
-include $$(UCOO_BASE)/build/$1.mk
+include $$(firstword $$(wildcard $$(BASE)/build/$1.mk) $$(UCOO_BASE)/build/$1.mk)
 endef
 $(foreach target,$(TARGETS),$(eval $(call TARGETS_template,$(target))))
 
