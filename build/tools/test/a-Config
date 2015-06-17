@@ -1,3 +1,6 @@
 [a]
 foo = 1
 bar =
+
+[a:blah]
+foo = 2
