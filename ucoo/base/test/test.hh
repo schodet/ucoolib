@@ -28,7 +28,7 @@
 /// Test helpers to fail and break to end of current block.
 #define test_fail_break_unless(test, cond) \
     ({ if (!(cond)) { \
-        test.fail (#cond); \
+        test.fail ("%s", #cond); \
         break; \
      } })
 
