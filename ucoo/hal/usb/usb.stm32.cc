@@ -85,15 +85,13 @@ UsbStreamControl::UsbStreamControl (const char *vendor, const char *product)
 # if CONFIG_UCOO_HAL_USB_DRIVER_HS
     rcc_periph_clock_enable (RCC_OTGHS);
     rcc_periph_clock_enable (RCC_GPIOB);
-    gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                     GPIO13 | GPIO14 | GPIO15);
-    gpio_set_af (GPIOB, GPIO_AF12, GPIO13 | GPIO14 | GPIO15);
+    gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO14 | GPIO15);
+    gpio_set_af (GPIOB, GPIO_AF12, GPIO14 | GPIO15);
 # else
     rcc_periph_clock_enable (RCC_OTGFS);
     rcc_periph_clock_enable (RCC_GPIOA);
-    gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                     GPIO9 | GPIO11 | GPIO12);
-    gpio_set_af (GPIOA, GPIO_AF10, GPIO9 | GPIO11 | GPIO12);
+    gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+    gpio_set_af (GPIOA, GPIO_AF10, GPIO11 | GPIO12);
 # endif
 #elif defined (TARGET_stm32f1)
     rcc_periph_clock_enable (RCC_OTGFS);
