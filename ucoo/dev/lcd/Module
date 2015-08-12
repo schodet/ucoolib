@@ -1,1 +1,1 @@
-ucoo_dev_lcd_SOURCES := lcd_spi.cc
+ucoo_dev_lcd_SOURCES := lcd_spi.cc lcd_dummy.cc

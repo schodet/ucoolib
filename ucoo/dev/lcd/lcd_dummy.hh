@@ -1,3 +1,5 @@
+#ifndef ucoo_dev_lcd_lcd_dummy_hh
+#define ucoo_dev_lcd_lcd_dummy_hh
 // ucoolib - Microcontroller object oriented library. {{{
 //
 // Copyright (C) 2015 Nicolas Schodet
@@ -21,23 +23,32 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "lcd.hh"
-#include <cstdio>
-#include <cstdarg>
+#include "ucoo/intf/lcd.hh"
 
 namespace ucoo {
 
-void
-Lcd::printf (const char *fmt, ...)
+/// Dummy LCD, drop any message.
+class LcdDummy : public Lcd
 {
-    // Buffer needs extra bytes for '\0' & '\n'.
-    va_list ap;
-    va_start (ap, fmt);
-    char buf[get_lines() * (get_columns() + 1) + 1];
-    vsnprintf (buf, sizeof (buf), fmt, ap);
-    buf[sizeof (buf) - 1] = '\0';
-    va_end (ap);
-    puts (buf);
-}
+  public:
+    /// Enable, initialise display.
+    void enable ();
+    /// Disable, clear display and shutdown if possible.
+    void disable ();
+    /// See Lcd::puts.
+    void puts (const char *str);
+    /// See Lcd::go.
+    void go (int line, int column);
+    /// See Lcd::clear.
+    void clear ();
+    /// See Lcd::get_lines.
+    int get_lines () const;
+    /// See Lcd::get_columns.
+    int get_columns () const;
+    /// See Lcd::printf.
+    void printf (const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
+};
 
 } // namespace ucoo
+
+#endif // ucoo_dev_lcd_lcd_dummy_hh

@@ -42,7 +42,7 @@ class Lcd
     /// Get number of columns.
     virtual int get_columns () const = 0;
     /// Helper for formated output.
-    void printf (const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
+    virtual void printf (const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
   protected:
     /// Default constructor.
     Lcd () { }

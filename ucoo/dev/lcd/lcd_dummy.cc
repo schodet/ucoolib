@@ -21,23 +21,60 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "lcd.hh"
+#include "ucoo/dev/lcd/lcd_dummy.hh"
+#include "ucoo/base/test/test.hh"
+
 #include <cstdio>
 #include <cstdarg>
 
 namespace ucoo {
 
 void
-Lcd::printf (const char *fmt, ...)
+LcdDummy::enable ()
 {
-    // Buffer needs extra bytes for '\0' & '\n'.
-    va_list ap;
+    test_stream_setup ();
+}
+
+void
+LcdDummy::disable ()
+{
+}
+
+void
+LcdDummy::puts (const char *str)
+{
+    std::puts (str);
+}
+
+void
+LcdDummy::go (int line, int column)
+{
+}
+
+void
+LcdDummy::clear ()
+{
+}
+
+int
+LcdDummy::get_lines () const
+{
+    return 0;
+}
+
+int
+LcdDummy::get_columns () const
+{
+    return 0;
+}
+
+void
+LcdDummy::printf (const char *fmt, ...)
+{
+    std::va_list ap;
     va_start (ap, fmt);
-    char buf[get_lines() * (get_columns() + 1) + 1];
-    vsnprintf (buf, sizeof (buf), fmt, ap);
-    buf[sizeof (buf) - 1] = '\0';
+    std::vprintf (fmt, ap);
     va_end (ap);
-    puts (buf);
 }
 
 } // namespace ucoo
