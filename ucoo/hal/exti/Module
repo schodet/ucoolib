@@ -1,0 +1,1 @@
+ucoo_hal_exti_SOURCES := exti.stm32.cc

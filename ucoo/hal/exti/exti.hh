@@ -1,6 +1,8 @@
+#ifndef ucoo_hal_exti_exti_hh
+#define ucoo_hal_exti_exti_hh
 // ucoolib - Microcontroller object oriented library. {{{
 //
-// Copyright (C) 2012 Nicolas Schodet
+// Copyright (C) 2015 Nicolas Schodet
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -21,19 +23,11 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "ucoo/arch/arch.hh"
-#include "ucoo/common.hh"
 
-#include <libopencm3/stm32/rcc.h>
+#if defined TARGET_stm32
+# include "exti.stm32.hh"
+#else
+# error "not implemented for this target"
+#endif
 
-namespace ucoo {
-
-void
-arch_init (int argc, const char **argv)
-{
-    rcc_clock_setup_hse_3v3 (&hse_8mhz_3v3[CLOCK_3V3_120MHZ]);
-    rcc_ahb_frequency = 120000000;
-    rcc_periph_clock_enable (RCC_SYSCFG);
-}
-
-} // namespace ucoo
+#endif // ucoo_hal_exti_exti_hh

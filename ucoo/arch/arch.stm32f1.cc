@@ -32,6 +32,7 @@ void
 arch_init (int argc, const char **argv)
 {
     rcc_clock_setup_in_hse_12mhz_out_72mhz ();
+    rcc_periph_clock_enable (RCC_AFIO);
 }
 
 } // namespace ucoo

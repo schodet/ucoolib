@@ -1,6 +1,8 @@
+#ifndef ucoo_intf_exti_hh
+#define ucoo_intf_exti_hh
 // ucoolib - Microcontroller object oriented library. {{{
 //
-// Copyright (C) 2012 Nicolas Schodet
+// Copyright (C) 2015 Nicolas Schodet
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -21,19 +23,34 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "ucoo/arch/arch.hh"
-#include "ucoo/common.hh"
-
-#include <libopencm3/stm32/rcc.h>
+#include "ucoo/utils/function.hh"
 
 namespace ucoo {
 
-void
-arch_init (int argc, const char **argv)
+/// External interrupt interface.
+class Exti
 {
-    rcc_clock_setup_hse_3v3 (&hse_8mhz_3v3[CLOCK_3V3_120MHZ]);
-    rcc_ahb_frequency = 120000000;
-    rcc_periph_clock_enable (RCC_SYSCFG);
-}
+  public:
+    /// Enable.
+    virtual void enable () = 0;
+    /// Disable.
+    virtual void disable () = 0;
+    /// Temporary mask interrupt, return previous state.
+    virtual bool mask () = 0;
+    /// Unmask interrupt.
+    virtual void unmask (bool saved_state) = 0;
+    /// Register a handler called on event.
+    template<typename F>
+    void register_event (F handler)
+        { handler_ = handler; }
+  protected:
+    /// Default constructor.
+    Exti () { }
+  protected:
+    /// Handler called on event.
+    Function<void ()> handler_;
+};
 
 } // namespace ucoo
+
+#endif // ucoo_intf_exti_hh

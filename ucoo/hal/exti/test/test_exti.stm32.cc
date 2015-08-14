@@ -1,6 +1,6 @@
 // ucoolib - Microcontroller object oriented library. {{{
 //
-// Copyright (C) 2012 Nicolas Schodet
+// Copyright (C) 2015 Nicolas Schodet
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -22,18 +22,45 @@
 //
 // }}}
 #include "ucoo/arch/arch.hh"
-#include "ucoo/common.hh"
+#include "ucoo/hal/gpio/gpio.hh"
+#include "ucoo/hal/exti/exti.hh"
+#include "ucoo/utils/delay.hh"
 
 #include <libopencm3/stm32/rcc.h>
 
-namespace ucoo {
+ucoo::Gpio *led4p;
 
 void
-arch_init (int argc, const char **argv)
+led4_handler ()
 {
-    rcc_clock_setup_hse_3v3 (&hse_8mhz_3v3[CLOCK_3V3_120MHZ]);
-    rcc_ahb_frequency = 120000000;
-    rcc_periph_clock_enable (RCC_SYSCFG);
+    led4p->toggle ();
 }
 
-} // namespace ucoo
+int
+main (int argc, const char **argv)
+{
+    ucoo::arch_init (argc, argv);
+    rcc_periph_clock_enable (RCC_GPIOB);
+    rcc_periph_clock_enable (RCC_GPIOD);
+    // For this test, shorten B6 & B7 to have loopback.
+    ucoo::Gpio loop_out (GPIOB, 6);
+    ucoo::Gpio loop_in (GPIOB, 7);
+    ucoo::Gpio led3 (GPIOD, 13);
+    ucoo::Gpio led4 (GPIOD, 12);
+    led4p = &led4;
+    ucoo::ExtiHard exti (7);
+    exti.set_source (GPIOB);
+    exti.set_trigger (ucoo::ExtiHard::Edge::RISING);
+    exti.register_event (led4_handler);
+    exti.enable ();
+    loop_out.output ();
+    led3.output ();
+    led4.output ();
+    while (1)
+    {
+        loop_out.toggle ();
+        led3.set (loop_in.get ());
+        ucoo::delay (1);
+    }
+    return 0;
+}
