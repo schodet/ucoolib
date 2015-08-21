@@ -1,0 +1,1 @@
+ucoo_hal_sdram_SOURCES := sdram.stm32f4.cc
