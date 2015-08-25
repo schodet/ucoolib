@@ -173,8 +173,12 @@ UsbStream::write (const char *buf, int count)
     {
         if (control_.configured_)
         {
+            // Do the FIFO write with IRQ locked, as the USB IP does not
+            // tolerate any interruption while the FIFO is being filled.
             int len = std::min (left, UsbStreamControl::ep_size_);
+            irq_flags_t f = irq_lock ();
             len = usbd_ep_write_packet (usbdev, num_ + 0x81, buf, len);
+            irq_restore (f);
             buf += len;
             left -= len;
         }
