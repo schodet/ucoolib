@@ -184,6 +184,7 @@ UsbStream::write (const char *buf, int count)
         }
         if (!block_)
             break;
+        barrier ();
     }
     return count - left;
 }
