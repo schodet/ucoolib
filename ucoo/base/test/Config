@@ -1,5 +1,7 @@
 [ucoo/base/test]
 wait = false
+test_stream_uart = -1
+test_stream_uart_speed = 115200
 
 [ucoo/base/test:stm32]
 wait = true

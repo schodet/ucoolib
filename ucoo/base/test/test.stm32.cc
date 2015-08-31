@@ -23,7 +23,13 @@
 // }}}
 #include "test.hh"
 
-#include "ucoo/hal/usb/usb.hh"
+#include "config/ucoo/base/test.hh"
+#if CONFIG_UCOO_BASE_TEST_TEST_STREAM_UART == -1
+# include "ucoo/hal/usb/usb.hh"
+#else
+# include "ucoo/hal/uart/uart.hh"
+#endif
+
 #include "ucoo/arch/syscalls.newlib.hh"
 
 namespace ucoo {
@@ -31,9 +37,20 @@ namespace ucoo {
 Stream &
 test_stream (void)
 {
+#if CONFIG_UCOO_BASE_TEST_TEST_STREAM_UART == -1
     static UsbStreamControl usc ("APBTeam", "test");
     static UsbStream us (usc, 0);
     return us;
+#else
+    static Uart u (CONFIG_UCOO_BASE_TEST_TEST_STREAM_UART);
+    static bool enabled = false;
+    if (!enabled)
+    {
+        enabled = true;
+        u.enable (CONFIG_UCOO_BASE_TEST_TEST_STREAM_UART_SPEED);
+    }
+    return u;
+#endif
 }
 
 void
