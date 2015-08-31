@@ -35,6 +35,14 @@ Fifo<T, size>::Fifo ()
 }
 
 template<typename T, int size>
+T &
+Fifo<T, size>::top ()
+{
+    assert (head_ != tail_);
+    return buffer_[head_];
+}
+
+template<typename T, int size>
 inline T
 Fifo<T, size>::pop ()
 {

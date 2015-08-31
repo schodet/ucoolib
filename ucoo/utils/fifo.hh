@@ -43,6 +43,9 @@ class Fifo
     bool empty () const { return head_ == tail_; }
     /// Test whether the FIFO is full.
     bool full () const { return head_ == next (tail_); }
+    /// Return a reference to top (next to be popped) element, do not do that
+    /// if FIFO is empty!
+    T &top ();
     /// Remove an element, do not do that if FIFO is empty!
     T pop ();
     /// Add an element, do not do that if FIFO is full!
