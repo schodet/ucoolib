@@ -26,8 +26,17 @@
 
 namespace ucoo {
 
-/// Trace buffer to be read with debugger, no initialisation, should be
-/// instantiated in BSS.
+/// Used when there is no timestamp.
+struct NoTimestamp
+{
+    /// Information added to entry.
+    struct Entry { };
+    /// Fill an entry with current timestamp.
+    void operator () (Entry &) { }
+};
+
+/// Trace buffer to be read with debugger.
+template<typename Timestamp = NoTimestamp>
 class TraceBuffer
 {
     /// Maximum number of arguments.
@@ -35,6 +44,8 @@ class TraceBuffer
     /// Maximum number of trace entries.
     static const int entries_nb = 32;
   public:
+    /// Constructor.
+    TraceBuffer (const Timestamp &timestamp = Timestamp ());
     /// Trace without argument.
     inline void operator() (const char *str);
     /// Trace with N arguments...
@@ -44,7 +55,7 @@ class TraceBuffer
     inline void operator() (const char *str, int a0, int a1, int a2, int a3);
   private:
     /// Trace entry, contains all given parameters.
-    struct Entry
+    struct Entry : public Timestamp::Entry
     {
         const char *str;
         int args[args_nb];
@@ -53,6 +64,8 @@ class TraceBuffer
     Entry entries[entries_nb];
     /// Index of next entry to be written in entries array.
     unsigned int index;
+    /// Time stamping object.
+    Timestamp timestamp_;
 };
 
 /// Dummy trace, trace nothing.
@@ -68,66 +81,23 @@ class TraceDummy
 
 /// Conditional trace, whether it trace or not depends on the template
 /// argument.
-template<bool ENABLED>
+template<bool ENABLED, typename Timestamp = NoTimestamp>
 class Trace
 {
 };
 
-template<>
-class Trace<true> : public TraceBuffer
+template<typename Timestamp>
+class Trace<true, Timestamp> : public TraceBuffer<Timestamp>
 {
 };
 
-template<>
-class Trace<false> : public TraceDummy
+template<typename Timestamp>
+class Trace<false, Timestamp> : public TraceDummy
 {
 };
-
-inline void
-TraceBuffer::operator() (const char *str)
-{
-    entries[index].str = str;
-    index = (index + 1) % entries_nb;
-}
-
-inline void
-TraceBuffer::operator() (const char *str, int a0)
-{
-    entries[index].str = str;
-    entries[index].args[0] = a0;
-    index = (index + 1) % entries_nb;
-}
-
-inline void
-TraceBuffer::operator() (const char *str, int a0, int a1)
-{
-    entries[index].str = str;
-    entries[index].args[0] = a0;
-    entries[index].args[1] = a1;
-    index = (index + 1) % entries_nb;
-}
-
-inline void
-TraceBuffer::operator() (const char *str, int a0, int a1, int a2)
-{
-    entries[index].str = str;
-    entries[index].args[0] = a0;
-    entries[index].args[1] = a1;
-    entries[index].args[2] = a2;
-    index = (index + 1) % entries_nb;
-}
-
-inline void
-TraceBuffer::operator() (const char *str, int a0, int a1, int a2, int a3)
-{
-    entries[index].str = str;
-    entries[index].args[0] = a0;
-    entries[index].args[1] = a1;
-    entries[index].args[2] = a2;
-    entries[index].args[3] = a3;
-    index = (index + 1) % entries_nb;
-}
 
 } // namespace ucoo
+
+#include "ucoo/utils/trace.tcc"
 
 #endif // ucoo_utils_trace_hh

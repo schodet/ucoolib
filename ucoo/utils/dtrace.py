@@ -11,16 +11,16 @@ class DTrace(gdb.Command):
             return
 
         trace = gdb.parse_and_eval(args[0])
-        args_nb = trace['args_nb'];
-        entries_nb = trace['entries_nb'];
         index = trace['index'];
         entries = trace['entries'];
+        entries_nb = entries.type.range()[1]
         
         if entries[index]['str']:
             r = range(index, entries_nb) + range(index)
         else:
             r = range(index)
         
+        last_timestamp = 0
         for i in r:
             entry = entries[i]
             if not entry['str']:
@@ -35,6 +35,12 @@ class DTrace(gdb.Command):
             if s.startswith('<'):
                 n = int(s[1:].partition('>')[0])
                 s = ' ' * (n * 10) + s
+            try:
+                timestamp = entry['timestamp']
+                print '[%+8d]' % (timestamp - last_timestamp),
+                last_timestamp = timestamp
+            except:
+                pass
             print s
 
 DTrace()
