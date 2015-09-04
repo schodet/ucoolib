@@ -25,17 +25,43 @@
 #include "ucoo/arch/arch.hh"
 #include "ucoo/hal/timer/timer.hh"
 
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+
 #include <cstdio>
-#include <cinttypes>
 
 int
 main (int argc, const char **argv)
 {
+    // PD13 (T4_CH2) is used as input capture.
+    // PWM signal is output on PA1 (T2_CH2), there is a button on PA0.
+    // Connect PD13 on PA0 or PA1.  On each edge, there will be a pulse on
+    // PD15 (T4_CH4).
     ucoo::arch_init (argc, argv);
     ucoo::test_stream_setup ();
-    ucoo::TimerHard<TIM2> timer;
-    timer.enable (1000);
+    using Timer = ucoo::TimerHard<TIM4>;
+    using TimerRef = ucoo::TimerHard<TIM2>;
+    Timer timer;
+    TimerRef timerref;
+    // AF setup.
+    rcc_periph_clock_enable (RCC_GPIOA);
+    rcc_periph_clock_enable (RCC_GPIOD);
+    gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLDOWN, GPIO1);
+    gpio_set_af (GPIOA, GPIO_AF1, GPIO1);
+    gpio_mode_setup (GPIOD, GPIO_MODE_AF, GPIO_PUPD_PULLDOWN, GPIO13 | GPIO15);
+    gpio_set_af (GPIOD, GPIO_AF2, GPIO13 | GPIO15);
+    // Timers setup.
+    timerref.enable<TimerRef::OptionReloadValue<5000>,
+        TimerRef::OptionOutputCompare<2> > (2000);
+    timerref.set_output_compare (2, 2500);
+    timer.enable<Timer::OptionOnePulse,
+        Timer::OptionReloadValue<1000>,
+        Timer::OptionTrigger<2>,
+        Timer::OptionInputCapture<2, Timer::Filter::OFF, Timer::Map::SAME,
+            Timer::Polarity::BOTH>,
+        Timer::OptionOutputCompare<4, Timer::Polarity::INVERTED> > (2000);
+    timer.set_output_compare (4, 500);
     while (1)
-        printf ("%" PRIu32 "\n", timer.get_value ());
+        printf ("%u\n", timer.get_value ());
 }
 
