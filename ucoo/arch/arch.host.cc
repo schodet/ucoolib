@@ -63,6 +63,13 @@ halt ()
 }
 
 void
+halt (const char *msg)
+{
+    fprintf (stderr, "halt: %s\n", msg);
+    abort ();
+}
+
+void
 halt_perror ()
 {
     perror ("halt");

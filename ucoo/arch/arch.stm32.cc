@@ -43,6 +43,16 @@ halt ()
 }
 
 void
+halt (const char *msg)
+{
+    volatile const char *halt_message = msg;
+    (void) halt_message;
+    asm volatile ("bkpt");
+    while (1)
+        ;
+}
+
+void
 halt_perror ()
 {
     halt ();

@@ -52,6 +52,10 @@ access_once (T &x)
 void
 halt () __attribute__ ((noreturn));
 
+/// Stop, try to output error message.
+void
+halt (const char *msg) __attribute__ ((noreturn));
+
 /// Stop, try to output error description corresponding to errno.
 void
 halt_perror () __attribute__ ((noreturn));
@@ -66,6 +70,17 @@ assert (bool condition)
     if (!__builtin_expect (condition, 1))
         halt ();
 }
+
+void
+assert (bool condition, const char *msg) __attribute__ ((always_inline));
+extern inline void
+assert (bool condition, const char *msg)
+{
+    if (!__builtin_expect (condition, 1))
+        halt (msg);
+}
+
+#define assert(c) assert (c, #c)
 
 /// To be used to swear that this code can never be reached.
 void
