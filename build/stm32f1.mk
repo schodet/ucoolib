@@ -6,14 +6,14 @@ include $(UCOO_BASE)/build/stm32.mk
 
 $(eval $(call stm32_libopencm3,stm32f1))
 
-stm32f1_SUBTARGETS := stm32 arm newlib
+stm32f1_SUBTARGETS = stm32 arm newlib
 
-stm32f1_CPU := cortex-m3
-stm32f1_STM32_DEFS := -DSTM32F1
+stm32f1_CPU = cortex-m3
+stm32f1_STM32_DEFS = -DSTM32F1
 
 $(eval $(call stm32_flags,stm32f1))
 
-stm32f1_PREFIX := arm-none-eabi-
+stm32f1_PREFIX = arm-none-eabi-
 $(eval $(call arch_cmds,stm32f1))
 
 stm32f1_ELF_SUFFIX = .elf

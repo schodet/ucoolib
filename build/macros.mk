@@ -35,3 +35,12 @@ mkdir_if_needed = $(if $(wildcard $(dir $1)),,$Qmkdir -p $(dir $1))
 # $(call rmdir_as_needed,DIRS,ROOT)
 rmdir_as_needed = $Qrmdir $(call reverse,$(sort $(call parents,$1,$2))) \
 		  $2 2>/dev/null || true
+
+# Emit a source specific variable assignment.
+# $(call source_specific,MODULE,SOURCES,VAR=value)
+define source_specific_sub
+$(foreach target,$(TARGETS),\
+	$(patsubst %,$(OBJDIR)/%.$(target).o,\
+	$(addprefix $1/,$(basename $2)))): $3
+endef
+source_specific = $(eval $(call source_specific_sub,$1,$2,$3))

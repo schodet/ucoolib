@@ -16,13 +16,13 @@ include $(UCOO_BASE)/build/macros.mk
 OBJDIR := obj
 
 INCLUDES := $(INCLUDES) -I$(UCOO_BASE) -I$(BASE) -I$(OBJDIR)
-CPPFLAGS := $(DEFS) $(INCLUDES) -MP -MMD
+CPPFLAGS = $(DEFS) $(INCLUDES) -MP -MMD
 OPTIMIZE ?= -Os
-CFLAGS := -g3 -Wall -W -Wundef -Wno-unused-parameter \
+CFLAGS = -g3 -Wall -W -Wundef -Wno-unused-parameter \
 	-fno-exceptions $(OPTIMIZE)
-CXXFLAGS := $(CFLAGS) -fno-rtti -fno-threadsafe-statics -std=gnu++11 -Wno-deprecated-declarations
-LDFLAGS :=
-LDLIBS := $(LIBS)
+CXXFLAGS = $(CFLAGS) -fno-rtti -fno-threadsafe-statics -std=gnu++11 -Wno-deprecated-declarations
+LDFLAGS =
+LDLIBS = $(LIBS)
 
 # Quiet, unset to see executed lines.
 Q = @

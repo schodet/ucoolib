@@ -6,18 +6,18 @@
 
 # Define standard commands.
 define arch_cmds
-$1_TARGET_DEFS := -DTARGET_$1=1 $$($1_SUBTARGETS:%=-DTARGET_%=1)
+$1_TARGET_DEFS = -DTARGET_$1=1 $$($1_SUBTARGETS:%=-DTARGET_%=1)
 $1_CPPFLAGS += $$($1_TARGET_DEFS)
-$1_CC := $$($1_PREFIX)gcc
-$1_CXX := $$($1_PREFIX)g++
-$1_OBJCOPY := $$($1_PREFIX)objcopy
-$1_OBJDUMP := $$($1_PREFIX)objdump
-$1_SIZE := $$($1_PREFIX)size
-$1_COMPILE.c := $$($1_CC) $$($1_CFLAGS) $$($1_CPPFLAGS) -c
-$1_COMPILE.cc := $$($1_CXX) $$($1_CXXFLAGS) $$($1_CPPFLAGS) -c
-$1_COMPILE.S := $$($1_CC) $$($1_ASFLAGS) $$($1_CPPFLAGS) -c
-$1_LINK.c := $$($1_CC) $$($1_CFLAGS) $$($1_LDFLAGS)
-$1_LINK.cc := $$($1_CXX) $$($1_CXXFLAGS) $$($1_LDFLAGS)
+$1_CC = $$($1_PREFIX)gcc
+$1_CXX = $$($1_PREFIX)g++
+$1_OBJCOPY = $$($1_PREFIX)objcopy
+$1_OBJDUMP = $$($1_PREFIX)objdump
+$1_SIZE = $$($1_PREFIX)size
+$1_COMPILE.c = $$($1_CC) $$($1_CFLAGS) $$($1_CPPFLAGS) -c
+$1_COMPILE.cc = $$($1_CXX) $$($1_CXXFLAGS) $$($1_CPPFLAGS) -c
+$1_COMPILE.S = $$($1_CC) $$($1_ASFLAGS) $$($1_CPPFLAGS) -c
+$1_LINK.c = $$($1_CC) $$($1_CFLAGS) $$($1_LDFLAGS)
+$1_LINK.cc = $$($1_CXX) $$($1_CXXFLAGS) $$($1_LDFLAGS)
 endef
 
 
