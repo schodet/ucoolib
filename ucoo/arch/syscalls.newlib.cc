@@ -26,6 +26,8 @@
 
 #include <reent.h>
 #include <sys/stat.h>
+#include <sys/times.h>
+#include <time.h>
 #include <errno.h>
 
 ucoo::Stream *ucoo::syscalls_streams[3];
@@ -56,6 +58,13 @@ _sbrk_r (struct _reent *ptr, int incr)
     prev_heap_end = heap_end;
     heap_end += incr;
     return (void *) prev_heap_end;
+}
+
+/** Some Newlib versions insist to call this function when exit is called,
+ * make them happy. */
+extern "C" void
+_fini (void)
+{
 }
 
 /** Exit program, endless loop to stop program, to be improved. */
@@ -175,5 +184,35 @@ _write_r (struct _reent *ptr, int fd, const void *buf, size_t cnt)
         ptr->_errno = EBADF;
         return -1;
     }
+}
+
+extern "C" int
+_unlink_r (struct _reent *ptr, const char *pathname)
+{
+    ptr->_errno = ENOSYS;
+    return -1;
+}
+
+extern "C" int
+_link_r (struct _reent *ptr, const char *old_name, const char *new_name)
+{
+    ptr->_errno = ENOSYS;
+    return -1;
+}
+
+extern "C" clock_t
+_times_r (struct _reent *ptr, struct tms *ptms)
+{
+    ptr->_errno = ENOSYS;
+    return -1;
+}
+
+extern "C" int
+_gettimeofday_r (struct _reent *ptr,
+                 struct timeval *ptimeval,
+                 void *ptimezone)
+{
+    ptr->_errno = ENOSYS;
+    return -1;
 }
 
