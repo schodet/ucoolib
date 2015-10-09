@@ -1,8 +1,6 @@
-#ifndef ucoo_arch_syscalls_newlib_hh
-#define ucoo_arch_syscalls_newlib_hh
 // ucoolib - Microcontroller object oriented library. {{{
 //
-// Copyright (C) 2012 Nicolas Schodet
+// Copyright (C) 2015 Nicolas Schodet
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -23,17 +21,38 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "ucoo/intf/stream.hh"
 #include "ucoo/intf/file_system.hh"
+#ifdef TARGET_newlib
+# include "ucoo/arch/syscalls.newlib.hh"
+# include "ucoo/common.hh"
+#endif
 
 namespace ucoo {
 
-/// Streams used as stdin, stdout, stderr and open files.
-extern Stream *syscalls_streams[8];
+void
+FileSystem::enable (bool root)
+{
+    disable ();
+    enabled_ = true;
+    root_ = root;
+#ifdef TARGET_newlib
+    if (root_)
+    {
+        assert (!syscalls_file_system);
+        syscalls_file_system = this;
+    }
+#endif
+}
 
-/// File system, if any.
-extern FileSystem *syscalls_file_system;
+void
+FileSystem::disable ()
+{
+#ifdef TARGET_newlib
+    if (enabled_ && root_)
+        syscalls_file_system = nullptr;
+#endif
+    enabled_ = false;
+    root_ = false;
+}
 
 } // namespace ucoo
-
-#endif // ucoo_arch_syscalls_newlib_hh

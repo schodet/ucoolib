@@ -26,11 +26,15 @@
 
 #include <reent.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/times.h>
 #include <time.h>
+#include <fcntl.h>
 #include <errno.h>
 
-ucoo::Stream *ucoo::syscalls_streams[3];
+ucoo::Stream *ucoo::syscalls_streams[8];
+
+ucoo::FileSystem *ucoo::syscalls_file_system;
 
 /** This is needed by C++ ABI, this simple definition will do.  See:
  * http://lists.debian.org/debian-gcc/2003/07/msg00057.html */
@@ -74,21 +78,6 @@ _exit (int n)
     ucoo::halt ();
 }
 
-/** Close a file, unimplemented. */
-extern "C" int
-_close_r (struct _reent *ptr, int fd)
-{
-    return -1;
-}
-
-/** Status of open file, consider all files as character devices. */
-extern "C" int
-_fstat_r (struct _reent *ptr, int fd, struct stat *st)
-{
-    st->st_mode = S_IFCHR;
-    return 0;
-}
-
 /** Get PID, minimal implementation. */
 extern "C" int
 _getpid_r (struct _reent *ptr)
@@ -96,11 +85,19 @@ _getpid_r (struct _reent *ptr)
     return 1;
 }
 
-/** Whether file is a terminal, consider this is always true. */
+/** Whether file is a terminal, consider this is always true for stdin, stdout
+ * and stderr. */
 extern "C" int
 _isatty_r (struct _reent *ptr, int fd)
 {
-    return 1;
+    if (fd < ucoo::lengthof (ucoo::syscalls_streams)
+        && ucoo::syscalls_streams[fd])
+        return fd < 3;
+    else
+    {
+        ptr->_errno = EBADF;
+        return -1;
+    }
 }
 
 /** Send a signal, no process, no signal. */
@@ -111,46 +108,137 @@ _kill_r (struct _reent *ptr, int pid, int sig)
     return -1;
 }
 
-/** Set position in a file, no-op. */
+/** Set position in a file, unimplemented. */
 extern "C" off_t
 _lseek_r (struct _reent *ptr, int fd, off_t pos, int whence)
 {
-    return 0;
+    ptr->_errno = ENOSYS;
+    return -1;
 }
 
-/** Open a file, unimplemented. */
+/** Open a file. */
 extern "C" int
 _open_r (struct _reent *ptr, const char *file, int flags, int mode)
 {
-    return -1;
+    if (ucoo::syscalls_file_system)
+    {
+        int i;
+        for (i = 0; i < ucoo::lengthof (ucoo::syscalls_streams)
+             && ucoo::syscalls_streams[i]; i++)
+            ;
+        if (i == ucoo::lengthof (ucoo::syscalls_streams))
+        {
+            ptr->_errno = ENFILE;
+            return -1;
+        }
+        else
+        {
+            ucoo::FileSystem::Mode mode;
+#ifdef O_BINARY
+            flags &= ~O_BINARY;
+#endif
+#ifdef O_TEXT
+            flags &= ~O_TEXT;
+#endif
+            if (flags == O_RDONLY)
+                mode = ucoo::FileSystem::Mode::READ;
+            else if (flags == (O_WRONLY | O_CREAT | O_TRUNC))
+                mode = ucoo::FileSystem::Mode::WRITE;
+            else
+            {
+                ptr->_errno = ENOSYS;
+                return -1;
+            }
+            ucoo::FileSystem::Error error;
+            ucoo::syscalls_streams[i] =
+                ucoo::syscalls_file_system->open (file, mode, error);
+            if (!ucoo::syscalls_streams[i])
+            {
+                if (error == ucoo::FileSystem::Error::ACCESS_DENIED)
+                    ptr->_errno = EACCES;
+                else if (error == ucoo::FileSystem::Error::TOO_MANY_OPEN_FILES)
+                    ptr->_errno = ENFILE;
+                else if (error == ucoo::FileSystem::Error::NAME_TOO_LONG)
+                    ptr->_errno = ENAMETOOLONG;
+                else if (error == ucoo::FileSystem::Error::NO_SUCH_FILE)
+                    ptr->_errno = ENOENT;
+                else if (error == ucoo::FileSystem::Error::NO_SPACE_LEFT)
+                    ptr->_errno = ENOSPC;
+                else if (error == ucoo::FileSystem::Error::READ_ONLY)
+                    ptr->_errno = EROFS;
+                else
+                    ucoo::assert_unreachable ();
+                return -1;
+            }
+            else
+                return i;
+        }
+    }
+    else
+    {
+        ptr->_errno = ENOSYS;
+        return -1;
+    }
+}
+
+/** Close a file. */
+extern "C" int
+_close_r (struct _reent *ptr, int fd)
+{
+    if (ucoo::syscalls_file_system
+        && fd < ucoo::lengthof (ucoo::syscalls_streams)
+        && ucoo::syscalls_streams[fd])
+    {
+        ucoo::syscalls_file_system->close (ucoo::syscalls_streams[fd]);
+        ucoo::syscalls_streams[fd] = nullptr;
+        return 0;
+    }
+    else
+    {
+        ptr->_errno = EBADF;
+        return -1;
+    }
+}
+
+/** Status of open file, consider all files as character devices. */
+extern "C" int
+_fstat_r (struct _reent *ptr, int fd, struct stat *st)
+{
+    if (fd < ucoo::lengthof (ucoo::syscalls_streams)
+        && ucoo::syscalls_streams[fd])
+    {
+        st->st_mode = S_IFCHR;
+        return 0;
+    }
+    else
+    {
+        ptr->_errno = EBADF;
+        return -1;
+    }
 }
 
 /** Read from file. */
 extern "C" int
 _read_r (struct _reent *ptr, int fd, void *buf, size_t cnt)
 {
-    if (fd == 0)
+    if (fd < ucoo::lengthof (ucoo::syscalls_streams)
+        && ucoo::syscalls_streams[fd])
     {
-        if (ucoo::syscalls_streams[0])
+        ucoo::Stream &s = *ucoo::syscalls_streams[fd];
+        int r = s.read (reinterpret_cast<char *> (buf), cnt);
+        switch (r)
         {
-            ucoo::Stream &s = *ucoo::syscalls_streams[0];
-            int r = s.read (reinterpret_cast<char *> (buf), cnt);
-            switch (r)
-            {
-            case -2:
-                return 0;
-            case -1:
-                ptr->_errno = EIO;
-                return -1;
-            case 0:
-                ptr->_errno = EAGAIN;
-                return -1;
-            default:
-                return r;
-            }
-        }
-        else
+        case -2:
             return 0;
+        case -1:
+            ptr->_errno = EIO;
+            return -1;
+        case 0:
+            ptr->_errno = EAGAIN;
+            return -1;
+        default:
+            return r;
+        }
     }
     else
     {
@@ -163,7 +251,8 @@ _read_r (struct _reent *ptr, int fd, void *buf, size_t cnt)
 extern "C" int
 _write_r (struct _reent *ptr, int fd, const void *buf, size_t cnt)
 {
-    if ((fd == 1 || fd == 2) && ucoo::syscalls_streams[fd])
+    if (fd < ucoo::lengthof (ucoo::syscalls_streams)
+        && ucoo::syscalls_streams[fd])
     {
         ucoo::Stream &s = *ucoo::syscalls_streams[fd];
         int r = s.write (reinterpret_cast<const char *> (buf), cnt);
@@ -189,8 +278,16 @@ _write_r (struct _reent *ptr, int fd, const void *buf, size_t cnt)
 extern "C" int
 _unlink_r (struct _reent *ptr, const char *pathname)
 {
-    ptr->_errno = ENOSYS;
-    return -1;
+    if (ucoo::syscalls_file_system)
+    {
+        ucoo::syscalls_file_system->unlink (pathname);
+        return 0;
+    }
+    else
+    {
+        ptr->_errno = ENOSYS;
+        return -1;
+    }
 }
 
 extern "C" int
