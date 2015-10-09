@@ -28,4 +28,4 @@ ALL_SOURCES := $(foreach prog,$(ALL_PROGS),$($(prog)_SOURCES))
 
 OBJDIRS := $(sort $(dir $(ALL_SOURCES:%=$(OBJDIR)/%)))
 
-COMPILE_DEPS :=
+.SECONDARY: $(COMPILE_DEPS) $(COMPILE_ORDER_DEPS)

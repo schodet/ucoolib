@@ -39,6 +39,9 @@ crc:
 test:
 
 clean:
+	$(if $(EXTRA_CLEAN),rm -f $(EXTRA_CLEAN))
+	$(if $(EXTRA_CLEAN_DIRS),@echo rmdir $(EXTRA_CLEAN_DIRS))
+	$(if $(EXTRA_CLEAN_DIRS),$(call rmdir_as_needed,$(EXTRA_CLEAN_DIRS),$(OBJDIR)))
 	@echo rmdir '$(OBJDIR)/.../'
 	$(call rmdir_as_needed,$(OBJDIRS),$(OBJDIR))
 
