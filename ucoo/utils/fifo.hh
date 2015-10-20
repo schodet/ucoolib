@@ -32,7 +32,6 @@ namespace ucoo {
 /// threads.
 ///
 /// This is a rather low level container used to implement ucoolib features.
-/// Be careful that there is only room for size - 1 elements in the FIFO.
 template<typename T, int size>
 class Fifo
 {
@@ -60,7 +59,7 @@ class Fifo
     /// Return next index, use unsigned operation for optimisation.
     int next (int index) const
     {
-        return (static_cast<unsigned int> (index) + 1) % size;
+        return (static_cast<unsigned int> (index) + 1) % (size + 1);
     }
   private:
     /// Index of the next element to pop, always incremented.
@@ -69,7 +68,7 @@ class Fifo
     /// always incremented.
     int_atomic_t tail_;
     /// Memory to store elements.
-    T buffer_[size];
+    T buffer_[size + 1];
 };
 
 } // namespace ucoo

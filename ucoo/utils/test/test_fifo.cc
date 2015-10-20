@@ -32,7 +32,7 @@ main (int argc, const char **argv)
     ucoo::TestSuite tsuite ("fifo");
     {
         ucoo::Test test (tsuite, "push pop");
-        ucoo::Fifo<int, 16> fifo;
+        ucoo::Fifo<int, 15> fifo;
         fifo.push (1);
         fifo.push (2);
         fifo.push (3);
@@ -41,7 +41,7 @@ main (int argc, const char **argv)
     }
     {
         ucoo::Test test (tsuite, "full empty");
-        ucoo::Fifo<int, 4> fifo;
+        ucoo::Fifo<int, 3> fifo;
         do
         {
             test_fail_break_unless (test, fifo.empty () && !fifo.full ());
@@ -55,7 +55,7 @@ main (int argc, const char **argv)
     }
     {
         ucoo::Test test (tsuite, "write read");
-        ucoo::Fifo<int, 8> fifo;
+        ucoo::Fifo<int, 7> fifo;
         static const int b[] = { 1, 2, 3, 4, 5 };
         int c[8];
         int r;

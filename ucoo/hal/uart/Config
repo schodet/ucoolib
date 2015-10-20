@@ -1,6 +1,6 @@
 [ucoo/hal/uart]
 # Size of reception buffer.
-rx_buffer = 32
+rx_buffer = 31
 # Size of transmission buffer.
-tx_buffer = 32
+tx_buffer = 31
 
