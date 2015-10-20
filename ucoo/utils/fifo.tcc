@@ -90,6 +90,38 @@ Fifo<T, size>::read (T *buf, int count)
 }
 
 template<typename T, int size>
+int
+Fifo<T, size>::read_peek (T *buf, int count)
+{
+    // Reader, can only update head.
+    int r = 0;
+    int head = head_;
+    int tail = access_once (tail_);
+    while (r < count && head != tail)
+    {
+        buf[r] = buffer_[head];
+        head = next (head);
+        r++;
+    }
+    // Do not update head.
+    return r;
+}
+
+template<typename T, int size>
+void
+Fifo<T, size>::drop (int count)
+{
+    // Reader, can only update head.
+    int head = head_;
+    for (int i = 0; i < count; i++)
+    {
+        assert (head != tail_);
+        head = next (head);
+    }
+    head_ = head;
+}
+
+template<typename T, int size>
 inline int
 Fifo<T, size>::write (const T *buf, int count)
 {
@@ -109,6 +141,13 @@ Fifo<T, size>::write (const T *buf, int count)
     barrier ();
     tail_ = tail;
     return r;
+}
+
+template<typename T, int size>
+int
+Fifo<T, size>::poll ()
+{
+    return (tail_ + size + 1 - head_) % (size + 1);
 }
 
 } // namespace ucoo

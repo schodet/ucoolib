@@ -63,12 +63,16 @@ main (int argc, const char **argv)
         {
             r = fifo.write (b, 5);
             test_fail_break_unless (test, r == 5);
+            test_fail_break_unless (test, fifo.poll () == 5);
             r = fifo.read (c, 2);
             test_fail_break_unless (test, r == 2 && c[0] == 1 && c[1] == 2);
+            test_fail_break_unless (test, fifo.poll () == 3);
             r = fifo.write (b, 5);
             test_fail_break_unless (test, r == 4);
+            test_fail_break_unless (test, fifo.poll () == 7);
             r = fifo.read (c, 8);
             test_fail_break_unless (test, r == 7);
+            test_fail_break_unless (test, fifo.poll () == 0);
             test_fail_break_unless (test, c[0] == 3 && c[1] == 4 && c[2] == 5);
             test_fail_break_unless (test, c[3] == 1 && c[4] == 2 && c[5] == 3
                                     && c[6] == 4);

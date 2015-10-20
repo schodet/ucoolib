@@ -52,9 +52,16 @@ class Fifo
     /// Pop up to COUNT elements and store them in BUF.  Return the number of
     /// read elements.
     int read (T *buf, int count);
+    /// Read up to COUNT elements and store them in BUF.  Return the number of
+    /// read elements.  Do not pop read elements.
+    int read_peek (T *buf, int count);
+    /// Drop COUNT elements, do not do that if COUNT elements are not present!
+    void drop (int count);
     /// Push up to COUNT elements from BUF.  Return the number of written
     /// elements.
     int write (const T *buf, int count);
+    /// Return the number of available elements to be read.
+    int poll ();
   private:
     /// Return next index, use unsigned operation for optimisation.
     int next (int index) const
