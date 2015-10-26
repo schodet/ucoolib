@@ -1,0 +1,1 @@
+ucoo_hal_self_programming_SOURCES := self_programming.stm32f4.cc
