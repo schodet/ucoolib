@@ -22,6 +22,7 @@
 //
 // }}}
 #include "ucoo/math/vect3d.hh"
+#include "ucoo/math/quaternion.hh"
 #include "ucoo/arch/arch.hh"
 #include "ucoo/base/test/test.hh"
 #include "ucoo/common.hh"
@@ -46,9 +47,11 @@ almost_eq (float a, double b)
 {
     float fb = b;
     float pfb = std::fabs (fb);
-    ucoo::assert (pfb >= FLT_MIN);
     float diff = std::fabs (a - fb);
-    return diff <= pfb * 4 * FLT_EPSILON;
+    if (pfb >= FLT_MIN)
+        return diff <= pfb * 4 * FLT_EPSILON;
+    else
+        return diff <= 4 * FLT_EPSILON;
 }
 
 template<>
@@ -56,9 +59,20 @@ bool
 almost_eq (double a, double b)
 {
     double pb = std::fabs (b);
-    ucoo::assert (pb >= DBL_MIN);
     double diff = std::fabs (a - b);
-    return diff <= pb * 4 * DBL_EPSILON;
+    if (pb >= DBL_MIN)
+        return diff <= pb * 4 * DBL_EPSILON;
+    else
+        return diff <= 4 * DBL_EPSILON;
+}
+
+template<typename T>
+bool
+almost_eq_vect (const ucoo::vect3d<T> v, T x, T y, T z)
+{
+    return almost_eq (v.x, x)
+        && almost_eq (v.y, y)
+        && almost_eq (v.z, z);
 }
 
 template<typename T>
@@ -152,6 +166,60 @@ test_group_vect3d (ucoo::TestSuite &tsuite, const char *tname)
     }
 }
 
+template<typename T>
+void
+test_group_quaternion (ucoo::TestSuite &tsuite, const char *tname)
+{
+    tsuite.group (tname);
+    ucoo::vect3d<T> x (1, 0, 0);
+    ucoo::vect3d<T> y (0, 1, 0);
+    ucoo::vect3d<T> z (0, 0, 1);
+    do {
+        ucoo::Test test (tsuite, "rotate x");
+        ucoo::Quaternion<T> q (ucoo::YawPitchRoll<T> (0, 0, M_PI_2));
+        ucoo::vect3d<T> r;
+        r = q.rotate (x);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 1, 0, 0));
+        r = q.rotate (y);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 0, 1));
+        r = q.rotate (z);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, -1, 0));
+    } while (0);
+    do {
+        ucoo::Test test (tsuite, "rotate y");
+        ucoo::Quaternion<T> q (ucoo::YawPitchRoll<T> (0, M_PI_2, 0));
+        ucoo::vect3d<T> r;
+        r = q.rotate (x);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 0, -1));
+        r = q.rotate (y);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 1, 0));
+        r = q.rotate (z);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 1, 0, 0));
+    } while (0);
+    do {
+        ucoo::Test test (tsuite, "rotate z");
+        ucoo::Quaternion<T> q (ucoo::YawPitchRoll<T> (M_PI_2, 0, 0));
+        ucoo::vect3d<T> r;
+        r = q.rotate (x);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 1, 0));
+        r = q.rotate (y);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, -1, 0, 0));
+        r = q.rotate (z);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 0, 1));
+    } while (0);
+    do {
+        ucoo::Test test (tsuite, "rotate zyx");
+        ucoo::Quaternion<T> q (ucoo::YawPitchRoll<T> (M_PI_2, M_PI_2, M_PI_2));
+        ucoo::vect3d<T> r;
+        r = q.rotate (x);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 0, -1));
+        r = q.rotate (y);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 1, 0));
+        r = q.rotate (z);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 1, 0, 0));
+    } while (0);
+}
+
 int
 main (int argc, const char **argv)
 {
@@ -160,5 +228,7 @@ main (int argc, const char **argv)
     test_group_vect3d<int> (tsuite, "vect3d int");
     test_group_vect3d<float> (tsuite, "vect3d float");
     test_group_vect3d<double> (tsuite, "vect3d double");
+    test_group_quaternion<float> (tsuite, "quaternion float");
+    test_group_quaternion<double> (tsuite, "quaternion double");
     return tsuite.report () ? 0 : 1;
 }
