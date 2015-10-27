@@ -67,6 +67,10 @@ class Gpio : public Io
     void pull (Pull dir);
     /// Set output speed.
     void speed (Speed s);
+    /// Set alternate function.
+    void af (int num);
+    /// Set as analog.
+    void analog ();
   private:
     /// Port register base address.
     const uint32_t port_;

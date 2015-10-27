@@ -76,6 +76,19 @@ dmask_set (uint32_t mask, uint32_t reg, uint32_t bits)
     return reg;
 }
 
+/// Set four bits in a register for the corresponding one-bit mask.
+static uint32_t
+qmask_set (uint32_t mask, uint32_t reg, uint32_t bits)
+{
+    uint32_t qshift = mask * mask;
+    qshift *= qshift;
+    uint32_t qmask = qshift | qshift << 1;
+    qmask = qmask | qmask << 2;
+    reg &= ~qmask;
+    reg |= bits * qshift;
+    return reg;
+}
+
 void
 Gpio::input ()
 {
@@ -102,6 +115,23 @@ Gpio::speed (Speed s)
 {
     GPIO_OSPEEDR (port_) = dmask_set (mask_, GPIO_OSPEEDR (port_),
                                       static_cast<uint32_t> (s));
+}
+
+void
+Gpio::af (int num)
+{
+    GPIO_MODER (port_) = dmask_set (mask_, GPIO_MODER (port_), GPIO_MODE_AF);
+    if (mask_ & 0xff)
+        GPIO_AFRL (port_) = qmask_set (mask_, GPIO_AFRL (port_), num);
+    else
+        GPIO_AFRH (port_) = qmask_set (mask_ >> 8, GPIO_AFRH (port_), num);
+}
+
+void
+Gpio::analog ()
+{
+    GPIO_MODER (port_) = dmask_set (mask_, GPIO_MODER (port_),
+                                    GPIO_MODE_ANALOG);
 }
 
 } // namespace ucoo
