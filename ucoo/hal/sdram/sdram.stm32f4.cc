@@ -66,20 +66,20 @@ Sdram::enable ()
     uint32_t sdcr =
         FMC_SDCR_RPIPE_NONE
         | (clock_div == 2 ? FMC_SDCR_SDCLK_2HCLK : FMC_SDCR_SDCLK_3HCLK)
-        | (params_.cas * FMC_SDCR_CAS_SHIFT)
+        | (params_.cas << FMC_SDCR_CAS_SHIFT)
         | (params_.banks == 2 ? FMC_SDCR_NB2 : FMC_SDCR_NB4)
         | (params_.bits == 8 ? FMC_SDCR_MWID_8b
            : (params_.bits == 16 ? FMC_SDCR_MWID_16b : FMC_SDCR_MWID_32b))
-        | ((params_.row_bits - 11) * FMC_SDCR_NR_SHIFT)
-        | ((params_.col_bits - 8) * FMC_SDCR_NC_SHIFT);
+        | ((params_.row_bits - 11) << FMC_SDCR_NR_SHIFT)
+        | ((params_.col_bits - 8) << FMC_SDCR_NC_SHIFT);
     uint32_t sdtr =
-        ((params_.trcd - 1) * FMC_SDTR_TRCD_SHIFT)
-        | ((params_.trp - 1) * FMC_SDTR_TRP_SHIFT)
-        | ((params_.twr - 1) * FMC_SDTR_TWR_SHIFT)
-        | ((params_.trc - 1) * FMC_SDTR_TRC_SHIFT)
-        | ((params_.tras - 1) * FMC_SDTR_TRAS_SHIFT)
-        | ((params_.txsr - 1) * FMC_SDTR_TXSR_SHIFT)
-        | ((params_.tmrd - 1) * FMC_SDTR_TMRD_SHIFT);
+        ((params_.trcd - 1) << FMC_SDTR_TRCD_SHIFT)
+        | ((params_.trp - 1) << FMC_SDTR_TRP_SHIFT)
+        | ((params_.twr - 1) << FMC_SDTR_TWR_SHIFT)
+        | ((params_.trc - 1) << FMC_SDTR_TRC_SHIFT)
+        | ((params_.tras - 1) << FMC_SDTR_TRAS_SHIFT)
+        | ((params_.txsr - 1) << FMC_SDTR_TXSR_SHIFT)
+        | ((params_.tmrd - 1) << FMC_SDTR_TMRD_SHIFT);
     if (params_.bank == 1)
     {
         FMC_SDCR1 = sdcr;
@@ -104,7 +104,7 @@ Sdram::enable ()
     while (FMC_SDSR & FMC_SDSR_BUSY)
         ;
     FMC_SDCMR = bank | ((params_.init_auto_refresh - 1)
-                        * FMC_SDCMR_NRFS_SHIFT)
+                        << FMC_SDCMR_NRFS_SHIFT)
         | FMC_SDCMR_MODE_AUTO_REFRESH;
     while (FMC_SDSR & FMC_SDSR_BUSY)
         ;
@@ -115,7 +115,7 @@ Sdram::enable ()
            : SDRAM_MODE_CAS_LATENCY_3)
         | SDRAM_MODE_OPERATING_MODE_STANDARD
         | SDRAM_MODE_WRITEBURST_MODE_SINGLE;
-    FMC_SDCMR = bank | (sdram_mode * FMC_SDCMR_MRD_SHIFT)
+    FMC_SDCMR = bank | (sdram_mode << FMC_SDCMR_MRD_SHIFT)
         | FMC_SDCMR_MODE_LOAD_MODE_REGISTER;
     // Set refresh rate.
     int refresh_interval_ns = params_.tref_ms * 1000000
