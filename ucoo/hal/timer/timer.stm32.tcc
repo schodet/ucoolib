@@ -42,6 +42,7 @@ struct TimerHardware<TIM1>
     static const unsigned int max = 0xffff;
     static const bool advanced = true;
     static const bool slave = true;
+    static const bool one_pulse = true;
     static const int channels = 4;
 };
 
@@ -57,6 +58,7 @@ struct TimerHardware<TIM2>
 #endif
     static const bool advanced = false;
     static const bool slave = true;
+    static const bool one_pulse = true;
     static const int channels = 4;
 };
 
@@ -68,6 +70,7 @@ struct TimerHardware<TIM3>
     static const unsigned int max = 0xffff;
     static const bool advanced = false;
     static const bool slave = true;
+    static const bool one_pulse = true;
     static const int channels = 4;
 };
 
@@ -79,7 +82,32 @@ struct TimerHardware<TIM4>
     static const unsigned int max = 0xffff;
     static const bool advanced = false;
     static const bool slave = true;
+    static const bool one_pulse = true;
     static const int channels = 4;
+};
+
+template<>
+struct TimerHardware<TIM10>
+{
+    static const enum rcc_periph_clken clken = RCC_TIM10;
+    static int freq () { return 2 * rcc_apb2_frequency; }
+    static const unsigned int max = 0xffff;
+    static const bool advanced = false;
+    static const bool slave = false;
+    static const bool one_pulse = false;
+    static const int channels = 1;
+};
+
+template<>
+struct TimerHardware<TIM11>
+{
+    static const enum rcc_periph_clken clken = RCC_TIM10;
+    static int freq () { return 2 * rcc_apb2_frequency; }
+    static const unsigned int max = 0xffff;
+    static const bool advanced = false;
+    static const bool slave = false;
+    static const bool one_pulse = false;
+    static const int channels = 1;
 };
 
 template<uint32_t Base>
@@ -253,6 +281,7 @@ struct TimerHard<Base>::OptionReloadValue : public TimerHard<Base>::Option
 template<uint32_t Base>
 struct TimerHard<Base>::OptionOnePulse : public TimerHard<Base>::Option
 {
+    static_assert (TimerHardware<Base>::one_pulse, "no one pulse mode");
     static const unsigned cr1 = TIM_CR1_OPM;
 };
 
