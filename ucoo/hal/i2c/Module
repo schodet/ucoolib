@@ -1,1 +1,2 @@
-ucoo_hal_i2c_SOURCES := i2c.host.cc i2c_slave_data_buffer.cc i2c_hard.stm32.cc
+ucoo_hal_i2c_SOURCES := i2c.host.cc i2c_slave_data_buffer.cc \
+	i2c_hard.stm32.cc i2c_soft.cc

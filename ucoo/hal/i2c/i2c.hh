@@ -28,9 +28,8 @@
 # include "i2c.host.hh"
 #elif defined (TARGET_stm32)
 # include "i2c_hard.stm32.hh"
-#else
-# error "not implemented for this target"
 #endif
+#include "i2c_soft.hh"
 #include "i2c_slave_data_buffer.hh"
 
 #endif // ucoo_hal_i2c_i2c_hh
