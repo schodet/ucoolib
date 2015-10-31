@@ -25,6 +25,7 @@
 // }}}
 #include "ucoo/intf/stream.hh"
 #include "ucoo/utils/fifo.hh"
+#include "ucoo/utils/function.hh"
 
 #include "config/ucoo/hal/uart.hh"
 
@@ -50,6 +51,11 @@ class Uart : public Stream
     void enable (int speed, Parity parity = Parity::NONE, int stop_bits = 1);
     /// Disable.
     void disable ();
+    /// Register a function to be called on events (new data available or room
+    /// available in TX buffer).  Handler first parameter is true if new data
+    /// is available.
+    template<typename F>
+    void register_event (F handler) { handler_ = handler; }
     /// Change the error character.
     void set_error_char (char c);
     /// See Stream::read.
@@ -71,6 +77,8 @@ class Uart : public Stream
     char error_char_;
     /// Is it enabled?
     bool enabled_;
+    /// Handler called on event.
+    Function<void (bool)> handler_;
 };
 
 } // namespace ucoo

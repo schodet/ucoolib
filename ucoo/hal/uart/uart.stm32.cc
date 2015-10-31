@@ -198,14 +198,22 @@ Uart::isr (int n)
     if (sr & USART_SR_RXNE)
     {
         if (!uart.rx_fifo_.full ())
+        {
+            bool was_empty = uart.rx_fifo_.empty ();
             uart.rx_fifo_.push (dr);
+            if (was_empty && uart.handler_)
+                uart.handler_ (true);
+        }
     }
     if (sr & USART_SR_TXE)
     {
+        bool was_full = uart.tx_fifo_.full ();
         if (!uart.tx_fifo_.empty ())
             USART_DR (base) = static_cast<uint8_t> (uart.tx_fifo_.pop ());
         if (uart.tx_fifo_.empty ())
             USART_CR1 (base) &= ~USART_CR1_TXEIE;
+        if (was_full && uart.handler_)
+            uart.handler_ (false);
     }
 }
 
