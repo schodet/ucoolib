@@ -2,6 +2,10 @@
 #
 # Usefull macros.
 
+# Evaluate B only if A is defined.
+# $(call ifdefined,A,B)
+ifdefined = $(if $(filter undefined,$(origin $1)),$2)
+
 # Return $(A) only if defined, else return B.
 # $(call defval,A,B)
 defval = $(if $(filter undefined,$(origin $1)),$2,$($1))
@@ -44,3 +48,7 @@ $(foreach target,$(TARGETS),\
 	$(addprefix $1/,$(basename $2)))): $3
 endef
 source_specific = $(eval $(call source_specific_sub,$1,$2,$3))
+
+# Evaluate subvariables.
+# $(call foreachsub,LIST,PREFIX)
+foreachsub = $(foreach v,$1,$($(subst /,_,$v)_$2))
