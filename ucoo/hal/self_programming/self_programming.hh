@@ -27,6 +27,10 @@
 
 namespace ucoo {
 
+/// Query flash size.
+int
+self_programming_flash_size ();
+
 /// Erase flash, must be aligned on erase size.
 void
 self_programming_erase (uint32_t addr, int count);

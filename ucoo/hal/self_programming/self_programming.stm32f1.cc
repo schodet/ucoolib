@@ -25,26 +25,9 @@
 
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/desig.h>
+#include <libopencm3/stm32/dbgmcu.h>
 
 namespace ucoo {
-
-static const uint32_t sector_addr[] = {
-    // 16 KB
-    0x8000000, 0x8004000, 0x8008000, 0x800c000,
-    // 64 KB
-    0x8010000,
-    // 128 KB.
-    0x8020000, 0x8040000, 0x8060000, 0x8080000, 0x80a0000, 0x80c0000,
-    0x80e0000, 0x8100000,
-    // For two banks devices only:
-    // 16 KB
-    0x8100000, 0x8104000, 0x8108000, 0x810c000,
-    // 64 KB
-    0x8110000,
-    // 128 KB.
-    0x8120000, 0x8140000, 0x8160000, 0x8180000, 0x81a0000, 0x81c0000,
-    0x81e0000, 0x8200000,
-};
 
 int
 self_programming_flash_size ()
@@ -55,20 +38,19 @@ self_programming_flash_size ()
 void
 self_programming_erase (uint32_t addr, int count)
 {
-    assert (static_cast<int> (addr - sector_addr[0] + count)
+    assert (static_cast<int> (addr - FLASH_BASE + count)
             <= self_programming_flash_size ());
-    int sector;
-    for (sector = 0; count && sector < lengthof (sector_addr); sector++)
+    uint32_t idcode = DBGMCU_IDCODE & DBGMCU_IDCODE_DEV_ID_MASK;
+    int page_size = idcode >= 0x414 ? 2048 : 1024;
+    assert ((addr & (page_size - 1)) == 0);
+    assert ((count & (page_size - 1)) == 0);
+    while (count)
     {
-        if (addr == sector_addr[sector])
-        {
-            flash_unlock ();
-            flash_erase_sector (sector, FLASH_CR_PROGRAM_X32);
-            flash_lock ();
-            int sector_size = sector_addr[sector + 1] - addr;
-            addr += sector_size;
-            count -= sector_size;
-        }
+        flash_unlock ();
+        flash_erase_page (addr);
+        flash_lock ();
+        addr += page_size;
+        count -= page_size;
     }
     assert (count == 0);
 }
@@ -76,15 +58,15 @@ self_programming_erase (uint32_t addr, int count)
 void
 self_programming_write (uint32_t addr, const char *buf, int count)
 {
-    assert (addr % 4 == 0);
-    assert (reinterpret_cast<int> (buf) % 4 == 0);
-    assert (count % 4 == 0);
-    assert (static_cast<int> (addr - sector_addr[0] + count)
+    assert (addr % 2 == 0);
+    assert (reinterpret_cast<int> (buf) % 2 == 0);
+    assert (count % 2 == 0);
+    assert (static_cast<int> (addr - FLASH_BASE + count)
             <= self_programming_flash_size ());
     flash_unlock ();
-    for (int i = 0; i < count; i += 4)
-        flash_program_word (addr + i,
-                            *reinterpret_cast<const uint32_t *> (buf + i));
+    for (int i = 0; i < count; i += 2)
+        flash_program_half_word (
+            addr + i, *reinterpret_cast<const uint16_t *> (buf + i));
     flash_lock ();
 }
 

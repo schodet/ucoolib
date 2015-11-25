@@ -1,1 +1,2 @@
-ucoo_hal_self_programming_SOURCES := self_programming.stm32f4.cc
+ucoo_hal_self_programming_SOURCES := self_programming.stm32f4.cc \
+	self_programming.stm32f1.cc
