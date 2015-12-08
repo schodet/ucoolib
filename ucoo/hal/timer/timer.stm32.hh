@@ -58,6 +58,10 @@ class TimerHard
     void wait_input_capture (int ch) const;
     /// Get timer frequency.
     int get_freq () const { return freq_; }
+    /// Enable interrupts on update event.
+    void enable_interrupt ();
+    /// Disable interrupts on update event.
+    void disable_interrupt ();
   private:
     /// Enable updates (reload value, output compare values...).
     void enable_updates ();

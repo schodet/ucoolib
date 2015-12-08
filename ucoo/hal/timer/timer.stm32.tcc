@@ -229,6 +229,20 @@ TimerHard<Base>::wait_input_capture (int ch) const
 
 template<uint32_t Base>
 void
+TimerHard<Base>::enable_interrupt ()
+{
+    TIM_DIER (Base) |= TIM_DIER_UIE;
+}
+
+template<uint32_t Base>
+void
+TimerHard<Base>::disable_interrupt ()
+{
+    TIM_DIER (Base) &= ~TIM_DIER_UIE;
+}
+
+template<uint32_t Base>
+void
 TimerHard<Base>::enable_updates ()
 {
     TIM_CR1 (Base) &= ~TIM_CR1_UDIS;
