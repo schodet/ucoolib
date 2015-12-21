@@ -35,7 +35,7 @@ static const uint32_t sector_addr[] = {
     0x8010000,
     // 128 KB.
     0x8020000, 0x8040000, 0x8060000, 0x8080000, 0x80a0000, 0x80c0000,
-    0x80e0000, 0x8100000,
+    0x80e0000,
     // For two banks devices only:
     // 16 KB
     0x8100000, 0x8104000, 0x8108000, 0x810c000,
@@ -62,8 +62,9 @@ self_programming_erase (uint32_t addr, int count)
     {
         if (addr == sector_addr[sector])
         {
+            int snb = sector >= 12 ? sector + 16 - 12 : sector;
             flash_unlock ();
-            flash_erase_sector (sector, FLASH_CR_PROGRAM_X32);
+            flash_erase_sector (snb, FLASH_CR_PROGRAM_X32);
             flash_lock ();
             int sector_size = sector_addr[sector + 1] - addr;
             addr += sector_size;
