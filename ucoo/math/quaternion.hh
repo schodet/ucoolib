@@ -42,6 +42,12 @@ struct Quaternion
     Quaternion (const YawPitchRoll<T> &ypr);
     /// Rotate a vector by a unit quaternion.
     vect3d<T> rotate (const vect3d<T> &v) const;
+    /// Compute Yaw.
+    T yaw () const;
+    /// Compute Pitch.
+    T pitch () const;
+    /// Compute Roll.
+    T roll () const;
 };
 
 } // namespace ucoo

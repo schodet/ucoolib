@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <cfloat>
+#include <cstdio>
 
 template<typename T>
 bool
@@ -45,10 +46,11 @@ template<>
 bool
 almost_eq (float a, double b)
 {
+    float pfa = std::fabs (a);
     float fb = b;
     float pfb = std::fabs (fb);
     float diff = std::fabs (a - fb);
-    if (pfb >= FLT_MIN)
+    if (pfa >= FLT_MIN && pfb >= FLT_MIN)
         return diff <= pfb * 4 * FLT_EPSILON;
     else
         return diff <= 4 * FLT_EPSILON;
@@ -58,9 +60,10 @@ template<>
 bool
 almost_eq (double a, double b)
 {
+    double pa = std::fabs (a);
     double pb = std::fabs (b);
     double diff = std::fabs (a - b);
-    if (pb >= DBL_MIN)
+    if (pa >= DBL_MIN && pb >= DBL_MIN)
         return diff <= pb * 4 * DBL_EPSILON;
     else
         return diff <= 4 * DBL_EPSILON;
@@ -217,6 +220,31 @@ test_group_quaternion (ucoo::TestSuite &tsuite, const char *tname)
         test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 1, 0));
         r = q.rotate (z);
         test_fail_break_unless (test, almost_eq_vect<T> (r, 1, 0, 0));
+    } while (0);
+    do {
+        ucoo::Test test (tsuite, "yaw-pitch-roll to quaternion and back");
+        ucoo::YawPitchRoll<T> yprs[] = {
+            { M_PI_4, 0, 0 },
+            { 0, M_PI_4, 0 },
+            { 0, 0, M_PI_4 },
+            { M_PI / 3, M_PI_4, 0 },
+            { M_PI / 3, 0, M_PI_4 },
+            { 0, M_PI / 3, M_PI_4 },
+            { M_PI / 3, M_PI_4, M_PI / 6 },
+            { -M_PI_4, 0, 0 },
+            { 0, -M_PI_4, 0 },
+            { 0, 0, -M_PI_4 },
+            { M_PI_2 + M_PI_4, 0, 0 },
+            // Pitch is between -pi/2 and +pi/2.
+            { 0, 0, M_PI_2 + M_PI_4 },
+        };
+        for (auto &ypr : yprs)
+        {
+            ucoo::Quaternion<T> q (ypr);
+            test_fail_break_unless (test, almost_eq (ypr.yaw, q.yaw ()));
+            test_fail_break_unless (test, almost_eq (ypr.pitch, q.pitch ()));
+            test_fail_break_unless (test, almost_eq (ypr.roll, q.roll ()));
+        }
     } while (0);
 }
 

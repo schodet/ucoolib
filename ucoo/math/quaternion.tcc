@@ -68,6 +68,27 @@ Quaternion<T>::rotate (const vect3d<T> &v) const
     return vect3d<T> (nx, ny, nz);
 }
 
+template<typename T>
+T
+Quaternion<T>::yaw () const
+{
+    return std::atan2 (2 * (x * y + w * z), w * w + x * x - y * y - z * z);
+}
+
+template<typename T>
+T
+Quaternion<T>::pitch () const
+{
+    return std::asin (-2 * (x * z - w * y));
+}
+
+template<typename T>
+T
+Quaternion<T>::roll () const
+{
+    return std::atan2 (2 * (y * z + w * x), w * w - x * x - y * y + z * z);
+}
+
 } // namespace ucoo
 
 #endif // ucoo_math_quaternion_tcc
