@@ -222,6 +222,20 @@ test_group_quaternion (ucoo::TestSuite &tsuite, const char *tname)
         test_fail_break_unless (test, almost_eq_vect<T> (r, 1, 0, 0));
     } while (0);
     do {
+        ucoo::Test test (tsuite, "multiplication");
+        ucoo::Quaternion<T> q1 (ucoo::YawPitchRoll<T> (M_PI_2, 0, 0));
+        ucoo::Quaternion<T> q2 (ucoo::YawPitchRoll<T> (0, M_PI_2, 0));
+        ucoo::Quaternion<T> q3 (ucoo::YawPitchRoll<T> (0, 0, M_PI_2));
+        ucoo::Quaternion<T> q = q1 * q2 * q3;
+        ucoo::vect3d<T> r;
+        r = q.rotate (x);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 0, -1));
+        r = q.rotate (y);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 0, 1, 0));
+        r = q.rotate (z);
+        test_fail_break_unless (test, almost_eq_vect<T> (r, 1, 0, 0));
+    } while (0);
+    do {
         ucoo::Test test (tsuite, "yaw-pitch-roll to quaternion and back");
         ucoo::YawPitchRoll<T> yprs[] = {
             { M_PI_4, 0, 0 },

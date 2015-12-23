@@ -89,6 +89,18 @@ Quaternion<T>::roll () const
     return std::atan2 (2 * (y * z + w * x), w * w - x * x - y * y + z * z);
 }
 
+template<typename T>
+Quaternion<T>
+Quaternion<T>::operator* (const Quaternion<T> &r) const
+{
+    return Quaternion<T> (
+        w * r.w - x * r.x - y * r.y - z * r.z,
+        w * r.x + x * r.w + y * r.z - z * r.y,
+        w * r.y - x * r.z + y * r.w + z * r.x,
+        w * r.z + x * r.y - y * r.x + z * r.w
+        );
+}
+
 } // namespace ucoo
 
 #endif // ucoo_math_quaternion_tcc

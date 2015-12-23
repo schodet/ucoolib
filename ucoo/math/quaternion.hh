@@ -48,6 +48,8 @@ struct Quaternion
     T pitch () const;
     /// Compute Roll.
     T roll () const;
+    /// Multiply by another quaternion.
+    Quaternion<T> operator* (const Quaternion<T> &r) const;
 };
 
 } // namespace ucoo
