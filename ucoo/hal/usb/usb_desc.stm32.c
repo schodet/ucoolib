@@ -22,6 +22,8 @@
  *
  * }}} */
 #include "usb_desc.stm32.h"
+#include <libopencm3/usb/usbstd.h>
+#include <libopencm3/usb/cdc.h>
 
 #include "config/ucoo/hal/usb.hh"
 
@@ -29,7 +31,7 @@ const struct usb_device_descriptor usb_desc_dev = {
     .bLength = USB_DT_DEVICE_SIZE,
     .bDescriptorType = USB_DT_DEVICE,
     .bcdUSB = 0x0200,
-    .bDeviceClass = 0xff,
+    .bDeviceClass = CONFIG_UCOO_HAL_USB_CDC_ACM ? USB_CLASS_CDC : 0xff,
     .bDeviceSubClass = 0,
     .bDeviceProtocol = 0,
     .bMaxPacketSize0 = 64,
@@ -61,6 +63,8 @@ static const struct usb_endpoint_descriptor usb_desc_endp_1[] = {
     },
 };
 
+#if !CONFIG_UCOO_HAL_USB_CDC_ACM
+
 static const struct usb_interface_descriptor usb_desc_iface_1[] = {
     {
 	.bLength = USB_DT_INTERFACE_SIZE,
@@ -77,7 +81,96 @@ static const struct usb_interface_descriptor usb_desc_iface_1[] = {
     },
 };
 
+#else /* CONFIG_UCOO_HAL_USB_CDC_ACM */
+
+static const struct usb_interface_descriptor usb_desc_iface_1[] = {
+    {
+	.bLength = USB_DT_INTERFACE_SIZE,
+	.bDescriptorType = USB_DT_INTERFACE,
+	.bInterfaceNumber = 1,
+	.bAlternateSetting = 0,
+	.bNumEndpoints = 2,
+	.bInterfaceClass = USB_CLASS_DATA,
+	.bInterfaceSubClass = 0,
+	.bInterfaceProtocol = 0,
+	.iInterface = 0,
+
+	.endpoint = usb_desc_endp_1,
+    },
+};
+
+static const struct {
+    struct usb_cdc_header_descriptor header;
+    struct usb_cdc_call_management_descriptor call_mgmt;
+    struct usb_cdc_acm_descriptor acm;
+    struct usb_cdc_union_descriptor cdc_union;
+} __attribute__ ((packed)) usb_desc_func_desc_1 = {
+    .header = {
+        .bFunctionLength = sizeof (struct usb_cdc_header_descriptor),
+        .bDescriptorType = CS_INTERFACE,
+        .bDescriptorSubtype = USB_CDC_TYPE_HEADER,
+        .bcdCDC = 0x0110,
+    },
+    .call_mgmt = {
+        .bFunctionLength = sizeof (struct usb_cdc_call_management_descriptor),
+        .bDescriptorType = CS_INTERFACE,
+        .bDescriptorSubtype = USB_CDC_TYPE_CALL_MANAGEMENT,
+        .bmCapabilities = 0,
+        .bDataInterface = 0,
+    },
+    .acm = {
+        .bFunctionLength = sizeof (struct usb_cdc_acm_descriptor),
+        .bDescriptorType = CS_INTERFACE,
+        .bDescriptorSubtype = USB_CDC_TYPE_ACM,
+        .bmCapabilities = 2, /* SET_LINE_CODING, SET_CONTROL_LINE_STATE,
+                                GET_LINE_CODING, and SERIAL_STATE
+                                notification. */
+    },
+    .cdc_union = {
+        .bFunctionLength = sizeof (struct usb_cdc_union_descriptor),
+        .bDescriptorType = CS_INTERFACE,
+        .bDescriptorSubtype = USB_CDC_TYPE_UNION,
+        .bControlInterface = 0,
+        .bSubordinateInterface0 = 1,
+    },
+};
+
+static const struct usb_endpoint_descriptor usb_desc_endp_1_notif[] = {
+    {
+        .bLength = USB_DT_ENDPOINT_SIZE,
+        .bDescriptorType = USB_DT_ENDPOINT,
+        .bEndpointAddress = 0x82,
+        .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
+        .wMaxPacketSize = 16,
+        .bInterval = 128,
+    },
+};
+
+static const struct usb_interface_descriptor usb_desc_iface_1_notif[] = {
+    {
+        .bLength = USB_DT_INTERFACE_SIZE,
+        .bDescriptorType = USB_DT_INTERFACE,
+        .bInterfaceNumber = 0,
+        .bAlternateSetting = 0,
+        .bNumEndpoints = 1,
+        .bInterfaceClass = USB_CLASS_CDC,
+        .bInterfaceSubClass = USB_CDC_SUBCLASS_ACM,
+        .bInterfaceProtocol = USB_CDC_PROTOCOL_AT,
+        .iInterface = 0,
+
+        .endpoint = usb_desc_endp_1_notif,
+
+        .extra = &usb_desc_func_desc_1,
+        .extralen = sizeof (usb_desc_func_desc_1),
+    },
+};
+
+#endif /* CONFIG_UCOO_HAL_USB_CDC_ACM */
+
 #if CONFIG_UCOO_HAL_USB_STREAM_NB >= 2
+# if CONFIG_UCOO_HAL_USB_CDC_ACM
+#  error "no enough endpoints to implement CDC ACM"
+# endif
 
 static const struct usb_endpoint_descriptor usb_desc_endp_2[] = {
     {
@@ -159,6 +252,8 @@ static const struct usb_interface_descriptor usb_desc_iface_3[] = {
 # error "too many streams requested"
 #endif
 
+#if !CONFIG_UCOO_HAL_USB_CDC_ACM
+
 static const struct usb_interface usb_desc_ifaces[] = {
     {
 	.num_altsetting = 1,
@@ -178,11 +273,26 @@ static const struct usb_interface usb_desc_ifaces[] = {
 #endif
 };
 
+#else /* CONFIG_UCOO_HAL_USB_CDC_ACM */
+
+static const struct usb_interface usb_desc_ifaces[] = {
+    {
+	.num_altsetting = 1,
+	.altsetting = usb_desc_iface_1_notif,
+    },
+    {
+	.num_altsetting = 1,
+	.altsetting = usb_desc_iface_1,
+    },
+};
+
+#endif /* CONFIG_UCOO_HAL_USB_CDC_ACM */
+
 const struct usb_config_descriptor usb_desc_config = {
     .bLength = USB_DT_CONFIGURATION_SIZE,
     .bDescriptorType = USB_DT_CONFIGURATION,
     .wTotalLength = 0,
-    .bNumInterfaces = CONFIG_UCOO_HAL_USB_STREAM_NB,
+    .bNumInterfaces = CONFIG_UCOO_HAL_USB_CDC_ACM ? 2 : CONFIG_UCOO_HAL_USB_STREAM_NB,
     .bConfigurationValue = 1,
     .iConfiguration = 0,
     .bmAttributes = 0x80 | (CONFIG_UCOO_HAL_USB_SELF_POWERED ? 0x40 : 0),

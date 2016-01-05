@@ -30,6 +30,10 @@
 
 #include "usb_desc.stm32.h"
 
+#if CONFIG_UCOO_HAL_USB_CDC_ACM
+# include <libopencm3/usb/cdc.h>
+#endif
+
 #if defined (TARGET_stm32f4)
 # if CONFIG_UCOO_HAL_USB_DRIVER_HS
 #  define usb_isr otg_hs_isr
@@ -68,6 +72,47 @@ const char *strings[] = {
     NULL,
     NULL
 };
+
+#if CONFIG_UCOO_HAL_USB_CDC_ACM
+
+static void
+usb_cdc_acm_send_serial_state (usbd_device *usbdev, bool active)
+{
+    struct serial_state_notification
+    {
+        struct usb_cdc_notification notification;
+        uint16_t state;
+    } n;
+    n.notification.bmRequestType = 0xa1;
+    n.notification.bNotification = USB_CDC_NOTIFY_SERIAL_STATE;
+    n.notification.wValue = 0;
+    n.notification.wIndex = 0;
+    n.notification.wLength = 2;
+    n.state = active ? 3 : 0;
+    usbd_ep_write_packet (usbdev, 0x82, reinterpret_cast<void *> (&n),
+                          sizeof (n));
+}
+
+static int
+usb_cdc_acm_control_request (
+    usbd_device *usbdev,
+    struct usb_setup_data *req, uint8_t **buf, uint16_t *len,
+    void (**complete) (usbd_device *usbdev, struct usb_setup_data *req))
+{
+    switch (req->bRequest)
+    {
+    case USB_CDC_REQ_SET_CONTROL_LINE_STATE:
+        usb_cdc_acm_send_serial_state (usbdev, true);
+        return USBD_REQ_HANDLED;
+    case USB_CDC_REQ_SET_LINE_CODING:
+        if (*len < sizeof (struct usb_cdc_line_coding))
+            return USBD_REQ_NOTSUPP;
+        return USBD_REQ_HANDLED;
+    }
+    return 0;
+}
+
+#endif /* CONFIG_UCOO_HAL_USB_CDC_ACM */
 
 UsbStreamControl::RxBuffer::RxBuffer (void)
     : size (0), offset (0)
@@ -121,6 +166,15 @@ UsbStreamControl::set_config (usbd_device *usbdev, uint16_t configured)
             usbd_ep_setup (usbdev, 0x81 + i, USB_ENDPOINT_ATTR_BULK, ep_size_,
                            NULL);
         }
+#if CONFIG_UCOO_HAL_USB_CDC_ACM
+        usbd_ep_setup (usbdev, 0x82, USB_ENDPOINT_ATTR_INTERRUPT, 16, NULL);
+	usbd_register_control_callback (
+            usbdev,
+            USB_REQ_TYPE_CLASS | USB_REQ_TYPE_INTERFACE,
+            USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT,
+            usb_cdc_acm_control_request);
+        usb_cdc_acm_send_serial_state (usbdev, true);
+#endif
     }
 }
 
