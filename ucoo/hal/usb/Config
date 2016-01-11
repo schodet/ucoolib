@@ -3,7 +3,7 @@
 vendor_id = 0x1d50
 product_id = 0x6052
 # Declare as a CDC ACM device.
-cdc_acm = false
+cdc_acm = true
 # Number of streams, interfaces, or pair of endpoints.
 stream_nb = 1
 # Set to 0 if powered from USB cable, 1 if device has its own power supply.
