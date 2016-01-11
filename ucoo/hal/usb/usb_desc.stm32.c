@@ -116,7 +116,7 @@ static const struct {
         .bDescriptorType = CS_INTERFACE,
         .bDescriptorSubtype = USB_CDC_TYPE_CALL_MANAGEMENT,
         .bmCapabilities = 0,
-        .bDataInterface = 0,
+        .bDataInterface = 1,
     },
     .acm = {
         .bFunctionLength = sizeof (struct usb_cdc_acm_descriptor),
