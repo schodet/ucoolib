@@ -29,6 +29,7 @@ main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
     ucoo::UsbStreamControl usc ("APBTeam", "USB test");
+    usc.enable ();
     ucoo::UsbStream us[] = {
         ucoo::UsbStream (usc, 0),
 #if CONFIG_UCOO_HAL_USB_STREAM_NB >= 2

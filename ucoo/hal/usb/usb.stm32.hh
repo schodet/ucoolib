@@ -43,6 +43,12 @@ class UsbStreamControl
     /// Construct a new USB control object, with given VENDOR and PRODUCT
     /// strings.
     UsbStreamControl (const char *vendor, const char *product);
+    /// Destruct and disable.
+    ~UsbStreamControl ();
+    /// Enable device.
+    void enable ();
+    /// Disable device.
+    void disable ();
     /// Return true if the device is configured.  This means that the
     /// connection is done with the host and data can be exchanged.
     bool is_configured () const { return configured_; }
@@ -59,6 +65,8 @@ class UsbStreamControl
     static const int stream_nb_ = CONFIG_UCOO_HAL_USB_STREAM_NB;
     /// Pointer to the one and only instance.
     static UsbStreamControl *instance_;
+    /// Is currently enabled?
+    bool enabled_;
     /// Whether device is currently configured.
     bool configured_;
     /// Internal RX buffer type.

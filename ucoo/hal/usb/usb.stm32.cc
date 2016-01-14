@@ -120,37 +120,78 @@ UsbStreamControl::RxBuffer::RxBuffer (void)
 }
 
 UsbStreamControl::UsbStreamControl (const char *vendor, const char *product)
-    : configured_ (false)
+    : enabled_ (false), configured_ (false)
 {
     assert (!instance_);
     instance_ = this;
     strings[0] = vendor;
     strings[1] = product;
+}
+
+UsbStreamControl::~UsbStreamControl ()
+{
+    disable ();
+}
+
+void
+UsbStreamControl::enable ()
+{
+    if (!enabled_)
+    {
 #if defined (TARGET_stm32f4)
 # if CONFIG_UCOO_HAL_USB_DRIVER_HS
-    rcc_periph_clock_enable (RCC_OTGHS);
-    rcc_periph_clock_enable (RCC_GPIOB);
-    gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO14 | GPIO15);
-    gpio_set_af (GPIOB, GPIO_AF12, GPIO14 | GPIO15);
+        rcc_periph_clock_enable (RCC_OTGHS);
+        rcc_periph_clock_enable (RCC_GPIOB);
+        gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO14 | GPIO15);
+        gpio_set_af (GPIOB, GPIO_AF12, GPIO14 | GPIO15);
 # else
-    rcc_periph_clock_enable (RCC_OTGFS);
-    rcc_periph_clock_enable (RCC_GPIOA);
-    gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
-    gpio_set_af (GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+        rcc_periph_clock_enable (RCC_OTGFS);
+        rcc_periph_clock_enable (RCC_GPIOA);
+        gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+        gpio_set_af (GPIOA, GPIO_AF10, GPIO11 | GPIO12);
 # endif
 #elif defined (TARGET_stm32f1)
-    rcc_periph_clock_enable (RCC_OTGFS);
-    rcc_periph_clock_enable (RCC_GPIOA);
+        rcc_periph_clock_enable (RCC_OTGFS);
+        rcc_periph_clock_enable (RCC_GPIOA);
 #endif
-    usbdev = usbd_init (&usb_driver, &usb_desc_dev, &usb_desc_config,
-                        strings, lengthof (strings),
-                        usb_control_buffer, sizeof (usb_control_buffer));
-    usbd_register_set_config_callback (usbdev, set_config);
+        usbdev = usbd_init (&usb_driver, &usb_desc_dev, &usb_desc_config,
+                            strings, lengthof (strings),
+                            usb_control_buffer, sizeof (usb_control_buffer));
+        usbd_register_set_config_callback (usbdev, set_config);
 #if CONFIG_UCOO_HAL_USB_DRIVER_HS
-    nvic_enable_irq (NVIC_OTG_HS_IRQ);
+        nvic_enable_irq (NVIC_OTG_HS_IRQ);
 #else
-    nvic_enable_irq (NVIC_OTG_FS_IRQ);
+        nvic_enable_irq (NVIC_OTG_FS_IRQ);
 #endif
+        enabled_ = true;
+    }
+}
+
+void
+UsbStreamControl::disable ()
+{
+    if (enabled_)
+    {
+        enabled_ = false;
+        configured_ = false;
+#if CONFIG_UCOO_HAL_USB_DRIVER_HS
+        nvic_disable_irq (NVIC_OTG_HS_IRQ);
+#else
+        nvic_disable_irq (NVIC_OTG_FS_IRQ);
+#endif
+        usbd_disconnect (usbdev, true);
+#if defined (TARGET_stm32f4)
+# if CONFIG_UCOO_HAL_USB_DRIVER_HS
+        rcc_periph_clock_disable (RCC_OTGHS);
+        gpio_mode_setup (GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO14 | GPIO15);
+# else
+        rcc_periph_clock_disable (RCC_OTGFS);
+        gpio_mode_setup (GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+# endif
+#elif defined (TARGET_stm32f1)
+        rcc_periph_clock_disable (RCC_OTGFS);
+#endif
+    }
 }
 
 void
