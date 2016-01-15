@@ -52,6 +52,17 @@ self_programming_flash_size ()
     return DESIG_FLASH_SIZE * 1024;
 }
 
+int
+self_programming_erase_size (uint32_t addr)
+{
+    for (int sector = 0; sector < lengthof (sector_addr) - 1; sector++)
+    {
+        if (addr == sector_addr[sector])
+            return sector_addr[sector + 1] - addr;
+    }
+    assert_unreachable ();
+}
+
 void
 self_programming_erase (uint32_t addr, int count)
 {

@@ -35,14 +35,23 @@ self_programming_flash_size ()
     return DESIG_FLASH_SIZE * 1024;
 }
 
+int
+self_programming_erase_size (uint32_t addr)
+{
+    assert (static_cast<int> (addr - FLASH_BASE)
+            <= self_programming_flash_size ());
+    uint32_t idcode = DBGMCU_IDCODE & DBGMCU_IDCODE_DEV_ID_MASK;
+    int page_size = idcode >= 0x414 ? 2048 : 1024;
+    assert ((addr & (page_size - 1)) == 0);
+    return page_size;
+}
+
 void
 self_programming_erase (uint32_t addr, int count)
 {
     assert (static_cast<int> (addr - FLASH_BASE + count)
             <= self_programming_flash_size ());
-    uint32_t idcode = DBGMCU_IDCODE & DBGMCU_IDCODE_DEV_ID_MASK;
-    int page_size = idcode >= 0x414 ? 2048 : 1024;
-    assert ((addr & (page_size - 1)) == 0);
+    int page_size = self_programming_erase_size (addr);
     assert ((count & (page_size - 1)) == 0);
     while (count)
     {
