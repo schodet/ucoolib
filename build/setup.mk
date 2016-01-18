@@ -6,7 +6,7 @@ TARGETS ?= host
 
 DEFAULT_MODULES ?= ucoo/intf ucoo/arch ucoo/arch/host ucoo/arch/host/mex
 
-ALL_PROGS := $(PROGS) $(foreach target,$(TARGETS),$($(target)_PROGS))
+ALL_PROGS := $(sort $(PROGS) $(foreach target,$(TARGETS),$($(target)_PROGS)))
 
 ALL_MODULES :=
 NEW_MODULES := $(sort $(DEFAULT_MODULES) $(MODULES) \
