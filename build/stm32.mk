@@ -37,7 +37,10 @@ $1_CXXFLAGS = $$(sort $$($1_CFLAGS) $$(CXXFLAGS))
 $1_ASFLAGS = $$(ASFLAGS)
 $1_LDSCRIPT ?= $(if $2,$2,$1).ld
 $1_LDSCRIPT_PATH ?= $$(UCOO_BASE)/ucoo/arch/$(if $2,$2,$1)
+$1_START_ADDRESS ?= $$(if $$(filter y,$$($1_BOOTLOADED)),0x8010000)
+$1_SECTION_START = -Wl,--section-start=.text=$$($1_START_ADDRESS)
 $1_LDFLAGS = $$(LDFLAGS) -T$$($1_LDSCRIPT) -L$$($1_LDSCRIPT_PATH) \
+	$$(if $$($1_START_ADDRESS),$$($1_SECTION_START)) \
 	$$($1_LIBOPENCM3_LDFLAGS)
 $1_LDLIBS = -nostartfiles $$(LDLIBS) $$($1_LIBS) \
 	-lopencm3_$(if $2,$2,$1)
@@ -54,7 +57,7 @@ endif
 
 %.$1.program: %.$1.bin
 	@echo "PROG [$1] $$<"
-	$$Qst-flash write $$< 0x8000000
+	$$Qst-flash write $$< $$(if $$($1_START_ADDRESS),$$($1_START_ADDRESS),0x8000000)
 
 endef
 
