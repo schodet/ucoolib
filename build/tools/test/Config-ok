@@ -3,3 +3,6 @@ bar = 2
 
 [a:host]
 bar = 3
+
+[project]
+blah = 1

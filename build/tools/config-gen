@@ -28,9 +28,13 @@ def read_config(modules_configs, project_config, known_targets):
                 parser.remove_section(section)
     # Save the list of existing items for later check.
     def config_items(parser):
-        return set('%s:%s' % (section.split(':')[0], item)
-                for section in parser.sections()
-                for item in parser.options(section))
+        s = set()
+        for section in parser.sections():
+            items = parser.options(section)
+            section = section.split(':')[0]
+            if section != 'project':
+                s.update(['%s:%s' % (section, item) for item in items])
+        return s
     modules_items = config_items(parser)
     # Now read project configuration.
     if project_config is not None:
