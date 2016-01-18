@@ -4,6 +4,6 @@ TARGETS = stm32f1
 PROGS = test_lcd
 test_lcd_SOURCES = test_lcd.cc
 
-MODULES = ucoo/intf ucoo/utils ucoo/hal/gpio ucoo/hal/spi ucoo/dev/lcd
+MODULES = ucoo/utils ucoo/hal/gpio ucoo/hal/spi ucoo/dev/lcd
 
 include $(BASE)/build/top.mk
