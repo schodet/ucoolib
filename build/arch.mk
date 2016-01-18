@@ -38,10 +38,14 @@ all.$1: elf.$1
 elf.$1: $$($1_ELFS)
 
 define $1_PROG_template
-$$1.$1$$$$($1_ELF_SUFFIX): $$$$(patsubst %,$$(OBJDIR)/%.$1.o,\
+$1_$$1_LINKFLAGS = $$$$($1_CFLAGS) $$$$($1_CXXFLAGS) $$$$($1_LDFLAGS)
+$$(call cmddep,$1_$$1_LINKFLAGS,$$$$(OBJDIR)/$$1.$1.linkflags)
+$1_$$1_OBJECTS = $$$$(patsubst %,$$(OBJDIR)/%.$1.o,\
 	$$$$(call filter_sources,$1,$$$$($$1_SOURCES)))
+$$1.$1$$$$($1_ELF_SUFFIX): $$$$($1_$$1_OBJECTS) $$$$(OBJDIR)/$$1.$1.linkflags
 	@echo "LINK [$1] $$$$@"
-	$$$$Q$$$$($1_LINK.$$(call iscxx,$$($$1_SOURCES))) $$$$^ $$$$($1_LDLIBS) -o $$$$@
+	$$$$Q$$$$($1_LINK.$$(call iscxx,$$($$1_SOURCES))) $$$$($1_$$1_OBJECTS) \
+		$$$$($1_LDLIBS) -o $$$$@
 endef
 $$(foreach prog,$$($1_PROGS),$$(eval $$(call $1_PROG_template,$$(prog))))
 
@@ -169,9 +173,11 @@ define arch_misc_rules
 clean: clean.$1
 
 clean.$1:
-	@echo rm -f '$$(OBJDIR)/.../*.$1.[od]' $$($1_ELFS) $$($1_EXTRA_CLEAN)
+	@echo rm -f '$$(OBJDIR)/.../*.$1.[od]' '$$(OBJDIR)/*.$1.linkflags' \
+		$$($1_ELFS) $$($1_EXTRA_CLEAN)
 	$$Qrm -f $$(patsubst %,$$(OBJDIR)/%.$1.[od],\
 		$$(call filter_sources,$1,$$(ALL_SOURCES))) \
+		$$($1_PROGS:%=$(OBJDIR)/%.$1.linkflags) \
 		$$($1_ELFS) $$($1_EXTRA_CLEAN)
 
 endef

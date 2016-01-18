@@ -10,6 +10,10 @@ ifdefined = $(if $(filter undefined,$(origin $1)),$2)
 # $(call defval,A,B)
 defval = $(if $(filter undefined,$(origin $1)),$2,$($1))
 
+# Return words which are in one argument but not in the other one.
+# $(call diff,A,B)
+diff = $(strip $(filter-out $1,$2) $(filter-out $2, $1))
+
 # Filter out source file for other targets, return basenames.
 # $(call filter_sources,TARGET,SOURCES)
 filter_sources = $(call filter_sources_sub,$1,$(basename $2))
@@ -48,6 +52,19 @@ $(foreach target,$(TARGETS),\
 	$(addprefix $1/,$(basename $2)))): $3
 endef
 source_specific = $(eval $(call source_specific_sub,$1,$2,$3))
+
+# Handle command line changes.
+# The given variable is saved in savefile, which should be included as target
+# dependencies.  If variable content is not the same as in previous build, the
+# savefile is made phony and the target is rebuilt.
+# $(call cmddep,VAR,savefile)
+define cmddep
+-include $2
+.PHONY: $$(if $$(call diff,$$($1_OLD),$$($1)),$2)
+$2:
+	$$(call mkdir_if_needed,$$@)
+	@echo '$1_OLD = $$($1)' > $$@
+endef
 
 # Evaluate subvariables.
 # $(call foreachsub,LIST,PREFIX)
