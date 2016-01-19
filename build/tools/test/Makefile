@@ -9,8 +9,8 @@ all: $(TESTS:%=test-%)
 
 test-%: Config-% $(MODULES_CONFIG) $(CONFIG_GEN)
 	expect=$(if $(filter ok,$*),0,1); \
-	$(CONFIG_GEN) -p $< -H out-$*/%.hh -T "$(TARGETS)" $(MODULES_CONFIG); \
+	$(CONFIG_GEN) -p $< -H obj/out-$*/%.hh -T "$(TARGETS)" $(MODULES_CONFIG); \
 	test $$expect -eq $$?
 
 clean:
-	rm -rf $(TESTS:%=out-%)
+	rm -rf obj
