@@ -55,9 +55,16 @@ ifeq ($$(words $$($1_PROGS)),1)
 program.$1: $$($1_PROGS:%=%.$1.program)
 endif
 
-%.$1.program: %.$1.bin
+$1_PROGRAM_TOOL ?= stflash
+$1_PROGRAM_FILE_stflash = bin
+$1_PROGRAM_stflash = st-flash $(STFLASH_FLAGS) write $$< \
+	$$(if $$($1_START_ADDRESS),$$($1_START_ADDRESS),0x8000000)
+$1_PROGRAM_FILE_bmflash = hex
+$1_PROGRAM_bmflash = bm-flash $(BMFLASH_FLAGS) $$<
+
+%.$1.program: %.$1.$$($1_PROGRAM_FILE_$$($1_PROGRAM_TOOL))
 	@echo "PROG [$1] $$<"
-	$$Qst-flash write $$< $$(if $$($1_START_ADDRESS),$$($1_START_ADDRESS),0x8000000)
+	$$Q$$($1_PROGRAM_$$($1_PROGRAM_TOOL))
 
 endef
 
