@@ -243,6 +243,13 @@ TimerHard<Base>::disable_interrupt ()
 
 template<uint32_t Base>
 void
+TimerHard<Base>::clear_interrupt ()
+{
+    TIM_SR (Base) = ~TIM_SR_UIF;
+}
+
+template<uint32_t Base>
+void
 TimerHard<Base>::enable_updates ()
 {
     TIM_CR1 (Base) &= ~TIM_CR1_UDIS;

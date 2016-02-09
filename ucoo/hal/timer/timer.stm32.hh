@@ -62,6 +62,8 @@ class TimerHard
     void enable_interrupt ();
     /// Disable interrupts on update event.
     void disable_interrupt ();
+    /// Clear update event interrupt flag.
+    void clear_interrupt ();
   private:
     /// Enable updates (reload value, output compare values...).
     void enable_updates ();
