@@ -87,6 +87,22 @@ struct TimerHardware<TIM4>
 };
 
 template<>
+struct TimerHardware<TIM5>
+{
+    static const enum rcc_periph_clken clken = RCC_TIM5;
+    static int freq () { return 2 * rcc_apb1_frequency; }
+#if defined TARGET_stm32f4
+    static const unsigned int max = 0xffffffff;
+#else
+    static const unsigned int max = 0xffff;
+#endif
+    static const bool advanced = false;
+    static const bool slave = true;
+    static const bool one_pulse = true;
+    static const int channels = 4;
+};
+
+template<>
 struct TimerHardware<TIM10>
 {
     static const enum rcc_periph_clken clken = RCC_TIM10;
