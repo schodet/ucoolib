@@ -38,7 +38,8 @@ Stream &
 test_stream (void)
 {
 #if CONFIG_UCOO_BASE_TEST_TEST_STREAM_UART == -1
-    static UsbStreamControl usc ("APBTeam", "test");
+    static UsbStreamControl usc (CONFIG_UCOO_BASE_TEST_TEST_STREAM_VENDOR,
+                                 CONFIG_UCOO_BASE_TEST_TEST_STREAM_PRODUCT);
     static UsbStream us (usc, 0);
     usc.enable ();
     return us;

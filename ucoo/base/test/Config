@@ -2,6 +2,8 @@
 wait = false
 test_stream_uart = -1
 test_stream_uart_speed = 115200
+test_stream_vendor = "APBTeam"
+test_stream_product = "test"
 
 [ucoo/base/test:stm32]
 wait = true
