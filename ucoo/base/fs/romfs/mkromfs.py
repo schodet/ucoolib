@@ -32,6 +32,9 @@ p.add_argument('-o', '--output', type=argparse.FileType('w'),
         metavar='FILE', help='output file')
 p.add_argument('-i', '--header', metavar='VARNAME',
         help='generate C header file')
+p.add_argument('-S', '--not-static', dest='static',
+        action='store_const', const='', default='static ',
+        help='do not output static keyword')
 p.add_argument('file', nargs='*', help='file to put in file system')
 options = p.parse_args()
 
@@ -66,11 +69,13 @@ if options.header:
     words = struct.unpack('<%dI' % (len(fs) / 4), fs)
     lines = [ '/* Auto-generated ROM FS from:' ]
     lines += [ ' *  - %s' % f for f in files ]
-    lines += [ ' */', '', 'static const uint32_t %s[] = {' % options.header ]
+    lines += [ ' */', '', '%sconst uint32_t %s[] = {'
+            % (options.static, options.header) ]
     for i in xrange(0, len(words), 4):
         w = [ '0x%08x,' % i for i in words[i:i+4] ]
         lines.append('    ' + ' '.join (w))
-    lines += [ '};' ]
+    lines += [ '};', '', '%sconst int %s_size = sizeof (%s);'
+            % (options.static, options.header, options.header) ]
     options.output.write('\n'.join(lines))
 else:
     options.output.write(fs)
