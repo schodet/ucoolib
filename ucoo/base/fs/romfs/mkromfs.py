@@ -25,6 +25,7 @@
 import argparse
 import struct
 import sys
+import os
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('-o', '--output', type=argparse.FileType('w'),
@@ -32,6 +33,9 @@ p.add_argument('-o', '--output', type=argparse.FileType('w'),
         metavar='FILE', help='output file')
 p.add_argument('-i', '--header', metavar='VARNAME',
         help='generate C header file')
+p.add_argument('-p', '--search-path', action='append', metavar='PATH',
+        default = [],
+        help='search files in PATH, can be used several times')
 p.add_argument('-S', '--not-static', dest='static',
         action='store_const', const='', default='static ',
         help='do not output static keyword')
@@ -51,7 +55,13 @@ for f in files:
     index += len(f)
     indexes.append(index)
 for f in files:
-    with open(f) as fd:
+    for p in options.search_path:
+        fp = os.path.join(p, f)
+        if os.path.exists(fp):
+            break
+    else:
+        fp = f
+    with open(fp) as fd:
         content = fd.read()
         index += len(content)
         indexes.append(index)
