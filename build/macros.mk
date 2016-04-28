@@ -22,7 +22,7 @@ filter_sources_sub = $(foreach t,$1 $($1_SUBTARGETS),$(filter %.$t,$2)) \
 
 # Test if one of the source is C++, in this case, return cc, else return c.
 # $(call iscxx,SOURCES)
-iscxx = $(if $(filter %.cc,$1),cc,c)
+iscxx = $(if $(filter %.cc,$1)$(filter %.cpp,$1),cc,c)
 
 # Output every parent directories until root is reached.
 # $(call parents,DIRS,ROOT)

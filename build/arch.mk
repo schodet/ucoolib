@@ -59,6 +59,11 @@ $$(OBJDIR)/%.$1.o: %.cc $$(COMPILE_DEPS) | $$(COMPILE_ORDER_DEPS)
 	$$(call mkdir_if_needed,$$@)
 	$$Q$$($1_COMPILE.cc) -o $$@ $$<
 
+$$(OBJDIR)/%.$1.o: %.cpp $$(COMPILE_DEPS) | $$(COMPILE_ORDER_DEPS)
+	@echo "CXX  [$1] $$<"
+	$$(call mkdir_if_needed,$$@)
+	$$Q$$($1_COMPILE.cc) -o $$@ $$<
+
 $$(OBJDIR)/%.$1.o: %.S $$(COMPILE_DEPS) | $$(COMPILE_ORDER_DEPS)
 	@echo "AS   [$1] $$<"
 	$$(call mkdir_if_needed,$$@)

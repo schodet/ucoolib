@@ -52,6 +52,7 @@ clean:
 include $(UCOO_BASE)/build/setup.mk
 
 vpath %.cc $(UCOO_BASE) $(BASE)
+vpath %.cpp $(UCOO_BASE) $(BASE)
 vpath %.c $(UCOO_BASE) $(BASE)
 vpath %.S $(UCOO_BASE) $(BASE)
 
