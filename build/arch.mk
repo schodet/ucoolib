@@ -79,7 +79,9 @@ endef
 define arch_lst_rules
 
 lst: lst.$1
+ifneq ($$(wildcard *.$1.lst),)
 all.$1: lst.$1
+endif
 
 .PHONY: lst.$1
 
@@ -101,8 +103,10 @@ hex: hex.$1
 srec: srec.$1
 bin: bin.$1
 crc: crc.$1
-all.$1: hex.$1
 
+ifneq ($$(wildcard *.$1.hex),)
+all.$1: hex.$1
+endif
 ifneq ($$(wildcard *.$1.srec),)
 all.$1: srec.$1
 endif
