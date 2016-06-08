@@ -65,6 +65,7 @@ Sdram::enable ()
     assert (params_.col_bits >= 8 && params_.col_bits <= 11);
     uint32_t sdcr =
         FMC_SDCR_RPIPE_NONE
+        | FMC_SDCR_RBURST
         | (clock_div == 2 ? FMC_SDCR_SDCLK_2HCLK : FMC_SDCR_SDCLK_3HCLK)
         | (params_.cas << FMC_SDCR_CAS_SHIFT)
         | (params_.banks == 2 ? FMC_SDCR_NB2 : FMC_SDCR_NB4)
