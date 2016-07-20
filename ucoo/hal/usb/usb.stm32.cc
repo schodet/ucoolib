@@ -27,6 +27,8 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/cm3/nvic.h>
+#include <libopencm3/stm32/otg_fs.h>
+#include <libopencm3/stm32/otg_hs.h>
 
 #include "usb_desc.stm32.h"
 
@@ -157,6 +159,21 @@ UsbStreamControl::enable ()
         usbdev = usbd_init (&usb_driver, &usb_desc_dev, &usb_desc_config,
                             strings, lengthof (strings),
                             usb_control_buffer, sizeof (usb_control_buffer));
+#if CONFIG_UCOO_HAL_USB_DRIVER_HS
+        if (OTG_HS_CID == 0x2000)
+        {
+            // Different registers in F479.
+            OTG_HS_GCCFG = (1 << 21) | (1 << 16);
+            OTG_HS_DCTL = 0;
+        }
+#else
+        if (OTG_FS_CID == 0x2000)
+        {
+            // Different registers in F479.
+            OTG_FS_GCCFG = (1 << 21) | (1 << 16);
+            OTG_FS_DCTL = 0;
+        }
+#endif
         usbd_register_set_config_callback (usbdev, set_config);
 #if CONFIG_UCOO_HAL_USB_DRIVER_HS
         nvic_enable_irq (NVIC_OTG_HS_IRQ);
