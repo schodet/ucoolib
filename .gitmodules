@@ -1,3 +1,6 @@
 [submodule "lib/libopencm3"]
 	path = lib/libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
+[submodule "lib/cmsis"]
+	path = lib/cmsis
+	url = http://git.ni.fr.eu.org/nicolas/cmsis.git
