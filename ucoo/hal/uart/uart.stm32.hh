@@ -29,6 +29,8 @@
 
 #include "config/ucoo/hal/uart.hh"
 
+#include "ucoo/arch/reg.hh"
+
 namespace ucoo {
 
 /// Universal asynchronous receiver transmitter (UART).
@@ -42,9 +44,21 @@ class Uart : public Stream
     enum class Parity { ODD, EVEN, NONE };
     /// Default error character.
     static const char default_error_char = '~';
+    /// Available UARTS.
+    enum class Instance
+    {
+        USART1,
+        USART2,
+        USART3,
+        UART4,
+        UART5,
+#ifdef USART6_BASE
+        USART6,
+#endif
+    };
   public:
-    /// Constructor for the Nth UART.
-    Uart (int n);
+    /// Constructor for an UART instance.
+    Uart (Instance inst);
     /// Shutdown UART.
     ~Uart ();
     /// Enable and setup UART.

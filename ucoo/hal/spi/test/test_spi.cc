@@ -29,8 +29,6 @@
 #include "ucoo/arch/arch.hh"
 #include "ucoo/base/test/test.hh"
 
-#include <libopencm3/stm32/rcc.h>
-
 #include <algorithm>
 #include <cstdio>
 
@@ -41,15 +39,16 @@ main (int argc, const char **argv)
     ucoo::Stream &ts = ucoo::test_stream ();
     // Use connection to LIS302DL device on discovery board revision MB997B.
     // Revision MB997C uses a different device.
-    rcc_periph_clock_enable (RCC_GPIOA);
-    rcc_periph_clock_enable (RCC_GPIOE);
-    ucoo::Gpio ss (GPIOE, 3);
+    ucoo::GPIOA.enable ();
+    ucoo::GPIOE.enable ();
+    ucoo::Gpio ss = ucoo::GPIOE[3];
     ss.set ();
     ss.output ();
-    ucoo::Gpio sck (GPIOA, 5), mosi (GPIOA, 7), miso (GPIOA, 6);
+    ucoo::Gpio sck = ucoo::GPIOA[5], mosi = ucoo::GPIOA[7],
+        miso = ucoo::GPIOA[6];
     ucoo::SpiSoftMaster spis (sck, mosi, miso);
     spis.enable (1000000, ucoo::SPI_MODE_3);
-    ucoo::SpiHardMaster spih (0);
+    ucoo::SpiHardMaster spih (ucoo::SpiHardMaster::Instance::SPI1);
     ucoo::SpiMaster *spi = &spis;
     // Loop with simple IU.
     char buf[64];
@@ -115,9 +114,9 @@ main (int argc, const char **argv)
             case 'h':
                 spi->disable ();
                 spi = &spih;
-                gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                                 GPIO5 | GPIO6 | GPIO7);
-                gpio_set_af (GPIOA, GPIO_AF5, GPIO5 | GPIO6 | GPIO7);
+                miso.af (5);
+                mosi.af (5);
+                sck.af (5);
                 spi->enable (1000000, ucoo::SPI_MODE_3);
                 break;
             case 's':

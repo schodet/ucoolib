@@ -68,7 +68,9 @@ TraceBuffer<Timestamp>::operator() (const char *str, int a0, int a1, int a2)
 {
     timestamp_ (entries[index]);
     entries[index].str = str;
-    entries[index].args = { a0, a1, a2 };
+    entries[index].args[0] = a0;
+    entries[index].args[1] = a1;
+    entries[index].args[2] = a2;
     index = (index + 1) % entries_nb;
 }
 

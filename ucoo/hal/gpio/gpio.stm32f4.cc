@@ -21,30 +21,43 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "gpio.stm32f4.hh"
+#include "ucoo/hal/gpio/gpio.stm32f4.hh"
+#include "ucoo/common.hh"
 
 namespace ucoo {
+
+GpioPort GPIOA (reg::GPIOA, Rcc::GPIOA);
+GpioPort GPIOB (reg::GPIOB, Rcc::GPIOB);
+GpioPort GPIOC (reg::GPIOC, Rcc::GPIOC);
+GpioPort GPIOD (reg::GPIOD, Rcc::GPIOD);
+GpioPort GPIOE (reg::GPIOE, Rcc::GPIOE);
+GpioPort GPIOF (reg::GPIOF, Rcc::GPIOF);
+GpioPort GPIOG (reg::GPIOG, Rcc::GPIOG);
+GpioPort GPIOH (reg::GPIOH, Rcc::GPIOH);
+GpioPort GPIOI (reg::GPIOI, Rcc::GPIOI);
+GpioPort GPIOJ (reg::GPIOJ, Rcc::GPIOJ);
+GpioPort GPIOK (reg::GPIOK, Rcc::GPIOK);
 
 void
 Gpio::set ()
 {
-    GPIO_BSRR (port_) = mask_;
+    port_->BSRR = mask_;
 }
 
 void
 Gpio::reset ()
 {
-    GPIO_BSRR (port_) = mask_ << 16;
+    port_->BSRR = mask_ << 16;
 }
 
 /// Helper to avoid virtual dance.
 static inline void
-Gpio_set (uint32_t port, uint16_t mask, bool state)
+Gpio_set (GPIO_TypeDef *port, uint16_t mask, bool state)
 {
     if (state)
-        GPIO_BSRR (port) = mask;
+        port->BSRR = mask;
     else
-        GPIO_BSRR (port) = mask << 16;
+        port->BSRR = mask << 16;
 }
 
 void
@@ -57,13 +70,13 @@ void
 Gpio::toggle ()
 {
     // Avoid read/modify/write ODR, to achieve atomic operation.
-    Gpio_set (port_, mask_, !(GPIO_ODR (port_) & mask_));
+    Gpio_set (port_, mask_, !(port_->ODR & mask_));
 }
 
 bool
 Gpio::get () const
 {
-    return GPIO_IDR (port_) & mask_;
+    return port_->IDR & mask_;
 }
 
 /// Set two bits in a register for the corresponding one-bit mask.
@@ -92,46 +105,95 @@ qmask_set (uint32_t mask, uint32_t reg, uint32_t bits)
 void
 Gpio::input ()
 {
-    GPIO_MODER (port_) = dmask_set (mask_, GPIO_MODER (port_),
-                                    GPIO_MODE_INPUT);
+    port_->MODER = dmask_set (mask_, port_->MODER, GPIO_MODER_Input);
 }
 
 void
 Gpio::output ()
 {
-    GPIO_MODER (port_) = dmask_set (mask_, GPIO_MODER (port_),
-                                    GPIO_MODE_OUTPUT);
+    port_->MODER = dmask_set (mask_, port_->MODER, GPIO_MODER_Output);
 }
 
 void
 Gpio::pull (Pull dir)
 {
-    GPIO_PUPDR (port_) = dmask_set (mask_, GPIO_PUPDR (port_),
-                                    static_cast<uint32_t> (dir));
+    port_->PUPDR = dmask_set (mask_, port_->PUPDR,
+                              static_cast<uint32_t> (dir));
 }
 
 void
 Gpio::speed (Speed s)
 {
-    GPIO_OSPEEDR (port_) = dmask_set (mask_, GPIO_OSPEEDR (port_),
-                                      static_cast<uint32_t> (s));
+    port_->OSPEEDR = dmask_set (mask_, port_->OSPEEDR,
+                                static_cast<uint32_t> (s));
+}
+
+void
+Gpio::type (Type t)
+{
+    port_->OTYPER = (port_->OTYPER & ~mask_)
+        | (mask_ * static_cast<uint32_t> (t));
 }
 
 void
 Gpio::af (int num)
 {
-    GPIO_MODER (port_) = dmask_set (mask_, GPIO_MODER (port_), GPIO_MODE_AF);
+    port_->MODER = dmask_set (mask_, port_->MODER, GPIO_MODER_AF);
     if (mask_ & 0xff)
-        GPIO_AFRL (port_) = qmask_set (mask_, GPIO_AFRL (port_), num);
+        port_->AFR[0] = qmask_set (mask_, port_->AFR[0], num);
     else
-        GPIO_AFRH (port_) = qmask_set (mask_ >> 8, GPIO_AFRH (port_), num);
+        port_->AFR[1] = qmask_set (mask_ >> 8, port_->AFR[1], num);
 }
 
 void
 Gpio::analog ()
 {
-    GPIO_MODER (port_) = dmask_set (mask_, GPIO_MODER (port_),
-                                    GPIO_MODE_ANALOG);
+    port_->MODER = dmask_set (mask_, port_->MODER, GPIO_MODER_Analog);
+}
+
+int
+GpioPort::get_port_index () const
+{
+    int port;
+    switch (rcc_)
+    {
+    case Rcc::GPIOA:
+        port = 0;
+        break;
+    case Rcc::GPIOB:
+        port = 1;
+        break;
+    case Rcc::GPIOC:
+        port = 2;
+        break;
+    case Rcc::GPIOD:
+        port = 3;
+        break;
+    case Rcc::GPIOE:
+        port = 4;
+        break;
+    case Rcc::GPIOF:
+        port = 5;
+        break;
+    case Rcc::GPIOG:
+        port = 6;
+        break;
+    case Rcc::GPIOH:
+        port = 7;
+        break;
+    case Rcc::GPIOI:
+        port = 8;
+        break;
+    case Rcc::GPIOJ:
+        port = 9;
+        break;
+    case Rcc::GPIOK:
+        port = 10;
+        break;
+    default:
+        assert_unreachable ();
+    }
+    return port;
 }
 
 } // namespace ucoo

@@ -24,6 +24,14 @@
 //
 // }}}
 
+#if defined (TARGET_arm)
+# include "arch.arm.hh"
+#elif defined (TARGET_host)
+# include "arch.host.hh"
+#else
+# error "not implemented for this target"
+#endif
+
 namespace ucoo {
 
 /// Initialise arch, take program arguments.
@@ -33,14 +41,6 @@ arch_init (int argc, const char **argv);
 /// Reset.
 void
 arch_reset ();
-
-#ifdef TARGET_host
-
-/// Retrieve program arguments.
-void
-arch_get_args (int &argc, const char **&argv);
-
-#endif
 
 } // namespace ucoo
 

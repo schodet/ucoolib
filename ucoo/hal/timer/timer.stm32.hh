@@ -27,8 +27,23 @@
 
 namespace ucoo {
 
+/// Available instances.
+enum class TimerInstance
+{
+    TIM1,
+    TIM2,
+    TIM3,
+    TIM4,
+    TIM5,
+    TIM10,
+    TIM11,
+};
+
+template<TimerInstance inst>
+struct TimerHardware { };
+
 /// STM32 timer very basic support.
-template<uint32_t Base>
+template<TimerInstance inst>
 class TimerHard
 {
   public:
@@ -39,7 +54,7 @@ class TimerHard
     ~TimerHard ();
     /// Enable timer.
     template <typename... Options>
-    void enable (int freq, bool start = true);
+    void enable (int freq_hz, bool start = true);
     /// Disable timer.
     void disable ();
     /// Manually start timer.
@@ -57,7 +72,7 @@ class TimerHard
     /// Wait until a new input capture value is available.
     void wait_input_capture (int ch) const;
     /// Get timer frequency.
-    int get_freq () const { return freq_; }
+    int get_freq_hz () const { return freq_hz_; }
     /// Enable interrupts on update event.
     void enable_interrupt ();
     /// Disable interrupts on update event.
@@ -95,11 +110,11 @@ class TimerHard
     {
       public:
         /// Disable updates.
-        UpdateDisabled (TimerHard<Base> &timer);
+        UpdateDisabled (TimerHard<inst> &timer);
         /// Enable updates.
         ~UpdateDisabled ();
       private:
-        TimerHard<Base> &timer_;
+        TimerHard<inst> &timer_;
     };
     friend class UpdateDisabled;
     /// Base class for options.
@@ -129,7 +144,9 @@ class TimerHard
     struct CombinedOptions;
   private:
     /// When enabled, programmed frequency.
-    int freq_ = 0;
+    int freq_hz_ = 0;
+    /// Hardware characteristics.
+    using Hard = TimerHardware<inst>;
 };
 
 } // namespace ucoo

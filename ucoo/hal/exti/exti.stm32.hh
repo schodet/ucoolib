@@ -24,8 +24,8 @@
 //
 // }}}
 #include "ucoo/intf/exti.hh"
-
-#include <libopencm3/stm32/exti.h>
+#include "ucoo/hal/gpio/gpio.hh"
+#include "ucoo/arch/interrupt.arm.hh"
 
 namespace ucoo {
 
@@ -43,9 +43,9 @@ class ExtiHard : public Exti
     /// Constructor, take the EXTI number.
     ExtiHard (int n);
     /// Constructor, shortcut to set source.
-    ExtiHard (uint32_t gpio_port, int n);
+    ExtiHard (const GpioPort &gpio_port, int n);
     /// Constructor, shortcut to set source and trigger.
-    ExtiHard (uint32_t gpio_port, int n, Edge edge);
+    ExtiHard (const GpioPort &gpio_port, int n, Edge edge);
     /// Destructor.
     ~ExtiHard ();
     /// See Exti::enable.
@@ -59,23 +59,26 @@ class ExtiHard : public Exti
     /// Set trigger edge.
     void set_trigger (Edge edge);
     /// Select source, take GPIO port address.
-    void set_source (uint32_t gpio_port);
+    void set_source (const GpioPort &gpio_port);
+  private:
     /// Handle interrupts.
     void isr ();
+    template<Irq>
+    friend void interrupt ();
   private:
     /// EXTI line number.
     int n_;
 };
 
 inline
-ExtiHard::ExtiHard (uint32_t gpio_port, int n)
+ExtiHard::ExtiHard (const GpioPort &gpio_port, int n)
     : ExtiHard (n)
 {
     set_source (gpio_port);
 }
 
 inline
-ExtiHard::ExtiHard (uint32_t gpio_port, int n, Edge edge)
+ExtiHard::ExtiHard (const GpioPort &gpio_port, int n, Edge edge)
     : ExtiHard (gpio_port, n)
 {
     set_trigger (edge);

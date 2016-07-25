@@ -9,6 +9,6 @@ test_crc_SOURCES = test_crc.cc
 test_function_SOURCES = test_function.cc
 test_pool_SOURCES = test_pool.cc
 
-MODULES = ucoo/utils ucoo/base/test ucoo/hal/usb
+MODULES = ucoo/utils ucoo/base/test ucoo/hal/usb ucoo/hal/gpio
 
 include $(BASE)/build/top.mk

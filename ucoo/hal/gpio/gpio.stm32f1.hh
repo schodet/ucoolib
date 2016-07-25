@@ -24,10 +24,12 @@
 //
 // }}}
 #include "ucoo/intf/io.hh"
-
-#include <libopencm3/stm32/gpio.h>
+#include "ucoo/arch/reg.hh"
+#include "ucoo/arch/rcc.stm32.hh"
 
 namespace ucoo {
+
+class GpioPort;
 
 /// General purpose input/output on STM32F1.
 class Gpio : public Io
@@ -35,27 +37,25 @@ class Gpio : public Io
   public:
     enum class InputCnf : uint8_t
     {
-        ANALOG = GPIO_CNF_INPUT_ANALOG << 2,
-        FLOAT = GPIO_CNF_INPUT_FLOAT << 2,
+        ANALOG = GPIO_CNF_Input_Analog << 2,
+        FLOAT = GPIO_CNF_Input_Float << 2,
         // Up/Down is selected using output register.
-        PULL_UPDOWN = GPIO_CNF_INPUT_PULL_UPDOWN << 2,
+        PULL_UPDOWN = GPIO_CNF_Input_PullUpDown << 2,
     };
     enum class OutputCnf : uint8_t
     {
-        PUSHPULL = GPIO_CNF_OUTPUT_PUSHPULL << 2,
-        OPENDRAIN = GPIO_CNF_OUTPUT_OPENDRAIN << 2,
-        ALTFN_PUSH_PULL = GPIO_CNF_OUTPUT_ALTFN_PUSHPULL << 2,
-        ALTFN_OPENDRAIN = GPIO_CNF_OUTPUT_ALTFN_OPENDRAIN << 2,
+        PUSHPULL = GPIO_CNF_Output_PushPull << 2,
+        OPENDRAIN = GPIO_CNF_Output_OpenDrain << 2,
+        AF_PUSH_PULL = GPIO_CNF_Output_AFPushPull << 2,
+        AF_OPENDRAIN = GPIO_CNF_Output_AFOpenDrain << 2,
     };
     enum class Speed : uint8_t
     {
-        SPEED_2MHZ = GPIO_MODE_OUTPUT_2_MHZ,
-        SPEED_10MHZ = GPIO_MODE_OUTPUT_10_MHZ,
-        SPEED_50MHZ = GPIO_MODE_OUTPUT_50_MHZ,
+        SPEED_2MHZ = GPIO_MODE_Output_2MHz,
+        SPEED_10MHZ = GPIO_MODE_Output_10MHz,
+        SPEED_50MHZ = GPIO_MODE_Output_50MHz,
     };
   public:
-    /// Constructor, take the PORT base address, and pin BIT number.
-    Gpio (uint32_t port, int bit);
     /// See Io::set.
     void set ();
     /// See Io::reset.
@@ -77,8 +77,12 @@ class Gpio : public Io
     /// Set output speed.
     void speed (Speed s);
   private:
+    /// Constructor, take a port, and pin BIT number.
+    Gpio (GpioPort &port, int bit);
+    friend GpioPort;
+  private:
     /// Port register base address.
-    const uint32_t port_;
+    GPIO_TypeDef * const port_;
     /// IO bitmask.
     const uint16_t mask_;
     /// Configuration for input.
@@ -91,15 +95,44 @@ class Gpio : public Io
     bool output_;
 };
 
+/// General purpose input/output port on STM32F1.
+class GpioPort
+{
+    GPIO_TypeDef * const port_;
+    const Rcc rcc_;
+    friend class Gpio;
+  public:
+    /// Constructor.
+    GpioPort (GPIO_TypeDef *port, Rcc rcc)
+        : port_ (port), rcc_ (rcc) { }
+    /// Enable port.
+    void enable ()
+        { rcc_peripheral_clock_enable (rcc_); }
+    /// Disable port.
+    void disable ()
+        { rcc_peripheral_clock_disable (rcc_); }
+    /// Return a port GPIO.
+    Gpio operator[] (int bit)
+        { return Gpio (*this, bit); }
+    /// Get the index of the port, used with Exti.
+    int get_port_index () const;
+};
+
 inline
-Gpio::Gpio (uint32_t port, int bit)
-    : port_ (port), mask_ (1u << bit),
+Gpio::Gpio (GpioPort &port, int bit)
+    : port_ (port.port_), mask_ (1u << bit),
       input_cnf_ (InputCnf::FLOAT),
       output_cnf_ (OutputCnf::PUSHPULL),
       speed_ (Speed::SPEED_10MHZ),
       output_ (false)
 {
 }
+
+extern GpioPort GPIOA;
+extern GpioPort GPIOB;
+extern GpioPort GPIOC;
+extern GpioPort GPIOD;
+extern GpioPort GPIOE;
 
 } // namespace ucoo
 

@@ -22,11 +22,10 @@
 //
 // }}}
 #include "delay.arm.hh"
+#include "ucoo/arch/reg.hh"
+#include "ucoo/arch/rcc.stm32.hh"
 
 #include <algorithm>
-
-#include <libopencm3/cm3/systick.h>
-#include <libopencm3/stm32/rcc.h>
 
 namespace ucoo {
 
@@ -35,21 +34,21 @@ delay_us (int us)
 {
     // Suppose that frequency is a multiple of 8 MHz (to avoid 64 bit
     // division).
-    int systick_mhz = rcc_ahb_frequency / (8 * 1000000);
+    int systick_mhz = rcc_ahb_freq_hz / (8 * 1000000);
     int cycles = systick_mhz * us;
-    STK_CSR = 0;
+    reg::SysTick->CTRL = 0;
     // Loop several times if cycles is too big for the systick timer. Some
     // nanoseconds are lost every second, I can live with that, it simplifies
     // code.
     while (cycles)
     {
         int loop_cycles = std::min (1 << 24, cycles);
-        STK_RVR = loop_cycles - 1;
-        STK_CVR = 0;
-        STK_CSR = STK_CSR_ENABLE;
-        while (!(STK_CSR & STK_CSR_COUNTFLAG))
+        reg::SysTick->LOAD = loop_cycles - 1;
+        reg::SysTick->VAL = 0;
+        reg::SysTick->CTRL = SysTick_CTRL_ENABLE_Msk;
+        while (!(reg::SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk))
             ;
-        STK_CSR = 0;
+        reg::SysTick->CTRL = 0;
         cycles -= loop_cycles;
     }
 }
@@ -59,16 +58,16 @@ delay_ns (int ns)
 {
     // Suppose that frequency is a multiple of 1 MHz (to avoid 64 bit
     // division).
-    int hclock_mhz = rcc_ahb_frequency / 1000000;
+    int hclock_mhz = rcc_ahb_freq_hz / 1000000;
     int cycles = (hclock_mhz * ns + 999) / 1000;
-    STK_CSR = 0;
+    reg::SysTick->CTRL = 0;
     // Loop once, ns is supposed to be small.
-    STK_RVR = cycles - 1;
-    STK_CVR = 0;
-    STK_CSR = STK_CSR_CLKSOURCE_AHB | STK_CSR_ENABLE;
-    while (!(STK_CSR & STK_CSR_COUNTFLAG))
+    reg::SysTick->LOAD = cycles - 1;
+    reg::SysTick->VAL = 0;
+    reg::SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;
+    while (!(reg::SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk))
         ;
-    STK_CSR = 0;
+    reg::SysTick->CTRL = 0;
 }
 
 } // namespace ucoo

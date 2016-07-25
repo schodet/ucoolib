@@ -21,30 +21,37 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "gpio.stm32f1.hh"
+#include "ucoo/hal/gpio/gpio.stm32f1.hh"
+#include "ucoo/common.hh"
 
 namespace ucoo {
+
+GpioPort GPIOA (reg::GPIOA, Rcc::GPIOA);
+GpioPort GPIOB (reg::GPIOB, Rcc::GPIOB);
+GpioPort GPIOC (reg::GPIOC, Rcc::GPIOC);
+GpioPort GPIOD (reg::GPIOD, Rcc::GPIOD);
+GpioPort GPIOE (reg::GPIOE, Rcc::GPIOE);
 
 void
 Gpio::set ()
 {
-    GPIO_BSRR (port_) = mask_;
+    port_->BSRR = mask_;
 }
 
 void
 Gpio::reset ()
 {
-    GPIO_BRR (port_) = mask_;
+    port_->BRR = mask_;
 }
 
 /// Helper to avoid virtual dance.
 static inline void
-Gpio_set (uint32_t port, uint16_t mask, bool state)
+Gpio_set (GPIO_TypeDef *port, uint16_t mask, bool state)
 {
     if (state)
-        GPIO_BSRR (port) = mask;
+        port->BSRR = mask;
     else
-        GPIO_BRR (port) = mask;
+        port->BRR = mask;
 }
 
 void
@@ -57,13 +64,13 @@ void
 Gpio::toggle ()
 {
     // Avoid read/modify/write ODR, to achieve atomic operation.
-    Gpio_set (port_, mask_, !(GPIO_ODR (port_) & mask_));
+    Gpio_set (port_, mask_, !(port_->ODR & mask_));
 }
 
 bool
 Gpio::get () const
 {
-    return GPIO_IDR (port_) & mask_;
+    return port_->IDR & mask_;
 }
 
 /// Set four bits in a register for the corresponding one-bit mask.
@@ -81,11 +88,11 @@ qmask_set (uint32_t mask, uint32_t reg, uint32_t bits)
 void
 Gpio::input ()
 {
-    uint32_t cnf_mode = static_cast<uint8_t> (input_cnf_) | GPIO_MODE_INPUT;
+    uint32_t cnf_mode = static_cast<uint8_t> (input_cnf_) | GPIO_MODE_Input;
     if (mask_ & 0xff)
-        GPIO_CRL (port_) = qmask_set (mask_, GPIO_CRL (port_), cnf_mode);
+        port_->CRL = qmask_set (mask_, port_->CRL, cnf_mode);
     else
-        GPIO_CRH (port_) = qmask_set (mask_ >> 8, GPIO_CRH (port_), cnf_mode);
+        port_->CRH = qmask_set (mask_ >> 8, port_->CRH, cnf_mode);
     output_ = false;
 }
 
@@ -95,9 +102,9 @@ Gpio::output ()
     uint32_t cnf_mode = static_cast<uint8_t> (output_cnf_)
         | static_cast<uint8_t> (speed_);
     if (mask_ & 0xff)
-        GPIO_CRL (port_) = qmask_set (mask_, GPIO_CRL (port_), cnf_mode);
+        port_->CRL = qmask_set (mask_, port_->CRL, cnf_mode);
     else
-        GPIO_CRH (port_) = qmask_set (mask_ >> 8, GPIO_CRH (port_), cnf_mode);
+        port_->CRH = qmask_set (mask_ >> 8, port_->CRH, cnf_mode);
     output_ = true;
 }
 
@@ -123,6 +130,33 @@ Gpio::speed (Speed s)
     speed_ = s;
     if (output_)
         output ();
+}
+
+int
+GpioPort::get_port_index () const
+{
+    int port;
+    switch (rcc_)
+    {
+    case Rcc::GPIOA:
+        port = 0;
+        break;
+    case Rcc::GPIOB:
+        port = 1;
+        break;
+    case Rcc::GPIOC:
+        port = 2;
+        break;
+    case Rcc::GPIOD:
+        port = 3;
+        break;
+    case Rcc::GPIOE:
+        port = 4;
+        break;
+    default:
+        assert_unreachable ();
+    }
+    return port;
 }
 
 } // namespace ucoo

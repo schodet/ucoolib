@@ -24,14 +24,14 @@
 #include "ucoo/arch/arch.hh"
 #include "ucoo/common.hh"
 
-#include <libopencm3/cm3/scb.h>
+#include "ucoo/arch/reg.hh"
 
 namespace ucoo {
 
 void
 arch_reset ()
 {
-    SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
+    NVIC_SystemReset ();
 }
 
 void

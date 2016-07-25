@@ -46,7 +46,7 @@ template<typename Timer>
 void
 RateLimit<Timer>::set_limit (int rate_num, int rate_denum)
 {
-    int freq = timer_.get_freq ();
+    int freq = timer_.get_freq_hz ();
     interval_ = freq * rate_denum / rate_num;
     ucoo::assert (interval_ <= Timer::max / 2 + 1);
     next_ = timer_.get_value ();

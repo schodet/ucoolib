@@ -29,8 +29,6 @@
 #include "ucoo/hal/spi/spi_soft.hh"
 #include "ucoo/utils/delay.hh"
 
-#include <libopencm3/stm32/f4/rcc.h>
-
 class TestAvrIspIntf : public ucoo::AvrIspIntf
 {
   public:
@@ -76,10 +74,10 @@ main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
     ucoo::Stream &ts = ucoo::test_stream ();
-    rcc_peripheral_enable_clock (&RCC_AHB1ENR, RCC_AHB1ENR_IOPDEN
-                                 | RCC_AHB1ENR_IOPEEN);
-    ucoo::Gpio reset (GPIOD, 10), sck (GPIOE, 7), mosi (GPIOD, 8),
-        miso (GPIOD, 9);
+    ucoo::GPIOD.enable ();
+    ucoo::GPIOE.enable ();
+    ucoo::Gpio reset (ucoo::GPIOD[10]), sck (ucoo::GPIOE[7]),
+        mosi (ucoo::GPIOD[8]), miso (ucoo::GPIOD[9]);
     TestAvrIspIntf intf (reset, sck, mosi, miso);
     ucoo::AvrIsp isp (intf);
     ucoo::AvrIspProto proto (isp);

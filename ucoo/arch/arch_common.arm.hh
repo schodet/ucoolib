@@ -29,6 +29,7 @@ namespace ucoo {
 /// Type used to save irq state.
 typedef unsigned int irq_flags_t;
 
+/// Lock interrupts and return previous state.
 static inline irq_flags_t
 irq_lock (void)
 {
@@ -40,7 +41,8 @@ irq_lock (void)
     return flags;
 }
 
-inline void
+/// Restore interrupts lock state after an irq_lock.
+static inline void
 irq_restore (irq_flags_t flags)
 {
     __asm__ __volatile__ ("msr PRIMASK, %0"

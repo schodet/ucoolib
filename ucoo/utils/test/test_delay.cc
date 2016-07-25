@@ -23,39 +23,47 @@
 // }}}
 #include "ucoo/utils/delay.hh"
 #include "ucoo/arch/arch.hh"
-
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/gpio.h>
+#include "ucoo/hal/gpio/gpio.hh"
+#include "ucoo/common.hh"
 
 int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    rcc_periph_clock_enable (RCC_GPIOD);
-    gpio_mode_setup (GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
-                     GPIO12 | GPIO13 | GPIO14 | GPIO15);
-    gpio_clear (GPIOD, GPIO12 | GPIO13 | GPIO14 | GPIO15);
+    ucoo::GPIOD.enable ();
+    ucoo::Gpio leds[] =
+    {
+        ucoo::GPIOD[12],
+        ucoo::GPIOD[13],
+        ucoo::GPIOD[14],
+        ucoo::GPIOD[15],
+    };
+    for (int i = 0; i < ucoo::lengthof (leds); i++)
+    {
+        leds[i].output ();
+        leds[i].reset ();
+    }
     int i, j;
     while (1)
     {
         for (i = 0; i < 4; i++)
         {
-            gpio_toggle (GPIOD, GPIO12 << (i % 4));
+            leds[i % 4].toggle ();
             ucoo::delay (1);
         }
         for (i = 0; i < 16; i++)
         {
-            gpio_toggle (GPIOD, GPIO12 << (i % 4));
+            leds[i % 4].toggle ();
             ucoo::delay_ms (250);
         }
         for (i = 0; i < 16000; i++)
         {
-            gpio_toggle (GPIOD, GPIO12 << (i % 4));
+            leds[i % 4].toggle ();
             ucoo::delay_us (250);
         }
         for (i = 0; i < 16; i++)
         {
-            gpio_toggle (GPIOD, GPIO12 << (i % 4));
+            leds[i % 4].toggle ();
             for (j = 0; j < 1000; j++)
                 ucoo::delay_us (250);
         }

@@ -24,9 +24,7 @@
 #include "ucoo/base/test/test.hh"
 #include "ucoo/arch/arch.hh"
 #include "ucoo/hal/timer/timer.hh"
-
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/gpio.h>
+#include "ucoo/hal/gpio/gpio.hh"
 
 #include <cstdio>
 
@@ -39,17 +37,19 @@ main (int argc, const char **argv)
     // PD15 (T4_CH4).
     ucoo::arch_init (argc, argv);
     ucoo::test_stream_setup ();
-    using Timer = ucoo::TimerHard<TIM4>;
-    using TimerRef = ucoo::TimerHard<TIM2>;
+    using Timer = ucoo::TimerHard<ucoo::TimerInstance::TIM4>;
+    using TimerRef = ucoo::TimerHard<ucoo::TimerInstance::TIM2>;
     Timer timer;
     TimerRef timerref;
     // AF setup.
-    rcc_periph_clock_enable (RCC_GPIOA);
-    rcc_periph_clock_enable (RCC_GPIOD);
-    gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLDOWN, GPIO1);
-    gpio_set_af (GPIOA, GPIO_AF1, GPIO1);
-    gpio_mode_setup (GPIOD, GPIO_MODE_AF, GPIO_PUPD_PULLDOWN, GPIO13 | GPIO15);
-    gpio_set_af (GPIOD, GPIO_AF2, GPIO13 | GPIO15);
+    ucoo::GPIOA.enable ();
+    ucoo::GPIOD.enable ();
+    ucoo::GPIOA[1].af (1);
+    ucoo::GPIOA[1].pull (ucoo::Gpio::Pull::DOWN);
+    ucoo::GPIOD[13].af (2);
+    ucoo::GPIOD[13].pull (ucoo::Gpio::Pull::DOWN);
+    ucoo::GPIOD[15].af (2);
+    ucoo::GPIOD[15].pull (ucoo::Gpio::Pull::DOWN);
     // Timers setup.
     timerref.enable<TimerRef::OptionReloadValue<5000>,
         TimerRef::OptionOutputCompare<2> > (2000);

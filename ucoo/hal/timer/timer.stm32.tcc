@@ -23,22 +23,19 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include <libopencm3/stm32/timer.h>
-#include <libopencm3/stm32/rcc.h>
+#include "ucoo/arch/rcc.stm32.hh"
+#include "ucoo/arch/reg.hh"
 
 namespace ucoo {
 
-template<uint32_t Base>
-struct TimerHardware { };
-
 // TODO add more timers.
-// TODO timer uses a double frequency only if APB prescaler is not 1.
 
 template<>
-struct TimerHardware<TIM1>
+struct TimerHardware<TimerInstance::TIM1>
 {
-    static const enum rcc_periph_clken clken = RCC_TIM1;
-    static int freq () { return 2 * rcc_apb2_frequency; }
+    static constexpr TIM_TypeDef *base = reg::TIM1;
+    static const Rcc rcc = Rcc::TIM1;
+    static int freq_hz () { return rcc_apb2_timer_freq_hz; }
     static const unsigned int max = 0xffff;
     static const bool advanced = true;
     static const bool slave = true;
@@ -47,10 +44,11 @@ struct TimerHardware<TIM1>
 };
 
 template<>
-struct TimerHardware<TIM2>
+struct TimerHardware<TimerInstance::TIM2>
 {
-    static const enum rcc_periph_clken clken = RCC_TIM2;
-    static int freq () { return 2 * rcc_apb1_frequency; }
+    static constexpr TIM_TypeDef *base = reg::TIM2;
+    static const Rcc rcc = Rcc::TIM2;
+    static int freq_hz () { return rcc_apb1_timer_freq_hz; }
 #if defined TARGET_stm32f4
     static const unsigned int max = 0xffffffff;
 #else
@@ -63,10 +61,11 @@ struct TimerHardware<TIM2>
 };
 
 template<>
-struct TimerHardware<TIM3>
+struct TimerHardware<TimerInstance::TIM3>
 {
-    static const enum rcc_periph_clken clken = RCC_TIM3;
-    static int freq () { return 2 * rcc_apb1_frequency; }
+    static constexpr TIM_TypeDef *base = reg::TIM3;
+    static const Rcc rcc = Rcc::TIM3;
+    static int freq_hz () { return rcc_apb1_timer_freq_hz; }
     static const unsigned int max = 0xffff;
     static const bool advanced = false;
     static const bool slave = true;
@@ -75,10 +74,11 @@ struct TimerHardware<TIM3>
 };
 
 template<>
-struct TimerHardware<TIM4>
+struct TimerHardware<TimerInstance::TIM4>
 {
-    static const enum rcc_periph_clken clken = RCC_TIM4;
-    static int freq () { return 2 * rcc_apb1_frequency; }
+    static constexpr TIM_TypeDef *base = reg::TIM4;
+    static const Rcc rcc = Rcc::TIM4;
+    static int freq_hz () { return rcc_apb1_timer_freq_hz; }
     static const unsigned int max = 0xffff;
     static const bool advanced = false;
     static const bool slave = true;
@@ -87,10 +87,11 @@ struct TimerHardware<TIM4>
 };
 
 template<>
-struct TimerHardware<TIM5>
+struct TimerHardware<TimerInstance::TIM5>
 {
-    static const enum rcc_periph_clken clken = RCC_TIM5;
-    static int freq () { return 2 * rcc_apb1_frequency; }
+    static constexpr TIM_TypeDef *base = reg::TIM5;
+    static const Rcc rcc = Rcc::TIM5;
+    static int freq_hz () { return rcc_apb1_timer_freq_hz; }
 #if defined TARGET_stm32f4
     static const unsigned int max = 0xffffffff;
 #else
@@ -103,10 +104,11 @@ struct TimerHardware<TIM5>
 };
 
 template<>
-struct TimerHardware<TIM10>
+struct TimerHardware<TimerInstance::TIM10>
 {
-    static const enum rcc_periph_clken clken = RCC_TIM10;
-    static int freq () { return 2 * rcc_apb2_frequency; }
+    static constexpr TIM_TypeDef *base = reg::TIM10;
+    static const Rcc rcc = Rcc::TIM10;
+    static int freq_hz () { return rcc_apb2_timer_freq_hz; }
     static const unsigned int max = 0xffff;
     static const bool advanced = false;
     static const bool slave = false;
@@ -115,10 +117,11 @@ struct TimerHardware<TIM10>
 };
 
 template<>
-struct TimerHardware<TIM11>
+struct TimerHardware<TimerInstance::TIM11>
 {
-    static const enum rcc_periph_clken clken = RCC_TIM10;
-    static int freq () { return 2 * rcc_apb2_frequency; }
+    static constexpr TIM_TypeDef *base = reg::TIM11;
+    static const Rcc rcc = Rcc::TIM10;
+    static int freq_hz () { return rcc_apb2_timer_freq_hz; }
     static const unsigned int max = 0xffff;
     static const bool advanced = false;
     static const bool slave = false;
@@ -126,175 +129,174 @@ struct TimerHardware<TIM11>
     static const int channels = 1;
 };
 
-template<uint32_t Base>
-const unsigned int TimerHard<Base>::max = TimerHardware<Base>::max;
+template<TimerInstance inst>
+const unsigned int TimerHard<inst>::max = TimerHardware<inst>::max;
 
-template<uint32_t Base>
-TimerHard<Base>::~TimerHard ()
+template<TimerInstance inst>
+TimerHard<inst>::~TimerHard ()
 {
     disable ();
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<typename... Options>
 void
-TimerHard<Base>::enable (int freq, bool start)
+TimerHard<inst>::enable (int freq_hz, bool start)
 {
-    using Hard = TimerHardware<Base>;
-    rcc_periph_clock_enable (Hard::clken);
-    int in_freq = Hard::freq ();
-    int div = in_freq / freq;
-    assert (div <= 0x10000 && in_freq / div == freq);
-    freq_ = freq;
+    rcc_peripheral_clock_enable (Hard::rcc);
+    int in_freq_hz = Hard::freq_hz ();
+    int div = in_freq_hz / freq_hz;
+    assert (div <= 0x10000 && in_freq_hz / div == freq_hz);
+    freq_hz_ = freq_hz;
     using OptionsCombined = CombinedOptions<Options...>;
-    TIM_CR1 (Base) = TIM_CR1_ARPE | OptionsCombined::cr1;
-    TIM_CR2 (Base) = 0;
+    Hard::base->CR1 = TIM_CR1_ARPE | OptionsCombined::cr1;
+    Hard::base->CR2 = 0;
     if (Hard::slave)
-        TIM_SMCR (Base) = OptionsCombined::smcr;
+        Hard::base->SMCR = OptionsCombined::smcr;
     if (Hard::channels > 0)
     {
-        TIM_CCER (Base) = 0;
-        TIM_CCMR1 (Base) = OptionsCombined::ccmr1;
+        Hard::base->CCER = 0;
+        Hard::base->CCMR1 = OptionsCombined::ccmr1;
         if (Hard::channels > 2)
-            TIM_CCMR2 (Base) = OptionsCombined::ccmr2;
-        TIM_CCER (Base) = OptionsCombined::ccer;
-        TIM_CCR1 (Base) = OptionsCombined::ccr1;
+            Hard::base->CCMR2 = OptionsCombined::ccmr2;
+        Hard::base->CCER = OptionsCombined::ccer;
+        Hard::base->CCR1 = OptionsCombined::ccr1;
         if (Hard::channels >= 2)
-            TIM_CCR2 (Base) = OptionsCombined::ccr2;
+            Hard::base->CCR2 = OptionsCombined::ccr2;
         if (Hard::channels >= 3)
-            TIM_CCR3 (Base) = OptionsCombined::ccr3;
+            Hard::base->CCR3 = OptionsCombined::ccr3;
         if (Hard::channels >= 4)
-            TIM_CCR4 (Base) = OptionsCombined::ccr4;
+            Hard::base->CCR4 = OptionsCombined::ccr4;
     }
-    TIM_PSC (Base) = div - 1;
-    TIM_ARR (Base) = OptionsCombined::arr ? OptionsCombined::arr : Hard::max;
+    Hard::base->PSC = div - 1;
+    Hard::base->ARR = OptionsCombined::arr ? OptionsCombined::arr : Hard::max;
     if (Hard::advanced)
-        TIM_BDTR (Base) = TIM_BDTR_MOE;
-    TIM_EGR (Base) = TIM_EGR_UG;
+        Hard::base->BDTR = TIM_BDTR_MOE;
+    Hard::base->EGR = TIM_EGR_UG;
     if (start)
-        TIM_CR1 (Base) = TIM_CR1_ARPE | OptionsCombined::cr1 | TIM_CR1_CEN;
+        Hard::base->CR1 = TIM_CR1_ARPE | OptionsCombined::cr1 | TIM_CR1_CEN;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::disable ()
+TimerHard<inst>::disable ()
 {
-    TIM_CR1 (Base) = 0;
-    rcc_periph_clock_disable (TimerHardware<Base>::clken);
-    freq_ = 0;
+    Hard::base->CR1 = 0;
+    rcc_peripheral_clock_disable (TimerHardware<inst>::rcc);
+    freq_hz_ = 0;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::start ()
+TimerHard<inst>::start ()
 {
-    TIM_CR1 (Base) |= TIM_CR1_CEN;
+    Hard::base->CR1 |= TIM_CR1_CEN;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::set_reload (unsigned int value)
+TimerHard<inst>::set_reload (unsigned int value)
 {
-    assert (value <= TimerHardware<Base>::max);
-    TIM_ARR (Base) = value;
+    assert (value <= Hard::max);
+    Hard::base->ARR = value;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::set_output_compare (int ch, unsigned int value)
+TimerHard<inst>::set_output_compare (int ch, unsigned int value)
 {
-    assert (ch > 0 && ch <= TimerHardware<Base>::channels);
-    assert (value <= TimerHardware<Base>::max);
-    *(&TIM_CCR1 (Base) + ch - 1) = value;
+    assert (ch > 0 && ch <= Hard::channels);
+    assert (value <= Hard::max);
+    *(&Hard::base->CCR1 + ch - 1) = value;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 unsigned int
-TimerHard<Base>::get_value ()
+TimerHard<inst>::get_value ()
 {
-    return TIM_CNT (Base);
+    return Hard::base->CNT;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 unsigned int
-TimerHard<Base>::get_input_capture (int ch) const
+TimerHard<inst>::get_input_capture (int ch) const
 {
-    assert (ch > 0 && ch <= TimerHardware<Base>::channels);
-    return *(&TIM_CCR1 (Base) + ch - 1);
+    assert (ch > 0 && ch <= Hard::channels);
+    return *(&Hard::base->CCR1 + ch - 1);
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::wait_update () const
+TimerHard<inst>::wait_update () const
 {
     unsigned int mask = TIM_SR_UIF;
-    while (!(TIM_SR (Base) & mask))
+    while (!(Hard::base->SR & mask))
         ;
-    TIM_SR (Base) = ~mask;
+    Hard::base->SR = ~mask;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::wait_input_capture (int ch) const
+TimerHard<inst>::wait_input_capture (int ch) const
 {
     unsigned int mask = TIM_SR_CC1IF >> 1 << ch;
-    while (!(TIM_SR (Base) & mask))
+    while (!(Hard::base->SR & mask))
         ;
-    TIM_SR (Base) = ~mask;
+    Hard::base->SR = ~mask;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::enable_interrupt ()
+TimerHard<inst>::enable_interrupt ()
 {
-    TIM_DIER (Base) |= TIM_DIER_UIE;
+    Hard::base->DIER |= TIM_DIER_UIE;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::disable_interrupt ()
+TimerHard<inst>::disable_interrupt ()
 {
-    TIM_DIER (Base) &= ~TIM_DIER_UIE;
+    Hard::base->DIER &= ~TIM_DIER_UIE;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::clear_interrupt ()
+TimerHard<inst>::clear_interrupt ()
 {
-    TIM_SR (Base) = ~TIM_SR_UIF;
+    Hard::base->SR = ~TIM_SR_UIF;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::enable_updates ()
+TimerHard<inst>::enable_updates ()
 {
-    TIM_CR1 (Base) &= ~TIM_CR1_UDIS;
+    Hard::base->CR1 &= ~TIM_CR1_UDIS;
 }
 
-template<uint32_t Base>
+template<TimerInstance inst>
 void
-TimerHard<Base>::disable_updates ()
+TimerHard<inst>::disable_updates ()
 {
-    TIM_CR1 (Base) |= TIM_CR1_UDIS;
+    Hard::base->CR1 |= TIM_CR1_UDIS;
 }
 
-template<uint32_t Base>
-TimerHard<Base>::UpdateDisabled::UpdateDisabled (TimerHard<Base> &timer)
+template<TimerInstance inst>
+TimerHard<inst>::UpdateDisabled::UpdateDisabled (TimerHard<inst> &timer)
     : timer_ (timer)
 {
     timer_.disable_updates ();
 }
 
-template<uint32_t Base>
-TimerHard<Base>::UpdateDisabled::~UpdateDisabled ()
+template<TimerInstance inst>
+TimerHard<inst>::UpdateDisabled::~UpdateDisabled ()
 {
     timer_.enable_updates ();
 }
 
-template<uint32_t Base>
-struct TimerHard<Base>::Option
+template<TimerInstance inst>
+struct TimerHard<inst>::Option
 {
-    static const uint32_t base = Base;
+    static const TimerInstance opinst = inst;
     static const unsigned cr1 = 0;
     static const unsigned smcr = 0;
     static const unsigned ccmr1 = 0;
@@ -307,214 +309,214 @@ struct TimerHard<Base>::Option
     static const unsigned ccr4 = 0;
 };
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<unsigned int value>
-struct TimerHard<Base>::OptionReloadValue : public TimerHard<Base>::Option
+struct TimerHard<inst>::OptionReloadValue : public TimerHard<inst>::Option
 {
-    static_assert (value <= TimerHardware<Base>::max, "value too large");
+    static_assert (value <= Hard::max, "value too large");
     static const unsigned arr = value;
 };
 
-template<uint32_t Base>
-struct TimerHard<Base>::OptionOnePulse : public TimerHard<Base>::Option
+template<TimerInstance inst>
+struct TimerHard<inst>::OptionOnePulse : public TimerHard<inst>::Option
 {
-    static_assert (TimerHardware<Base>::one_pulse, "no one pulse mode");
+    static_assert (Hard::one_pulse, "no one pulse mode");
     static const unsigned cr1 = TIM_CR1_OPM;
 };
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<int timer_input>
-struct TimerHard<Base>::OptionTrigger : public TimerHard<Base>::Option
+struct TimerHard<inst>::OptionTrigger : public TimerHard<inst>::Option
 {
-    static_assert (TimerHardware<Base>::slave, "no external trigger");
+    static_assert (Hard::slave, "no external trigger");
     static_assert (timer_input >= 1 && timer_input <= 2, "no such input");
     static const unsigned smcr =
-        (timer_input == 1 ? TIM_SMCR_TS_IT1FP1 : TIM_SMCR_TS_IT1FP2)
+        (timer_input == 1 ? TIM_SMCR_TS_TI1FP1 : TIM_SMCR_TS_TI1FP2)
         | TIM_SMCR_SMS_TM;
 };
 
-template<uint32_t Base>
-template<int channel, typename TimerHard<Base>::Filter filter,
-    typename TimerHard<Base>::Map map,
-    typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionInputCapture
+template<TimerInstance inst>
+template<int channel, typename TimerHard<inst>::Filter filter,
+    typename TimerHard<inst>::Map map,
+    typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionInputCapture
 {
     static_assert (channel == 1, "no such channel");
     // Always activate input capture (through Polarity values), even when only
     // used as a trigger, no harm is done.
 };
 
-template<uint32_t Base>
-template<typename TimerHard<Base>::Filter filter,
-    typename TimerHard<Base>::Map map,
-    typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionInputCapture<1, filter, map, polarity>
-    : public TimerHard<Base>::Option
+template<TimerInstance inst>
+template<typename TimerHard<inst>::Filter filter,
+    typename TimerHard<inst>::Map map,
+    typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionInputCapture<1, filter, map, polarity>
+    : public TimerHard<inst>::Option
 {
-    static_assert (1 <= TimerHardware<Base>::channels, "no such channel");
+    static_assert (1 <= TimerHard<inst>::Hard::channels, "no such channel");
     static const unsigned ccmr1 =
         (static_cast<int> (filter)
-         * (TIM_CCMR1_IC1F_MASK & ~(TIM_CCMR1_IC1F_MASK - 1)))
+         * (TIM_CCMR1_IC1F & ~(TIM_CCMR1_IC1F - 1)))
         | (static_cast<int> (map)
-           * (TIM_CCMR1_CC1S_MASK & ~(TIM_CCMR1_CC1S_MASK - 1)));
+           * (TIM_CCMR1_CC1S & ~(TIM_CCMR1_CC1S - 1)));
     static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC1E;
 };
 
-template<uint32_t Base>
-template<typename TimerHard<Base>::Filter filter,
-    typename TimerHard<Base>::Map map,
-    typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionInputCapture<2, filter, map, polarity>
-    : public TimerHard<Base>::Option
+template<TimerInstance inst>
+template<typename TimerHard<inst>::Filter filter,
+    typename TimerHard<inst>::Map map,
+    typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionInputCapture<2, filter, map, polarity>
+    : public TimerHard<inst>::Option
 {
-    static_assert (2 <= TimerHardware<Base>::channels, "no such channel");
+    static_assert (2 <= TimerHard<inst>::Hard::channels, "no such channel");
     static const unsigned ccmr1 =
         (static_cast<int> (filter)
-         * (TIM_CCMR1_IC2F_MASK & ~(TIM_CCMR1_IC2F_MASK - 1)))
+         * (TIM_CCMR1_IC2F & ~(TIM_CCMR1_IC2F - 1)))
         | (static_cast<int> (map)
-           * (TIM_CCMR1_CC2S_MASK & ~(TIM_CCMR1_CC2S_MASK - 1)));
+           * (TIM_CCMR1_CC2S & ~(TIM_CCMR1_CC2S - 1)));
     static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC2E;
 };
 
-template<uint32_t Base>
-template<typename TimerHard<Base>::Filter filter,
-    typename TimerHard<Base>::Map map,
-    typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionInputCapture<3, filter, map, polarity>
-    : public TimerHard<Base>::Option
+template<TimerInstance inst>
+template<typename TimerHard<inst>::Filter filter,
+    typename TimerHard<inst>::Map map,
+    typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionInputCapture<3, filter, map, polarity>
+    : public TimerHard<inst>::Option
 {
-    static_assert (3 <= TimerHardware<Base>::channels, "no such channel");
+    static_assert (3 <= TimerHard<inst>::Hard::channels, "no such channel");
     static const unsigned ccmr2 =
         (static_cast<int> (filter)
-         * (TIM_CCMR2_IC3F_MASK & ~(TIM_CCMR2_IC3F_MASK - 1)))
+         * (TIM_CCMR2_IC3F & ~(TIM_CCMR2_IC3F - 1)))
         | (static_cast<int> (map)
-           * (TIM_CCMR2_CC3S_MASK & ~(TIM_CCMR2_CC3S_MASK - 1)));
+           * (TIM_CCMR2_CC3S & ~(TIM_CCMR2_CC3S - 1)));
     static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC3E;
 };
 
-template<uint32_t Base>
-template<typename TimerHard<Base>::Filter filter,
-    typename TimerHard<Base>::Map map,
-    typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionInputCapture<4, filter, map, polarity>
-    : public TimerHard<Base>::Option
+template<TimerInstance inst>
+template<typename TimerHard<inst>::Filter filter,
+    typename TimerHard<inst>::Map map,
+    typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionInputCapture<4, filter, map, polarity>
+    : public TimerHard<inst>::Option
 {
-    static_assert (4 <= TimerHardware<Base>::channels, "no such channel");
+    static_assert (4 <= TimerHard<inst>::Hard::channels, "no such channel");
     static const unsigned ccmr2 =
         (static_cast<int> (filter)
-         * (TIM_CCMR2_IC4F_MASK & ~(TIM_CCMR2_IC4F_MASK - 1)))
+         * (TIM_CCMR2_IC4F & ~(TIM_CCMR2_IC4F - 1)))
         | (static_cast<int> (map)
-           * (TIM_CCMR2_CC4S_MASK & ~(TIM_CCMR2_CC4S_MASK - 1)));
+           * (TIM_CCMR2_CC4S & ~(TIM_CCMR2_CC4S - 1)));
     static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC4E;
 };
 
-template<uint32_t Base>
-template<int channel, typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionOutputCompare
+template<TimerInstance inst>
+template<int channel, typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionOutputCompare
 {
     static_assert (channel == 1, "no such channel");
 };
 
-template<uint32_t Base>
-template<typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionOutputCompare<1, polarity>
-    : public TimerHard<Base>::Option
+template<TimerInstance inst>
+template<typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionOutputCompare<1, polarity>
+    : public TimerHard<inst>::Option
 {
-    static_assert (1 <= TimerHardware<Base>::channels, "no such channel");
+    static_assert (1 <= TimerHard<inst>::Hard::channels, "no such channel");
     static const unsigned ccmr1 = TIM_CCMR1_OC1M_PWM1 | TIM_CCMR1_OC1PE;
     static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC1E;
 };
 
-template<uint32_t Base>
-template<typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionOutputCompare<2, polarity>
-    : public TimerHard<Base>::Option
+template<TimerInstance inst>
+template<typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionOutputCompare<2, polarity>
+    : public TimerHard<inst>::Option
 {
-    static_assert (2 <= TimerHardware<Base>::channels, "no such channel");
+    static_assert (2 <= TimerHard<inst>::Hard::channels, "no such channel");
     static const unsigned ccmr1 = TIM_CCMR1_OC2M_PWM1 | TIM_CCMR1_OC2PE;
     static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC2E;
 };
 
-template<uint32_t Base>
-template<typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionOutputCompare<3, polarity>
-    : public TimerHard<Base>::Option
+template<TimerInstance inst>
+template<typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionOutputCompare<3, polarity>
+    : public TimerHard<inst>::Option
 {
-    static_assert (3 <= TimerHardware<Base>::channels, "no such channel");
+    static_assert (3 <= TimerHard<inst>::Hard::channels, "no such channel");
     static const unsigned ccmr2 = TIM_CCMR2_OC3M_PWM1 | TIM_CCMR2_OC3PE;
     static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC3E;
 };
 
-template<uint32_t Base>
-template<typename TimerHard<Base>::Polarity polarity>
-struct TimerHard<Base>::OptionOutputCompare<4, polarity>
-    : public TimerHard<Base>::Option
+template<TimerInstance inst>
+template<typename TimerHard<inst>::Polarity polarity>
+struct TimerHard<inst>::OptionOutputCompare<4, polarity>
+    : public TimerHard<inst>::Option
 {
-    static_assert (4 <= TimerHardware<Base>::channels, "no such channel");
+    static_assert (4 <= TimerHard<inst>::Hard::channels, "no such channel");
     static const unsigned ccmr2 = TIM_CCMR2_OC4M_PWM1 | TIM_CCMR2_OC4PE;
     static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC4E;
 };
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<int channel, unsigned int value>
-struct TimerHard<Base>::OptionOutputCompareValue
-    : public TimerHard<Base>::Option
+struct TimerHard<inst>::OptionOutputCompareValue
+    : public TimerHard<inst>::Option
 {
     static_assert (channel == 1, "no such channel");
 };
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<unsigned int value>
-struct TimerHard<Base>::OptionOutputCompareValue<1, value>
-    : public TimerHard<Base>::Option
+struct TimerHard<inst>::OptionOutputCompareValue<1, value>
+    : public TimerHard<inst>::Option
 {
-    static_assert (1 <= TimerHardware<Base>::channels, "no such channel");
-    static_assert (value <= TimerHardware<Base>::max, "value too large");
+    static_assert (1 <= TimerHard<inst>::Hard::channels, "no such channel");
+    static_assert (value <= TimerHard<inst>::Hard::max, "value too large");
     static const unsigned ccr1 = value;
 };
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<unsigned int value>
-struct TimerHard<Base>::OptionOutputCompareValue<2, value>
-    : public TimerHard<Base>::Option
+struct TimerHard<inst>::OptionOutputCompareValue<2, value>
+    : public TimerHard<inst>::Option
 {
-    static_assert (2 <= TimerHardware<Base>::channels, "no such channel");
-    static_assert (value <= TimerHardware<Base>::max, "value too large");
+    static_assert (2 <= TimerHard<inst>::Hard::channels, "no such channel");
+    static_assert (value <= TimerHard<inst>::Hard::max, "value too large");
     static const unsigned ccr2 = value;
 };
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<unsigned int value>
-struct TimerHard<Base>::OptionOutputCompareValue<3, value>
-    : public TimerHard<Base>::Option
+struct TimerHard<inst>::OptionOutputCompareValue<3, value>
+    : public TimerHard<inst>::Option
 {
-    static_assert (3 <= TimerHardware<Base>::channels, "no such channel");
-    static_assert (value <= TimerHardware<Base>::max, "value too large");
+    static_assert (3 <= TimerHard<inst>::Hard::channels, "no such channel");
+    static_assert (value <= TimerHard<inst>::Hard::max, "value too large");
     static const unsigned ccr3 = value;
 };
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<unsigned int value>
-struct TimerHard<Base>::OptionOutputCompareValue<4, value>
-    : public TimerHard<Base>::Option
+struct TimerHard<inst>::OptionOutputCompareValue<4, value>
+    : public TimerHard<inst>::Option
 {
-    static_assert (4 <= TimerHardware<Base>::channels, "no such channel");
-    static_assert (value <= TimerHardware<Base>::max, "value too large");
+    static_assert (4 <= TimerHard<inst>::Hard::channels, "no such channel");
+    static_assert (value <= TimerHard<inst>::Hard::max, "value too large");
     static const unsigned ccr4 = value;
 };
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<typename... Options>
-struct TimerHard<Base>::CombinedOptions : public TimerHard<Base>::Option
+struct TimerHard<inst>::CombinedOptions : public TimerHard<inst>::Option
 {
 };
 
-template<uint32_t Base>
+template<TimerInstance inst>
 template<typename Option, typename... Options>
-struct TimerHard<Base>::CombinedOptions<Option, Options...>
+struct TimerHard<inst>::CombinedOptions<Option, Options...>
 {
-    static_assert (Base == Option::base, "option for another timer");
-    static const uint32_t base = Base;
+    static_assert (inst == Option::opinst, "option for another timer");
+    static const TimerInstance opinst = inst;
     static const unsigned cr1 = Option::cr1
         | CombinedOptions<Options...>::cr1;
     static const unsigned smcr = Option::smcr

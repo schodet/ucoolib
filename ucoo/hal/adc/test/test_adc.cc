@@ -26,9 +26,8 @@
 #include "ucoo/arch/arch.hh"
 #include "ucoo/base/test/test.hh"
 #include "ucoo/utils/delay.hh"
-
-#include <libopencm3/stm32/adc.h>
 #include "ucoo/hal/gpio/gpio.hh"
+#include "ucoo/arch/reg.hh"
 
 #include <cstdio>
 
@@ -38,10 +37,10 @@ main (int argc, const char **argv)
     ucoo::arch_init (argc, argv);
     ucoo::test_stream_setup ();
     // Have fun with temperature sensor.
-    ucoo::AdcHard adc (0);
+    ucoo::AdcHard adc (ucoo::AdcHard::Instance::ADC1);
     adc.enable ();
-    ADC_CCR = ADC_CCR_TSVREFE;
-    ucoo::AdcHardChannel c (adc, 16);
+    ucoo::reg::ADC->CCR = ADC_CCR_TSVREFE;
+    ucoo::AdcHardChannel c = adc[16];
     while (1)
     {
         int r = c.read ();

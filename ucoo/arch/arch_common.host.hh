@@ -29,6 +29,7 @@ namespace ucoo {
 /// Type used to save irq state.
 typedef unsigned int irq_flags_t;
 
+/// Lock interrupts and return previous state.
 static inline irq_flags_t
 irq_lock (void)
 {
@@ -36,7 +37,8 @@ irq_lock (void)
     return 0;
 }
 
-inline void
+/// Restore interrupts lock state after an irq_lock.
+static inline void
 irq_restore (irq_flags_t)
 {
     // Nothing on host, there is no interrupts.

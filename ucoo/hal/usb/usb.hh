@@ -24,8 +24,10 @@
 //
 // }}}
 
+#include "usb_driver.hh"
+#include "usb_application.hh"
 #ifdef TARGET_stm32
-# include "usb.stm32.hh"
+# include "usb_dwc_otg.stm32.hh"
 #else
 # error "not implemented for this target"
 #endif

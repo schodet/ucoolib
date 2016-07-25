@@ -25,8 +25,6 @@
 #include "ucoo/hal/gpio/gpio.hh"
 #include "ucoo/utils/delay.hh"
 
-#include <libopencm3/stm32/rcc.h>
-
 void
 test (ucoo::Io &loop_out, ucoo::Io &loop_in, ucoo::Io &led3, ucoo::Io &led4,
       ucoo::Io &led5, ucoo::Io &led6)
@@ -56,16 +54,16 @@ int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    rcc_periph_clock_enable (RCC_GPIOB);
-    rcc_periph_clock_enable (RCC_GPIOD);
+    ucoo::GPIOB.enable ();
+    ucoo::GPIOD.enable ();
     // For this test, shorten B6 & B7 to have loopback.
-    gpio_mode_setup (GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO7);
-    ucoo::Gpio loop_out (GPIOB, 6);
-    ucoo::Gpio loop_in (GPIOB, 7);
-    ucoo::Gpio led3 (GPIOD, 13);
-    ucoo::Gpio led4 (GPIOD, 12);
-    ucoo::Gpio led5 (GPIOD, 14);
-    ucoo::Gpio led6 (GPIOD, 15);
+    ucoo::Gpio loop_out (ucoo::GPIOB[6]);
+    ucoo::Gpio loop_in (ucoo::GPIOB[7]);
+    loop_in.pull (ucoo::Gpio::Pull::UP);
+    ucoo::Gpio led3 (ucoo::GPIOD[13]);
+    ucoo::Gpio led4 (ucoo::GPIOD[12]);
+    ucoo::Gpio led5 (ucoo::GPIOD[14]);
+    ucoo::Gpio led6 (ucoo::GPIOD[15]);
     test (loop_out, loop_in, led3, led4, led5, led6);
     return 0;
 }

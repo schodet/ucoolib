@@ -22,17 +22,14 @@
 //
 // }}}
 #include "ucoo/hal/self_programming/self_programming.hh"
-
-#include <libopencm3/stm32/flash.h>
-#include <libopencm3/stm32/desig.h>
-#include <libopencm3/stm32/dbgmcu.h>
+#include "ucoo/arch/reg.hh"
 
 namespace ucoo {
 
 int
 self_programming_flash_size ()
 {
-    return DESIG_FLASH_SIZE * 1024;
+    return reg::DESIG->FLASH_SIZE * 1024;
 }
 
 int
@@ -40,7 +37,7 @@ self_programming_erase_size (uint32_t addr)
 {
     assert (static_cast<int> (addr - FLASH_BASE)
             <= self_programming_flash_size ());
-    uint32_t idcode = DBGMCU_IDCODE & DBGMCU_IDCODE_DEV_ID_MASK;
+    uint32_t idcode = reg::DBGMCU->IDCODE & DBGMCU_IDCODE_DEV_ID_Msk;
     int page_size = idcode >= 0x414 ? 2048 : 1024;
     assert ((addr & (page_size - 1)) == 0);
     return page_size;
@@ -53,14 +50,23 @@ self_programming_erase (uint32_t addr, int count)
             <= self_programming_flash_size ());
     int page_size = self_programming_erase_size (addr);
     assert ((count & (page_size - 1)) == 0);
+    reg::FLASH->CR = FLASH_CR_LOCK;
+    reg::FLASH->KEYR = FLASH_KEYR_KEY1;
+    reg::FLASH->KEYR = FLASH_KEYR_KEY2;
+    while (reg::FLASH->SR & FLASH_SR_BSY)
+        ;
     while (count)
     {
-        flash_unlock ();
-        flash_erase_page (addr);
-        flash_lock ();
+        reg::FLASH->CR = FLASH_CR_PER;
+        reg::FLASH->AR = addr;
+        reg::FLASH->CR |= FLASH_CR_STRT;
+        while (reg::FLASH->SR & FLASH_SR_BSY)
+            ;
+        reg::FLASH->CR = 0;
         addr += page_size;
         count -= page_size;
     }
+    reg::FLASH->CR = FLASH_CR_LOCK;
     assert (count == 0);
 }
 
@@ -72,11 +78,21 @@ self_programming_write (uint32_t addr, const char *buf, int count)
     assert (count % 2 == 0);
     assert (static_cast<int> (addr - FLASH_BASE + count)
             <= self_programming_flash_size ());
-    flash_unlock ();
+    reg::FLASH->CR = FLASH_CR_LOCK;
+    reg::FLASH->KEYR = FLASH_KEYR_KEY1;
+    reg::FLASH->KEYR = FLASH_KEYR_KEY2;
+    while (reg::FLASH->SR & FLASH_SR_BSY)
+        ;
     for (int i = 0; i < count; i += 2)
-        flash_program_half_word (
-            addr + i, *reinterpret_cast<const uint16_t *> (buf + i));
-    flash_lock ();
+    {
+        reg::FLASH->CR = FLASH_CR_PG;
+        *reinterpret_cast<uint16_t *> (addr + i)
+            = *reinterpret_cast<const uint16_t *> (buf + i);
+        while (reg::FLASH->SR & FLASH_SR_BSY)
+            ;
+        reg::FLASH->CR = 0;
+    }
+    reg::FLASH->CR = FLASH_CR_LOCK;
 }
 
 } // namespace ucoo

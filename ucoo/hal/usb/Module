@@ -1,1 +1,5 @@
-ucoo_hal_usb_SOURCES = usb.stm32.cc usb_desc.stm32.c
+ucoo_hal_usb_SOURCES = \
+	usb_driver.cc \
+	usb_application.cc \
+	usb_cdc.cc \
+	usb_dwc_otg.stm32.cc

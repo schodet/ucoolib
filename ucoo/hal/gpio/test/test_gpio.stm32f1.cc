@@ -25,8 +25,6 @@
 #include "ucoo/hal/gpio/gpio.hh"
 #include "ucoo/utils/delay.hh"
 
-#include <libopencm3/stm32/rcc.h>
-
 void
 test (ucoo::Io &loop_in, ucoo::Io &led1, ucoo::Io &led2, ucoo::Io &led3,
       ucoo::Io &led4)
@@ -54,12 +52,12 @@ int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    rcc_periph_clock_enable (RCC_GPIOC);
-    ucoo::Gpio loop_in (GPIOC, 5);
-    ucoo::Gpio led1 (GPIOC, 6);
-    ucoo::Gpio led2 (GPIOC, 7);
-    ucoo::Gpio led3 (GPIOC, 8);
-    ucoo::Gpio led4 (GPIOC, 9);
+    ucoo::GPIOC.enable ();
+    ucoo::Gpio loop_in (ucoo::GPIOC[5]);
+    ucoo::Gpio led1 (ucoo::GPIOC[6]);
+    ucoo::Gpio led2 (ucoo::GPIOC[7]);
+    ucoo::Gpio led3 (ucoo::GPIOC[8]);
+    ucoo::Gpio led4 (ucoo::GPIOC[9]);
     test (loop_in, led1, led2, led3, led4);
     return 0;
 }

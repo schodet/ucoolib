@@ -27,14 +27,26 @@
 
 #include "config/ucoo/hal/i2c.hh"
 
+#include "ucoo/arch/reg.hh"
+
 namespace ucoo {
 
 /// I2C interface, using dedicated hardware.
 class I2cHard : public I2c
 {
   public:
+    /// Available instances.
+    enum class Instance
+    {
+        I2C1,
+        I2C2,
+#ifdef I2C3_BASE
+        I2C3,
+#endif
+    };
+  public:
     /// Constructor for the Nth I2C.
-    I2cHard (int n);
+    I2cHard (Instance inst);
     /// Shutdown.
     ~I2cHard ();
     /// Enable and setup
@@ -62,11 +74,11 @@ class I2cHard : public I2c
     /// I2C number.
     int n_;
     /// Is it enabled?
-    bool enabled_;
+    bool enabled_ = false;
     /// Slave address.
-    uint8_t slave_addr_;
+    uint8_t slave_addr_ = 0;
     /// Handler called to source or sink data for slave exchanges.
-    DataHandler *slave_data_handler_;
+    DataHandler *slave_data_handler_ = nullptr;
     /// Slave buffer.
     char slave_buf_[CONFIG_UCOO_HAL_I2C_SLAVE_BUFFER_SIZE];
     /// Current buffer count (bytes to send), or buffer size (available room).
@@ -75,11 +87,11 @@ class I2cHard : public I2c
     /// byte).
     int buf_index_;
     /// Master access granted.
-    bool master_;
+    bool master_ = false;
     /// Current master transfer status.
-    int master_status_;
+    int master_status_ = STATUS_ERROR;
     /// Current master transfer buffer.
-    char *master_buf_;
+    char *master_buf_ = nullptr;
     /// Current master transfer size, copied to buf_count_ when active.
     int master_count_;
     /// Current master transfer slave address, LSB is set for receiver mode.

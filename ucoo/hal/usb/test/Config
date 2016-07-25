@@ -1,2 +1,2 @@
 [ucoo/hal/usb]
-stream_nb = 1
+trace = true

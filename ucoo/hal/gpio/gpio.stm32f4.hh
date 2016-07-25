@@ -24,10 +24,12 @@
 //
 // }}}
 #include "ucoo/intf/io.hh"
-
-#include <libopencm3/stm32/gpio.h>
+#include "ucoo/arch/reg.hh"
+#include "ucoo/arch/rcc.stm32.hh"
 
 namespace ucoo {
+
+class GpioPort;
 
 /// General purpose input/output on STM32F4.
 class Gpio : public Io
@@ -35,20 +37,23 @@ class Gpio : public Io
   public:
     enum class Pull : uint32_t
     {
-        NONE = GPIO_PUPD_NONE,
-        UP = GPIO_PUPD_PULLUP,
-        DOWN = GPIO_PUPD_PULLDOWN,
+        NONE,
+        UP,
+        DOWN,
     };
     enum class Speed : uint32_t
     {
-        SPEED_2MHZ = GPIO_OSPEED_2MHZ,
-        SPEED_25MHZ = GPIO_OSPEED_25MHZ,
-        SPEED_50MHZ = GPIO_OSPEED_50MHZ,
-        SPEED_100MHZ = GPIO_OSPEED_100MHZ,
+        SPEED_2MHZ,
+        SPEED_25MHZ,
+        SPEED_50MHZ,
+        SPEED_100MHZ,
+    };
+    enum class Type : uint32_t
+    {
+        PUSH_PULL,
+        OPEN_DRAIN,
     };
   public:
-    /// Constructor, take the PORT base address, and pin BIT number.
-    Gpio (uint32_t port, int bit);
     /// See Io::set.
     void set ();
     /// See Io::reset.
@@ -67,22 +72,63 @@ class Gpio : public Io
     void pull (Pull dir);
     /// Set output speed.
     void speed (Speed s);
+    /// Set output type.
+    void type (Type t);
     /// Set alternate function.
     void af (int num);
     /// Set as analog.
     void analog ();
   private:
+    /// Constructor, take a port, and pin BIT number.
+    Gpio (GpioPort &port, int bit);
+    friend GpioPort;
+  private:
     /// Port register base address.
-    const uint32_t port_;
+    GPIO_TypeDef * const port_;
     /// IO bitmask.
     const uint16_t mask_;
 };
 
+/// General purpose input/output port on STM32F4.
+class GpioPort
+{
+    GPIO_TypeDef * const port_;
+    const Rcc rcc_;
+    friend class Gpio;
+  public:
+    /// Constructor.
+    GpioPort (GPIO_TypeDef *port, Rcc rcc)
+        : port_ (port), rcc_ (rcc) { }
+    /// Enable port.
+    void enable ()
+        { rcc_peripheral_clock_enable (rcc_); }
+    /// Disable port.
+    void disable ()
+        { rcc_peripheral_clock_disable (rcc_); }
+    /// Return a port GPIO.
+    Gpio operator[] (int bit)
+        { return Gpio (*this, bit); }
+    /// Get the index of the port, used with Exti.
+    int get_port_index () const;
+};
+
 inline
-Gpio::Gpio (uint32_t port, int bit)
-    : port_ (port), mask_ (1u << bit)
+Gpio::Gpio (GpioPort &port, int bit)
+    : port_ (port.port_), mask_ (1u << bit)
 {
 }
+
+extern GpioPort GPIOA;
+extern GpioPort GPIOB;
+extern GpioPort GPIOC;
+extern GpioPort GPIOD;
+extern GpioPort GPIOE;
+extern GpioPort GPIOF;
+extern GpioPort GPIOG;
+extern GpioPort GPIOH;
+extern GpioPort GPIOI;
+extern GpioPort GPIOJ;
+extern GpioPort GPIOK;
 
 } // namespace ucoo
 

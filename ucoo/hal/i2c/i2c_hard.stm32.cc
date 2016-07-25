@@ -21,11 +21,9 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "i2c_hard.stm32.hh"
-
-#include <libopencm3/stm32/i2c.h>
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/cm3/nvic.h>
+#include "ucoo/hal/i2c/i2c_hard.stm32.hh"
+#include "ucoo/arch/interrupt.arm.hh"
+#include "ucoo/arch/rcc.stm32.hh"
 
 #include "ucoo/utils/trace.hh"
 
@@ -38,53 +36,56 @@ static Trace<CONFIG_UCOO_HAL_I2C_TRACE> i2c_trace;
 struct i2c_hardware_t
 {
     /// I2C base address.
-    uint32_t base;
-    /// Clock enable identifier.
-    enum rcc_periph_clken clken;
-    /// Corresponding event IRQ (error IRQ is next one).
-    int ev_irq;
+    I2C_TypeDef *base;
+    /// RCC identifier, to enable clock.
+    Rcc rcc;
+    /// Corresponding event IRQ.
+    Irq ev_irq;
+    /// Corresponding error IRQ.
+    Irq er_irq;
 };
 
 /// Information on I2C hardware array, this is zero indexed, I2C1 is at index
 /// 0.
 static const i2c_hardware_t i2c_hardware[] =
 {
-    { I2C1_BASE, RCC_I2C1, NVIC_I2C1_EV_IRQ },
-    { I2C2_BASE, RCC_I2C2, NVIC_I2C2_EV_IRQ },
+    { reg::I2C1, Rcc::I2C1, Irq::I2C1_EV, Irq::I2C1_ER },
+    { reg::I2C2, Rcc::I2C2, Irq::I2C2_EV, Irq::I2C2_ER },
 #ifdef I2C3_BASE
-    { I2C3_BASE, RCC_I2C3, NVIC_I2C3_EV_IRQ },
+    { reg::I2C3, Rcc::I2C3, Irq::I2C3_EV, Irq::I2C3_ER },
 #endif
 };
 
 static I2cHard *i2c_instances[lengthof (i2c_hardware)];
 
-} // namespace ucoo
+template<>
+void interrupt<Irq::I2C1_EV> () { I2cHard::ev_isr (0); }
 
-extern "C" {
+template<>
+void interrupt<Irq::I2C1_ER> () { I2cHard::er_isr (0); }
 
-void i2c1_ev_isr () { ucoo::I2cHard::ev_isr (0); }
+template<>
+void interrupt<Irq::I2C2_EV> () { I2cHard::ev_isr (1); }
 
-void i2c1_er_isr () { ucoo::I2cHard::er_isr (0); }
+template<>
+void interrupt<Irq::I2C2_ER> () { I2cHard::er_isr (1); }
 
-void i2c2_ev_isr () { ucoo::I2cHard::ev_isr (1); }
+#ifdef I2C3_BASE
 
-void i2c2_er_isr () { ucoo::I2cHard::er_isr (1); }
+template<>
+void interrupt<Irq::I2C3_EV> () { I2cHard::ev_isr (2); }
 
-void i2c3_ev_isr () { ucoo::I2cHard::ev_isr (2); }
+template<>
+void interrupt<Irq::I2C3_ER> () { I2cHard::er_isr (2); }
 
-void i2c3_er_isr () { ucoo::I2cHard::er_isr (2); }
+#endif
 
-}
-
-namespace ucoo {
-
-I2cHard::I2cHard (int n)
-    : n_ (n), enabled_ (false), slave_addr_ (0), slave_data_handler_ (0),
-      master_ (false), master_status_ (STATUS_ERROR), master_buf_ (0)
+I2cHard::I2cHard (Instance inst)
+    : n_ (static_cast<int> (inst))
 {
-    assert (n < lengthof (i2c_instances));
-    assert (!i2c_instances[n]);
-    i2c_instances[n] = this;
+    assert (n_ < lengthof (i2c_instances));
+    assert (!i2c_instances[n_]);
+    i2c_instances[n_] = this;
 }
 
 I2cHard::~I2cHard ()
@@ -97,38 +98,38 @@ void
 I2cHard::enable (int speed)
 {
     enabled_ = true;
-    uint32_t base = i2c_hardware[n_].base;
+    auto base = i2c_hardware[n_].base;
     // Turn on.
-    rcc_periph_clock_enable (i2c_hardware[n_].clken);
+    rcc_peripheral_clock_enable (i2c_hardware[n_].rcc);
     // Reset.
-    I2C_CR1 (base) = I2C_CR1_SWRST;
+    base->CR1 = I2C_CR1_SWRST;
     // TODO: make sure the bus is free!!! How!
-    I2C_CR1 (base) = 0;
+    base->CR1 = 0;
     // Compute clock parameters.
-    int pclk = rcc_apb1_frequency;
-    int pclk_mhz = pclk / 1000000;
+    int pclk_hz = rcc_apb1_freq_hz;
+    int pclk_mhz = pclk_hz / 1000000;
     uint16_t ccr, tris;
     if (speed <= 100000)
     {
-        ccr = pclk / speed / 2;
+        ccr = pclk_hz / speed / 2;
         tris = pclk_mhz + 1;
     }
     else
     {
         assert (speed <= 400000);
-        ccr = I2C_CCR_FS | I2C_CCR_DUTY | (pclk / speed / 25);
+        ccr = I2C_CCR_FS | I2C_CCR_DUTY | (pclk_hz / speed / 25);
         tris = pclk_mhz * 3 / 10 + 1;
     }
     // Set all parameters.
-    I2C_CCR (base) = ccr;
-    I2C_TRISE (base) = tris;
-    I2C_OAR1 (base) = slave_addr_ | (1 << 14);
-    I2C_OAR2 (base) = 0;
-    I2C_CR2 (base) = I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | pclk_mhz;
+    base->CCR = ccr;
+    base->TRISE = tris;
+    base->OAR1 = slave_addr_ | (1 << 14);
+    base->OAR2 = 0;
+    base->CR2 = I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | pclk_mhz;
     // Enable.
-    nvic_enable_irq (i2c_hardware[n_].ev_irq);
-    nvic_enable_irq (i2c_hardware[n_].ev_irq + 1);
-    I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_PE;
+    interrupt_enable (i2c_hardware[n_].ev_irq);
+    interrupt_enable (i2c_hardware[n_].er_irq);
+    base->CR1 = I2C_CR1_ACK | I2C_CR1_PE;
 
 }
 
@@ -138,14 +139,14 @@ I2cHard::disable ()
     if (enabled_)
     {
         enabled_ = false;
-        uint32_t base = i2c_hardware[n_].base;
+        auto base = i2c_hardware[n_].base;
         // TODO: wait for end of transfer?
         // Disable.
-        nvic_disable_irq (i2c_hardware[n_].ev_irq);
-        nvic_disable_irq (i2c_hardware[n_].ev_irq + 1);
-        I2C_CR1 (base) = 0;
+        interrupt_disable (i2c_hardware[n_].ev_irq);
+        interrupt_disable (i2c_hardware[n_].er_irq);
+        base->CR1 = 0;
         // Turn off.
-        rcc_periph_clock_disable (i2c_hardware[n_].clken);
+        rcc_peripheral_clock_disable (i2c_hardware[n_].rcc);
     }
 }
 
@@ -155,9 +156,9 @@ I2cHard::transfer (uint8_t addr, char *buf, int count)
     assert (enabled_ && count);
     // No need to lock, master is not busy.
     assert (master_status_ != STATUS_BUSY);
-    uint32_t base = i2c_hardware[n_].base;
+    auto base = i2c_hardware[n_].base;
     // Wait until STOP condition terminated, polling is the only way.
-    while (I2C_CR1 (base) & I2C_CR1_STOP)
+    while (base->CR1 & I2C_CR1_STOP)
         barrier ();
     // Now, program next transfer.
     master_status_ = STATUS_BUSY;
@@ -165,7 +166,7 @@ I2cHard::transfer (uint8_t addr, char *buf, int count)
     master_buf_ = buf;
     master_count_ = count;
     // TODO: multimaster: about ACK, may have to lock IRQ for multimaster.
-    I2C_CR1 (base) |= I2C_CR1_START;
+    base->CR1 |= I2C_CR1_START;
 }
 
 void
@@ -204,24 +205,24 @@ I2cHard::register_data (uint8_t addr, DataHandler &data_handler)
     slave_data_handler_ = &data_handler;
     if (enabled_)
     {
-        uint32_t base = i2c_hardware[n_].base;
+        auto base = i2c_hardware[n_].base;
         // Just in case a transfer is triggered right now.
         barrier ();
         // According to datasheet, bit 14 should be 1!
-        I2C_OAR1 (base) = addr | (1 << 14);
+        base->OAR1 = addr | (1 << 14);
     }
 }
 
 void
 I2cHard::ev_isr (int n)
 {
-    uint32_t base = i2c_hardware[n].base;
+    auto base = i2c_hardware[n].base;
     assert (i2c_instances[n]);
     I2cHard &i2c = *i2c_instances[n];
     i2c_trace ("<%d> event isr", n);
     while (1)
     {
-        uint16_t sr1 = I2C_SR1 (base);
+        uint16_t sr1 = base->SR1;
         i2c_trace ("<%d> sr1=%04x", n, sr1);
         // Can not read SR2 because doing so would clear the ADDR bit.
         if (i2c.master_)
@@ -233,42 +234,42 @@ I2cHard::ev_isr (int n)
                 // before reading SR2, and STOP after... Crappy hardware!
                 if ((i2c.master_slave_addr_ & 1) && i2c.buf_count_ == 1)
                 {
-                    I2C_CR1 (base) = I2C_CR1_PE;
-                    sr2 = I2C_SR2 (base);
-                    I2C_CR1 (base) = I2C_CR1_STOP | I2C_CR1_PE;
+                    base->CR1 = I2C_CR1_PE;
+                    sr2 = base->SR2;
+                    base->CR1 = I2C_CR1_STOP | I2C_CR1_PE;
                     // TODO: what to wait now? Unsupported for now.
                 }
                 else if ((i2c.master_slave_addr_ & 1) && i2c.buf_count_ == 2)
                 {
-                    I2C_CR1 (base) = I2C_CR1_POS | I2C_CR1_PE;
-                    sr2 = I2C_SR2 (base);
+                    base->CR1 = I2C_CR1_POS | I2C_CR1_PE;
+                    sr2 = base->SR2;
                     // Wait for BTF.
                 }
                 else
                 {
-                    sr2 = I2C_SR2 (base);
-                    I2C_CR2 (base) |= I2C_CR2_ITBUFEN;
+                    sr2 = base->SR2;
+                    base->CR2 |= I2C_CR2_ITBUFEN;
                 }
                 i2c_trace ("<%d> master sr2=%04x", n, sr2);
             }
-            else if (sr1 & I2C_SR1_TxE
+            else if (sr1 & I2C_SR1_TXE
                      && i2c.buf_index_ < i2c.buf_count_)
             {
                 i2c_trace ("<%d> master tx index=%d", n, i2c.buf_index_);
                 // Send next byte.
-                I2C_DR (base) = i2c.master_buf_[i2c.buf_index_++];
+                base->DR = i2c.master_buf_[i2c.buf_index_++];
                 // Wait for BTF if last one.
                 if (i2c.buf_index_ == i2c.buf_count_)
-                    I2C_CR2 (base) &= ~I2C_CR2_ITBUFEN;
+                    base->CR2 &= ~I2C_CR2_ITBUFEN;
             }
-            else if (sr1 & I2C_SR1_RxNE
+            else if (sr1 & I2C_SR1_RXNE
                      && i2c.buf_count_ - i2c.buf_index_ > 3)
             {
                 i2c_trace ("<%d> master rx index=%d", n, i2c.buf_index_);
-                i2c.master_buf_[i2c.buf_index_++] = I2C_DR (base);
+                i2c.master_buf_[i2c.buf_index_++] = base->DR;
                 if (i2c.buf_count_ - i2c.buf_index_ == 3)
                     // Wait for BTF.
-                    I2C_CR2 (base) &= ~I2C_CR2_ITBUFEN;
+                    base->CR2 &= ~I2C_CR2_ITBUFEN;
             }
             else if (sr1 & I2C_SR1_BTF)
             {
@@ -276,7 +277,7 @@ I2cHard::ev_isr (int n)
                 if (!(i2c.master_slave_addr_ & 1))
                 {
                     // End of transmission.
-                    I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
+                    base->CR1 = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
                     i2c.master_ = false;
                     i2c.master_status_ = i2c.buf_index_;
                     if (i2c.finished_handler_)
@@ -285,17 +286,17 @@ I2cHard::ev_isr (int n)
                 else if (i2c.buf_count_ - i2c.buf_index_ == 3)
                 {
                     // Near end of reception.
-                    I2C_CR1 (base) = I2C_CR1_PE;
-                    i2c.master_buf_[i2c.buf_index_++] = I2C_DR (base);
+                    base->CR1 = I2C_CR1_PE;
+                    i2c.master_buf_[i2c.buf_index_++] = base->DR;
                     // Wait for BTF.
                 }
                 else
                 {
                     // End of reception.
-                    I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
+                    base->CR1 = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
                     if (i2c.buf_count_ - i2c.buf_index_ == 2)
-                        i2c.master_buf_[i2c.buf_index_++] = I2C_DR (base);
-                    i2c.master_buf_[i2c.buf_index_++] = I2C_DR (base);
+                        i2c.master_buf_[i2c.buf_index_++] = base->DR;
+                    i2c.master_buf_[i2c.buf_index_++] = base->DR;
                     i2c.master_ = false;
                     i2c.master_status_ = i2c.buf_index_;
                     if (i2c.finished_handler_)
@@ -309,7 +310,7 @@ I2cHard::ev_isr (int n)
         {
             if (sr1 & I2C_SR1_ADDR)
             {
-                uint16_t sr2 = I2C_SR2 (base);
+                uint16_t sr2 = base->SR2;
                 i2c_trace ("<%d> slave sr2=%04x", n, sr2);
                 // Initiate new slave transfer.
                 if (sr2 & I2C_SR2_TRA)
@@ -320,20 +321,20 @@ I2cHard::ev_isr (int n)
                 else
                     i2c.buf_count_ = sizeof (i2c.slave_buf_);
                 i2c.buf_index_ = 0;
-                I2C_CR2 (base) |= I2C_CR2_ITBUFEN;
+                base->CR2 |= I2C_CR2_ITBUFEN;
             }
-            else if (sr1 & I2C_SR1_TxE)
+            else if (sr1 & I2C_SR1_TXE)
             {
                 i2c_trace ("<%d> slave tx index=%d", n, i2c.buf_index_);
                 uint8_t b = 0xff;
                 if (i2c.buf_index_ < i2c.buf_count_)
                     b = i2c.slave_buf_[i2c.buf_index_++];
-                I2C_DR (base) = b;
+                base->DR = b;
             }
-            else if (sr1 & I2C_SR1_RxNE)
+            else if (sr1 & I2C_SR1_RXNE)
             {
                 i2c_trace ("<%d> slave rx index=%d", n, i2c.buf_index_);
-                uint8_t b = I2C_DR (base);
+                uint8_t b = base->DR;
                 if (i2c.buf_index_ < i2c.buf_count_)
                     i2c.slave_buf_[i2c.buf_index_++] = b;
             }
@@ -343,14 +344,14 @@ I2cHard::ev_isr (int n)
                 i2c.slave_data_handler_->to_recv (i2c.slave_buf_, i2c.buf_index_);
                 // TODO: multimaster: there is no way to write in this
                 // register if a START was requested to switch to master mode!
-                I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_PE;
-                I2C_CR2 (base) &= ~I2C_CR2_ITBUFEN;
+                base->CR1 = I2C_CR1_ACK | I2C_CR1_PE;
+                base->CR2 &= ~I2C_CR2_ITBUFEN;
             }
             else if (sr1 & I2C_SR1_SB)
             {
                 i2c_trace ("<%d> master start", n);
                 // Starting master mode.
-                I2C_DR (base) = i2c.master_slave_addr_;
+                base->DR = i2c.master_slave_addr_;
                 i2c.master_ = true;
                 i2c.buf_count_ = i2c.master_count_;
                 i2c.buf_index_ = 0;
@@ -365,30 +366,30 @@ I2cHard::ev_isr (int n)
 void
 I2cHard::er_isr (int n)
 {
-    uint32_t base = i2c_hardware[n].base;
+    auto base = i2c_hardware[n].base;
     assert (i2c_instances[n]);
     I2cHard &i2c = *i2c_instances[n];
-    uint16_t sr1 = I2C_SR1 (base);
-    I2C_SR1 (base) = 0;
+    uint16_t sr1 = base->SR1;
+    base->SR1 = 0;
     i2c_trace ("<%d> error isr sr1=%04x", n, sr1);
     if (i2c.master_)
     {
         if (sr1 & I2C_SR1_ARLO)
         {
             // Try again.
-            I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_START | I2C_CR1_PE;
+            base->CR1 = I2C_CR1_ACK | I2C_CR1_START | I2C_CR1_PE;
             i2c.master_ = false;
         }
         else if (sr1 & I2C_SR1_AF)
         {
-            I2C_CR1 (base) = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
+            base->CR1 = I2C_CR1_ACK | I2C_CR1_STOP | I2C_CR1_PE;
             i2c.master_ = false;
             i2c.master_status_ = i2c.buf_index_;
             if (i2c.finished_handler_)
                 i2c.finished_handler_->finished (i2c.master_status_);
         }
     }
-    I2C_CR2 (base) &= ~I2C_CR2_ITBUFEN;
+    base->CR2 &= ~I2C_CR2_ITBUFEN;
     // TODO: handle misplaced STOP errata.
 }
 

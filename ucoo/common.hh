@@ -100,6 +100,10 @@ assert_perror (bool condition)
         halt_perror ();
 }
 
+/// Give some time to other tasks when running in a tight loop.
+void
+yield ();
+
 /// Get array length at compile time.
 template<class T, int N>
 constexpr int

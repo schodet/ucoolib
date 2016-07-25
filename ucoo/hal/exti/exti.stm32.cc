@@ -22,13 +22,8 @@
 //
 // }}}
 #include "ucoo/hal/exti/exti.stm32.hh"
-#include "ucoo/common.hh"
 
-#include <libopencm3/cm3/nvic.h>
-#include <libopencm3/stm32/gpio.h>
-#if !defined AFIO_BASE
-# include <libopencm3/stm32/syscfg.h>
-#endif
+#include "ucoo/arch/interrupt.arm.hh"
 
 namespace ucoo {
 
@@ -36,7 +31,7 @@ namespace ucoo {
 struct exti_hardware_t
 {
     /// Corresponding IRQ.
-    int irq;
+    Irq irq;
     /// Pointer to number of enabled EXTI for shared vectors, or NULL.
     int *enabled;
 };
@@ -48,108 +43,100 @@ static int exti_vector_9_5_enabled;
 static int exti_vector_15_10_enabled;
 
 /// Information on EXTI hardware array.
-struct exti_hardware_t exti_hardware[] =
+static const exti_hardware_t exti_hardware[] =
 {
-    { NVIC_EXTI0_IRQ, nullptr },
-    { NVIC_EXTI1_IRQ, nullptr },
-    { NVIC_EXTI2_IRQ, nullptr },
-    { NVIC_EXTI3_IRQ, nullptr },
-    { NVIC_EXTI4_IRQ, nullptr },
-    { NVIC_EXTI9_5_IRQ, &exti_vector_9_5_enabled },
-    { NVIC_EXTI9_5_IRQ, &exti_vector_9_5_enabled },
-    { NVIC_EXTI9_5_IRQ, &exti_vector_9_5_enabled },
-    { NVIC_EXTI9_5_IRQ, &exti_vector_9_5_enabled },
-    { NVIC_EXTI9_5_IRQ, &exti_vector_9_5_enabled },
-    { NVIC_EXTI15_10_IRQ, &exti_vector_15_10_enabled },
-    { NVIC_EXTI15_10_IRQ, &exti_vector_15_10_enabled },
-    { NVIC_EXTI15_10_IRQ, &exti_vector_15_10_enabled },
-    { NVIC_EXTI15_10_IRQ, &exti_vector_15_10_enabled },
-    { NVIC_EXTI15_10_IRQ, &exti_vector_15_10_enabled },
-    { NVIC_EXTI15_10_IRQ, &exti_vector_15_10_enabled },
+    { Irq::EXTI0, nullptr },
+    { Irq::EXTI1, nullptr },
+    { Irq::EXTI2, nullptr },
+    { Irq::EXTI3, nullptr },
+    { Irq::EXTI4, nullptr },
+    { Irq::EXTI9_5, &exti_vector_9_5_enabled },
+    { Irq::EXTI9_5, &exti_vector_9_5_enabled },
+    { Irq::EXTI9_5, &exti_vector_9_5_enabled },
+    { Irq::EXTI9_5, &exti_vector_9_5_enabled },
+    { Irq::EXTI9_5, &exti_vector_9_5_enabled },
+    { Irq::EXTI15_10, &exti_vector_15_10_enabled },
+    { Irq::EXTI15_10, &exti_vector_15_10_enabled },
+    { Irq::EXTI15_10, &exti_vector_15_10_enabled },
+    { Irq::EXTI15_10, &exti_vector_15_10_enabled },
+    { Irq::EXTI15_10, &exti_vector_15_10_enabled },
+    { Irq::EXTI15_10, &exti_vector_15_10_enabled },
 };
 
 static ExtiHard *exti_instances[lengthof (exti_hardware)];
 
-} // namespace ucoo
-
-extern "C" {
-
 // If the interrupt is triggered again after being cleared, the interrupt
 // handler will be reentered.  There is no need to loop.
 
-void
-exti0_isr ()
+template<>
+void interrupt<Irq::EXTI0> ()
 {
-    EXTI_PR = 1u << 0;
-    assert (ucoo::exti_instances[0]);
-    ucoo::exti_instances[0]->isr ();
+    reg::EXTI->PR = 1u << 0;
+    assert (exti_instances[0]);
+    exti_instances[0]->isr ();
 }
 
-void
-exti1_isr ()
+template<>
+void interrupt<Irq::EXTI1> ()
 {
-    EXTI_PR = 1u << 1;
-    assert (ucoo::exti_instances[1]);
-    ucoo::exti_instances[1]->isr ();
+    reg::EXTI->PR = 1u << 1;
+    assert (exti_instances[1]);
+    exti_instances[1]->isr ();
 }
 
-void
-exti2_isr ()
+template<>
+void interrupt<Irq::EXTI2> ()
 {
-    EXTI_PR = 1u << 2;
-    assert (ucoo::exti_instances[2]);
-    ucoo::exti_instances[2]->isr ();
+    reg::EXTI->PR = 1u << 2;
+    assert (exti_instances[2]);
+    exti_instances[2]->isr ();
 }
 
-void
-exti3_isr ()
+template<>
+void interrupt<Irq::EXTI3> ()
 {
-    EXTI_PR = 1u << 3;
-    assert (ucoo::exti_instances[3]);
-    ucoo::exti_instances[3]->isr ();
+    reg::EXTI->PR = 1u << 3;
+    assert (exti_instances[3]);
+    exti_instances[3]->isr ();
 }
 
-void
-exti4_isr ()
+template<>
+void interrupt<Irq::EXTI4> ()
 {
-    EXTI_PR = 1u << 4;
-    assert (ucoo::exti_instances[4]);
-    ucoo::exti_instances[4]->isr ();
+    reg::EXTI->PR = 1u << 4;
+    assert (exti_instances[4]);
+    exti_instances[4]->isr ();
 }
 
-void
-exti9_5_isr ()
+template<>
+void interrupt<Irq::EXTI9_5> ()
 {
-    uint32_t pending = EXTI_PR & 0x3e0;
-    EXTI_PR = pending;
+    uint32_t pending = reg::EXTI->PR & 0x3e0;
+    reg::EXTI->PR = pending;
     for (int i = 5; i <= 9; i++)
     {
         if (pending & (1u << i))
         {
-            assert (ucoo::exti_instances[i]);
-            ucoo::exti_instances[i]->isr ();
+            assert (exti_instances[i]);
+            exti_instances[i]->isr ();
         }
     }
 }
 
-void
-exti15_10_isr ()
+template<>
+void interrupt<Irq::EXTI15_10> ()
 {
-    uint32_t pending = EXTI_PR & 0xfc00;
-    EXTI_PR = pending;
+    uint32_t pending = reg::EXTI->PR & 0xfc00;
+    reg::EXTI->PR = pending;
     for (int i = 10; i <= 15; i++)
     {
         if (pending & (1u << i))
         {
-            assert (ucoo::exti_instances[i]);
-            ucoo::exti_instances[i]->isr ();
+            assert (exti_instances[i]);
+            exti_instances[i]->isr ();
         }
     }
 }
-
-}
-
-namespace ucoo {
 
 ExtiHard::ExtiHard (int n)
     : n_ (n)
@@ -169,14 +156,14 @@ void
 ExtiHard::enable ()
 {
     assert (handler_);
-    EXTI_IMR |= 1u << n_;
+    reg::EXTI->IMR |= 1u << n_;
     if (exti_hardware[n_].enabled)
     {
         if (!(*exti_hardware[n_].enabled)++)
-            nvic_enable_irq (exti_hardware[n_].irq);
+            interrupt_enable (exti_hardware[n_].irq);
     }
     else
-        nvic_enable_irq (exti_hardware[n_].irq);
+        interrupt_enable (exti_hardware[n_].irq);
 }
 
 void
@@ -185,20 +172,20 @@ ExtiHard::disable ()
     if (exti_hardware[n_].enabled)
     {
         if (!--*exti_hardware[n_].enabled)
-            nvic_disable_irq (exti_hardware[n_].irq);
+            interrupt_disable (exti_hardware[n_].irq);
     }
     else
-        nvic_disable_irq (exti_hardware[n_].irq);
-    EXTI_IMR &= ~(1u << n_);
-    EXTI_PR = 1u << n_;
+        interrupt_disable (exti_hardware[n_].irq);
+    reg::EXTI->IMR &= ~(1u << n_);
+    reg::EXTI->PR = 1u << n_;
 }
 
 bool
 ExtiHard::mask ()
 {
-    bool irq_enabled = nvic_get_irq_enabled (exti_hardware[n_].irq);
+    bool irq_enabled = interrupt_is_enabled (exti_hardware[n_].irq);
     if (irq_enabled)
-        nvic_disable_irq (exti_hardware[n_].irq);
+        interrupt_disable (exti_hardware[n_].irq);
     return irq_enabled;
 }
 
@@ -206,7 +193,7 @@ void
 ExtiHard::unmask (bool saved_state)
 {
     if (saved_state)
-        nvic_enable_irq (exti_hardware[n_].irq);
+        interrupt_enable (exti_hardware[n_].irq);
 }
 
 void
@@ -215,74 +202,32 @@ ExtiHard::set_trigger (Edge edge)
     switch (edge)
     {
     case Edge::RISING:
-        EXTI_RTSR |= 1u << n_;
-        EXTI_FTSR &= ~(1u << n_);
+        reg::EXTI->RTSR |= 1u << n_;
+        reg::EXTI->FTSR &= ~(1u << n_);
         break;
     case Edge::FALLING:
-        EXTI_RTSR &= ~(1u << n_);
-        EXTI_FTSR |= 1u << n_;
+        reg::EXTI->RTSR &= ~(1u << n_);
+        reg::EXTI->FTSR |= 1u << n_;
         break;
     case Edge::BOTH:
-        EXTI_RTSR |= (1u << n_);
-        EXTI_FTSR |= (1u << n_);
+        reg::EXTI->RTSR |= (1u << n_);
+        reg::EXTI->FTSR |= (1u << n_);
         break;
     }
 }
 
 void
-ExtiHard::set_source (uint32_t gpio_port)
+ExtiHard::set_source (const GpioPort &gpio_port)
 {
-    int port;
-    switch (gpio_port)
-    {
-    case GPIOA:
-        port = 0;
-        break;
-    case GPIOB:
-        port = 1;
-        break;
-    case GPIOC:
-        port = 2;
-        break;
-    case GPIOD:
-        port = 3;
-        break;
-#if defined GPIOE
-    case GPIOE:
-        port = 4;
-        break;
-#endif
-#if defined GPIOF
-    case GPIOF:
-        port = 5;
-        break;
-#endif
-#if defined GPIOG
-    case GPIOG:
-        port = 6;
-        break;
-#endif
-#if defined GPIOH
-    case GPIOH:
-        port = 7;
-        break;
-#endif
-#if defined GPIOI
-    case GPIOI:
-        port = 8;
-        break;
-#endif
-    default:
-        assert_unreachable ();
-    }
+    int port = gpio_port.get_port_index ();
     int shift = (n_ % 4) * 4;
     int reg = n_ / 4;
     uint32_t mask = 0xf << shift;
     uint32_t bits = port << shift;
 #if defined AFIO_BASE
-    AFIO_EXTICR (reg) = (AFIO_EXTICR (reg) & ~mask) | bits;
+    reg::AFIO->EXTICR[reg] = (reg::AFIO->EXTICR[reg] & ~mask) | bits;
 #else
-    SYSCFG_EXTICR (reg) = (SYSCFG_EXTICR (reg) & ~mask) | bits;
+    reg::SYSCFG->EXTICR[reg] = (reg::SYSCFG->EXTICR[reg] & ~mask) | bits;
 #endif
 }
 

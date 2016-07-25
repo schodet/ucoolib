@@ -2,15 +2,12 @@
 # Theses are APBTeam IDs, given by Openmoko!
 vendor_id = 0x1d50
 product_id = 0x6052
-# Declare as a CDC ACM device.
-cdc_acm = true
-# Number of streams, interfaces, or pair of endpoints.
-stream_nb = 1
-# Set to 0 if powered from USB cable, 1 if device has its own power supply.
-self_powered = 0
+# Set to false if powered from USB cable, true if device has its own power
+# supply.
+self_powered = false
 # Maximum power consumed from USB cable (mA).
 max_power = 100
 # End point size, you should use 64.
 ep_size = 64
-# Use HS driver instead of FS
-driver_hs = false
+# Enable trace buffer.
+trace = false

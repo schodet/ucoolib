@@ -4,7 +4,7 @@ TARGETS = host stm32f4
 PROGS = test_romfs
 test_romfs_SOURCES = test_romfs.cc
 
-MODULES = ucoo/base/test ucoo/base/fs/romfs ucoo/hal/usb
+MODULES = ucoo/base/test ucoo/base/fs/romfs ucoo/hal/usb ucoo/hal/gpio
 
 COMPILE_DEPS = $(OBJDIR)/test_fs.h
 EXTRA_CLEAN = $(OBJDIR)/test_fs.h

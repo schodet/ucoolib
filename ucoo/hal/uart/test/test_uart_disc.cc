@@ -27,8 +27,6 @@
 #include "ucoo/hal/gpio/gpio.hh"
 #include "ucoo/base/test/test.hh"
 
-#include <libopencm3/stm32/rcc.h>
-
 static void
 check_act (ucoo::Stream &ts, ucoo::Stream &u, char n)
 {
@@ -53,23 +51,20 @@ main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
     ucoo::Stream &ts = ucoo::test_stream ();
-    ucoo::Uart u1 (0);
-    ucoo::Uart u3 (2);
-    ucoo::Uart u4 (3);
+    ucoo::Uart u1 (ucoo::Uart::Instance::USART1);
+    ucoo::Uart u3 (ucoo::Uart::Instance::USART3);
+    ucoo::Uart u4 (ucoo::Uart::Instance::UART4);
     u1.enable (38400, ucoo::Uart::Parity::EVEN, 1);
     u3.enable (38400, ucoo::Uart::Parity::EVEN, 1);
     u4.enable (38400, ucoo::Uart::Parity::EVEN, 1);
     // For this test, shorten B6 & B7 to have a loopback on UART1, shorten C10
     // & C11 to connect UART3 to UART4.
-    rcc_periph_clock_enable (RCC_GPIOB);
-    rcc_periph_clock_enable (RCC_GPIOC);
-    gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                     GPIO6 | GPIO7);
-    gpio_set_af (GPIOB, GPIO_AF7, GPIO6 | GPIO7);
-    gpio_mode_setup (GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE,
-                     GPIO10 | GPIO11);
-    gpio_set_af (GPIOC, GPIO_AF7, GPIO10);
-    gpio_set_af (GPIOC, GPIO_AF8, GPIO11);
+    ucoo::GPIOB.enable ();
+    ucoo::GPIOC.enable ();
+    ucoo::GPIOB[6].af (7);
+    ucoo::GPIOB[7].af (7);
+    ucoo::GPIOC[10].af (7);
+    ucoo::GPIOC[11].af (8);
     // Loop to report any activity on ports and provide a simple UI.
     char buf[64];
     int buf_i = 0;

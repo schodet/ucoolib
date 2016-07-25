@@ -21,23 +21,17 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
-#include "adc_hard.stm32f4.hh"
-
-#include <libopencm3/stm32/adc.h>
-#include <libopencm3/stm32/rcc.h>
+#include "ucoo/hal/adc/adc_hard.stm32f4.hh"
 
 namespace ucoo {
 
-static const enum rcc_periph_clken adc_clken[] = {
-    RCC_ADC1, RCC_ADC2, RCC_ADC3
-};
+static ADC_TypeDef * const bases[] = { reg::ADC1, reg::ADC2, reg::ADC3 };
+static const Rcc rccs[] = { Rcc::ADC1, Rcc::ADC2, Rcc::ADC3 };
 
-AdcHard::AdcHard (int n)
-    : n_ (n)
+AdcHard::AdcHard (AdcHard::Instance inst)
+    : base_ (bases[static_cast<int> (inst)]),
+      rcc_ (rccs[static_cast<int> (inst)])
 {
-    static const uint32_t bases[] = { ADC1, ADC2, ADC3 };
-    assert (n < (int) lengthof (bases));
-    base_ = bases[n];
 }
 
 AdcHard::~AdcHard ()
@@ -48,26 +42,26 @@ AdcHard::~AdcHard ()
 void
 AdcHard::enable ()
 {
-    rcc_periph_clock_enable (adc_clken[n_]);
-    ADC_CR2 (base_) = ADC_CR2_ADON;
+    rcc_peripheral_clock_enable (rcc_);
+    base_->CR2 = ADC_CR2_ADON;
 }
 
 void
 AdcHard::disable ()
 {
-    ADC_CR2 (base_) = 0;
-    rcc_periph_clock_disable (adc_clken[n_]);
+    base_->CR2 = 0;
+    rcc_peripheral_clock_disable (rcc_);
 }
 
 int
 AdcHard::read (int channel)
 {
-    ADC_SQR3 (base_) = channel;
-    ADC_CR2 (base_) |= ADC_CR2_SWSTART;
-    while (!(ADC_SR (base_) & ADC_SR_EOC))
+    base_->SQR3 = channel;
+    base_->CR2 |= ADC_CR2_SWSTART;
+    while (!(base_->SR & ADC_SR_EOC))
         yield ();
-    ADC_SR (base_) = ~ADC_SR_EOC;
-    return ADC_DR (base_);
+    base_->SR = ~ADC_SR_EOC;
+    return base_->DR;
 }
 
 } // namespace ucoo

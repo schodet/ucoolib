@@ -26,7 +26,6 @@
 #include "ucoo/arch/arch.hh"
 
 #if defined (TARGET_stm32)
-# include <libopencm3/stm32/rcc.h>
 # include "ucoo/hal/gpio/gpio.hh"
 #endif
 
@@ -41,14 +40,14 @@ main (int argc, const char **argv)
 #elif defined (TARGET_stm32)
     // D8, D9: UART3
     // C12, D2: UART5
-    rcc_periph_clock_enable (RCC_GPIOC);
-    rcc_periph_clock_enable (RCC_GPIOD);
-    gpio_mode_setup (GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO12);
-    gpio_mode_setup (GPIOD, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO8 | GPIO9);
-    gpio_set_af (GPIOC, GPIO_AF8, GPIO12);
-    gpio_set_af (GPIOD, GPIO_AF8, GPIO2);
-    gpio_set_af (GPIOD, GPIO_AF7, GPIO8 | GPIO9);
-    ucoo::Uart u0 (2), u1 (4);
+    ucoo::GPIOC.enable ();
+    ucoo::GPIOD.enable ();
+    ucoo::GPIOC[12].af (8);
+    ucoo::GPIOD[2].af (8);
+    ucoo::GPIOD[8].af (7);
+    ucoo::GPIOD[9].af (7);
+    ucoo::Uart u0 (ucoo::Uart::Instance::USART3);
+    ucoo::Uart u1 (ucoo::Uart::Instance::UART5);
     u0.enable (38400, ucoo::Uart::Parity::EVEN, 1);
     u1.enable (38400, ucoo::Uart::Parity::EVEN, 1);
 #endif

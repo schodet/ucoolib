@@ -24,6 +24,7 @@
 //
 // }}}
 #include "ucoo/intf/spi_master.hh"
+#include "ucoo/arch/reg.hh"
 
 namespace ucoo {
 
@@ -31,8 +32,24 @@ namespace ucoo {
 class SpiHardMaster : public SpiMaster
 {
   public:
-    /// Constructor for the Nth SPI.
-    SpiHardMaster (int n);
+    enum class Instance
+    {
+        SPI1,
+        SPI2,
+        SPI3,
+#ifdef SPI4_BASE
+        SPI4,
+#endif
+#ifdef SPI5_BASE
+        SPI5,
+#endif
+#ifdef SPI6_BASE
+        SPI6,
+#endif
+    };
+  public:
+    /// Constructor for an SPI instance.
+    SpiHardMaster (Instance inst);
     /// Destructor, disable.
     ~SpiHardMaster ();
     /// See SpiMaster::enable.

@@ -22,53 +22,34 @@
 //
 // }}}
 #include "ucoo/hal/usb/usb.hh"
+#include "ucoo/hal/usb/usb_cdc.hh"
+#include "ucoo/hal/gpio/gpio.hh"
 #include "ucoo/arch/arch.hh"
+
+static const auto string_descs_pack = ucoo::usb_descs_pack (
+    ucoo::usb_string_desc (ucoo::USB_LANGUAGE_EN_US),
+    ucoo::usb_string_desc (u"APBTeam"),
+    ucoo::usb_string_desc (u"test"));
+
+static const auto string_descs = ucoo::usb_descs (string_descs_pack);
 
 int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    ucoo::UsbStreamControl usc ("APBTeam", "USB test");
-    usc.enable ();
-    ucoo::UsbStream us[] = {
-        ucoo::UsbStream (usc, 0),
-#if CONFIG_UCOO_HAL_USB_STREAM_NB >= 2
-        ucoo::UsbStream (usc, 1),
-#endif
-#if CONFIG_UCOO_HAL_USB_STREAM_NB >= 3
-        ucoo::UsbStream (usc, 2),
-#endif
-    };
-    if (CONFIG_UCOO_HAL_USB_STREAM_NB > 1)
-    {
-        for (int i = 0; i < CONFIG_UCOO_HAL_USB_STREAM_NB; i++)
-            us[i].block (false);
-    }
-    char buf[6];
+    ucoo::UsbDriverDwcOtg driver (ucoo::UsbDriverDwcOtg::Instance::OTG_FS,
+                                  ucoo::usb_cdc_default_device_desc (),
+                                  ucoo::usb_cdc_default_configuration_desc (),
+                                  string_descs);
+    ucoo::UsbApplicationCdcAcm cdc (driver);
+    driver.enable ();
+    cdc.write ("hello", 5);
     while (1)
     {
-        for (int i = 0; i < CONFIG_UCOO_HAL_USB_STREAM_NB; i++)
-        {
-            int len = us[i].read (buf + 2, sizeof (buf) - 2);
-            if (len)
-            {
-                buf[0] = i + '0';
-                buf[1] = '>';
-                len += 2;
-                if (CONFIG_UCOO_HAL_USB_STREAM_NB == 1)
-                    us[i].write (buf, len);
-                else
-                {
-                    const char *p = buf;
-                    while (len)
-                    {
-                        int r = us[i].write (p, len);
-                        p += r;
-                        len -= r;
-                    }
-                }
-            }
-        }
+        char buf[64];
+        int r = cdc.read (buf, sizeof (buf));
+        if (r)
+            cdc.write (buf, r);
     }
 }
 

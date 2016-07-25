@@ -23,6 +23,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
+#include "ucoo/hal/gpio/gpio.hh"
 #include "ucoo/common.hh"
 
 #include <initializer_list>
@@ -34,7 +35,7 @@ class Sdram
 {
 public:
     struct Io {
-        uint32_t gpio;
+        GpioPort &port;
         uint16_t pins;
     };
     struct Param {

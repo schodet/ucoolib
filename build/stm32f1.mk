@@ -4,7 +4,7 @@
 
 include $(UCOO_BASE)/build/stm32.mk
 
-$(eval $(call stm32_libopencm3,stm32f1))
+$(eval $(call stm32_cmsis,stm32f1))
 
 stm32f1_SUBTARGETS = stm32 arm newlib
 

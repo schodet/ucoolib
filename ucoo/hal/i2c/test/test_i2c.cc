@@ -27,7 +27,6 @@
 #include "ucoo/base/test/test.hh"
 
 #ifdef TARGET_stm32
-#  include <libopencm3/stm32/rcc.h>
 #  include "ucoo/hal/gpio/gpio.hh"
 #endif
 
@@ -198,20 +197,19 @@ main (int argc, const char **argv)
     // Connect I2C1 to I2C3 for the test.
     // I2C1: B6: SCL, B9: SDA
     // I2C3: A8: SCL, C9: SDA
-    rcc_periph_clock_enable (RCC_GPIOA);
-    rcc_periph_clock_enable (RCC_GPIOB);
-    rcc_periph_clock_enable (RCC_GPIOC);
-    gpio_mode_setup (GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO6 | GPIO9);
-    gpio_mode_setup (GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO8);
-    gpio_mode_setup (GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
-    gpio_set_output_options (GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, GPIO6 | GPIO9);
-    gpio_set_output_options (GPIOA, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, GPIO8);
-    gpio_set_output_options (GPIOC, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, GPIO9);
-    gpio_set_af (GPIOB, GPIO_AF4, GPIO6 | GPIO9);
-    gpio_set_af (GPIOA, GPIO_AF4, GPIO8);
-    gpio_set_af (GPIOC, GPIO_AF4, GPIO9);
-    ucoo::I2cHard i2c1 (0);
-    ucoo::I2cHard i2c2 (2);
+    ucoo::GPIOA.enable ();
+    ucoo::GPIOB.enable ();
+    ucoo::GPIOC.enable ();
+    ucoo::GPIOB[6].af (4);
+    ucoo::GPIOB[6].type (ucoo::Gpio::Type::OPEN_DRAIN);
+    ucoo::GPIOB[9].af (4);
+    ucoo::GPIOB[9].type (ucoo::Gpio::Type::OPEN_DRAIN);
+    ucoo::GPIOA[8].af (4);
+    ucoo::GPIOA[8].type (ucoo::Gpio::Type::OPEN_DRAIN);
+    ucoo::GPIOC[9].af (4);
+    ucoo::GPIOC[9].type (ucoo::Gpio::Type::OPEN_DRAIN);
+    ucoo::I2cHard i2c1 (ucoo::I2cHard::Instance::I2C1);
+    ucoo::I2cHard i2c2 (ucoo::I2cHard::Instance::I2C2);
     i2c1.enable ();
     i2c2.enable ();
 #endif

@@ -1,3 +1,5 @@
 ucoo_arch_SOURCES := arch.host.cc \
 	arch.stm32.cc arch.stm32f1.cc arch.stm32f4.cc \
+	rcc.stm32f1.cc rcc.stm32f4.cc \
+	vector.arm.cc \
 	syscalls.newlib.cc syscalls.cc

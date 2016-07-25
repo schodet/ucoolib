@@ -26,8 +26,6 @@
 #include "ucoo/hal/exti/exti.hh"
 #include "ucoo/utils/delay.hh"
 
-#include <libopencm3/stm32/rcc.h>
-
 ucoo::Gpio *led4p;
 
 void
@@ -40,16 +38,16 @@ int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    rcc_periph_clock_enable (RCC_GPIOB);
-    rcc_periph_clock_enable (RCC_GPIOD);
+    ucoo::GPIOB.enable ();
+    ucoo::GPIOD.enable ();
     // For this test, shorten B6 & B7 to have loopback.
-    ucoo::Gpio loop_out (GPIOB, 6);
-    ucoo::Gpio loop_in (GPIOB, 7);
-    ucoo::Gpio led3 (GPIOD, 13);
-    ucoo::Gpio led4 (GPIOD, 12);
+    ucoo::Gpio loop_out (ucoo::GPIOB[6]);
+    ucoo::Gpio loop_in (ucoo::GPIOB[7]);
+    ucoo::Gpio led3 (ucoo::GPIOD[13]);
+    ucoo::Gpio led4 (ucoo::GPIOD[12]);
     led4p = &led4;
     ucoo::ExtiHard exti (7);
-    exti.set_source (GPIOB);
+    exti.set_source (ucoo::GPIOB);
     exti.set_trigger (ucoo::ExtiHard::Edge::RISING);
     exti.register_event (led4_handler);
     exti.enable ();

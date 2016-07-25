@@ -22,17 +22,20 @@
 //
 // }}}
 #include "ucoo/arch/arch.hh"
-#include "ucoo/common.hh"
-
-#include <libopencm3/stm32/rcc.h>
+#include "ucoo/arch/rcc.stm32.hh"
 
 namespace ucoo {
 
 void
 arch_init (int argc, const char **argv)
 {
-    rcc_clock_setup_in_hse_12mhz_out_72mhz ();
-    rcc_periph_clock_enable (RCC_AFIO);
+    rcc_sys_clock_setup_pll (72000000, 12000000,
+                             1, // prediv1 => 12 MHz / 1 = 12 MHz
+                             6, // pllmul => 12 MHz * 6 = 72 MHz
+                             2, // apb1_pre => 36 MHz
+                             1, // apb2_pre => 72 MHz
+                             6); // adc_pre => 12 MHz
+    rcc_peripheral_clock_enable (Rcc::AFIO);
 }
 
 } // namespace ucoo

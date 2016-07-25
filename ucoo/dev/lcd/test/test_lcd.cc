@@ -29,19 +29,17 @@
 
 #include "ucoo/arch/arch.hh"
 
-#include <libopencm3/stm32/rcc.h>
-
 int
 main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
-    rcc_periph_clock_enable (RCC_GPIOB);
-    ucoo::Gpio rw (GPIOB, 10);
-    ucoo::Gpio rs (GPIOB, 11);
-    ucoo::Gpio cs (GPIOB, 12);
-    ucoo::Gpio sck (GPIOB, 13);
-    ucoo::Gpio miso (GPIOB, 14);
-    ucoo::Gpio mosi (GPIOB, 15);
+    ucoo::GPIOB.enable ();
+    ucoo::Gpio rw (ucoo::GPIOB[10]);
+    ucoo::Gpio rs (ucoo::GPIOB[11]);
+    ucoo::Gpio cs (ucoo::GPIOB[12]);
+    ucoo::Gpio sck (ucoo::GPIOB[13]);
+    ucoo::Gpio miso (ucoo::GPIOB[14]);
+    ucoo::Gpio mosi (ucoo::GPIOB[15]);
     ucoo::SpiSoftMaster spi (sck, mosi, miso);
     rw.reset ();
     rw.output ();

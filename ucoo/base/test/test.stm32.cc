@@ -24,8 +24,9 @@
 #include "test.hh"
 
 #include "config/ucoo/base/test.hh"
-#if CONFIG_UCOO_BASE_TEST_TEST_STREAM_UART == -1
+#if CONFIG_UCOO_BASE_TEST_TEST_STREAM_USE_USB
 # include "ucoo/hal/usb/usb.hh"
+# include "ucoo/hal/usb/usb_cdc.hh"
 #else
 # include "ucoo/hal/uart/uart.hh"
 #endif
@@ -37,15 +38,27 @@ namespace ucoo {
 Stream &
 test_stream (void)
 {
-#if CONFIG_UCOO_BASE_TEST_TEST_STREAM_UART == -1
-    static UsbStreamControl usc (CONFIG_UCOO_BASE_TEST_TEST_STREAM_VENDOR,
-                                 CONFIG_UCOO_BASE_TEST_TEST_STREAM_PRODUCT);
-    static UsbStream us (usc, 0);
-    usc.enable ();
-    return us;
-#else
-    static Uart u (CONFIG_UCOO_BASE_TEST_TEST_STREAM_UART);
     static bool enabled = false;
+#if CONFIG_UCOO_BASE_TEST_TEST_STREAM_USE_USB
+    static const auto string_descs_pack = usb_descs_pack (
+        usb_string_desc (USB_LANGUAGE_EN_US),
+        usb_string_desc (CONFIG_UCOO_BASE_TEST_TEST_STREAM_USB_VENDOR),
+        usb_string_desc (CONFIG_UCOO_BASE_TEST_TEST_STREAM_USB_PRODUCT));
+    static const auto string_descs = ucoo::usb_descs (string_descs_pack);
+    static UsbDriverDwcOtg driver (
+        CONFIG_UCOO_BASE_TEST_TEST_STREAM_USB_INSTANCE,
+        usb_cdc_default_device_desc (),
+        usb_cdc_default_configuration_desc (),
+        string_descs);
+    static UsbApplicationCdcAcm cdc (driver);
+    if (!enabled)
+    {
+        enabled = true;
+        driver.enable ();
+    }
+    return cdc;
+#else
+    static Uart u (CONFIG_UCOO_BASE_TEST_TEST_STREAM_UART_INSTANCE);
     if (!enabled)
     {
         enabled = true;

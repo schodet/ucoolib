@@ -26,7 +26,30 @@
 #include "ucoo/intf/adc.hh"
 #include "ucoo/common.hh"
 
+#include "ucoo/arch/reg.hh"
+#include "ucoo/arch/rcc.stm32.hh"
+
 namespace ucoo {
+
+class AdcHard;
+
+/// Single ADC channel.
+class AdcHardChannel : public Adc
+{
+  public:
+    /// See Adc::read.
+    inline int read ();
+    /// See Adc::get_resolution.
+    inline int get_resolution () const;
+  private:
+    /// Constructor.
+    AdcHardChannel (AdcHard &adc, int channel)
+        : adc_ (adc), channel_ (channel) { }
+    friend AdcHard;
+  private:
+    AdcHard &adc_;
+    int channel_;
+};
 
 /// ADC interface.  This control a full ADC, use AdcHardChannel for a single
 /// channel.
@@ -34,9 +57,16 @@ class AdcHard
 {
   public:
     static const int resolution = 1 << 12;
+    /// Available ADC.
+    enum class Instance
+    {
+        ADC1,
+        ADC2,
+        ADC3,
+    };
   public:
-    /// Constructor for the Nth ADC.
-    AdcHard (int n);
+    /// Constructor for an ADC instance.
+    AdcHard (Instance inst);
     /// Shutdown.
     ~AdcHard ();
     /// Enable, power on.
@@ -45,28 +75,27 @@ class AdcHard
     void disable ();
     /// Make a single measure.
     int read (int channel);
+    /// Return an ADC channel.
+    AdcHardChannel operator[] (int channel)
+        { return AdcHardChannel (*this, channel); }
   private:
-    /// ADC index.
-    int n_;
     /// ADC base address.
-    uint32_t base_;
+    ADC_TypeDef * const base_;
+    /// ADC RCC identifier.
+    const Rcc rcc_;
 };
 
-/// Single ADC channel.
-class AdcHardChannel : public Adc
+inline int
+AdcHardChannel::read ()
 {
-  public:
-    /// Constructor.
-    AdcHardChannel (AdcHard &adc, int channel)
-        : adc_ (adc), channel_ (channel) { }
-    /// See Adc::read.
-    int read () { return adc_.read (channel_); }
-    /// See Adc::get_resolution.
-    int get_resolution () const { return AdcHard::resolution; }
-  private:
-    AdcHard &adc_;
-    int channel_;
-};
+    return adc_.read (channel_);
+}
+
+inline int
+AdcHardChannel::get_resolution () const
+{
+    return AdcHard::resolution;
+}
 
 } // namespace ucoo
 

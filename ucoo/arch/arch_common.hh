@@ -32,12 +32,4 @@
 # error "not implemented for this target"
 #endif
 
-namespace ucoo {
-
-/// Give some time to other tasks when running in a tight loop.
-void
-yield ();
-
-} // namespace ucoo
-
 #endif // ucoo_arch_arch_common_hh

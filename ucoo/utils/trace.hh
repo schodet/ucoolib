@@ -42,7 +42,7 @@ class TraceBuffer
     /// Maximum number of arguments.
     static const int args_nb = 4;
     /// Maximum number of trace entries.
-    static const int entries_nb = 32;
+    static const int entries_nb = 512;
   public:
     /// Constructor.
     TraceBuffer (const Timestamp &timestamp = Timestamp ());

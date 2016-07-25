@@ -25,9 +25,7 @@
 
 #include "ucoo/arch/arch.hh"
 #include "ucoo/base/test/test.hh"
-
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/gpio.h>
+#include "ucoo/utils/bits.hh"
 
 #include <cstdio>
 #include <cinttypes>
@@ -65,24 +63,25 @@ main (int argc, const char **argv)
 {
     ucoo::arch_init (argc, argv);
     ucoo::test_stream_setup ();
-    rcc_periph_clock_enable (RCC_GPIOD);
-    rcc_periph_clock_enable (RCC_GPIOE);
-    rcc_periph_clock_enable (RCC_GPIOF);
-    rcc_periph_clock_enable (RCC_GPIOG);
-    rcc_periph_clock_enable (RCC_GPIOH);
-    rcc_periph_clock_enable (RCC_GPIOI);
+    ucoo::GPIOD.enable ();
+    ucoo::GPIOE.enable ();
+    ucoo::GPIOF.enable ();
+    ucoo::GPIOG.enable ();
+    ucoo::GPIOH.enable ();
+    ucoo::GPIOI.enable ();
     std::initializer_list<ucoo::Sdram::Io> sdram_ios {
-        { GPIOD, GPIO0 | GPIO1 | GPIO8 | GPIO9 | GPIO10 | GPIO14 | GPIO15 },
-        { GPIOE, GPIO0 | GPIO1 | GPIO7 | GPIO8 | GPIO9 | GPIO10 | GPIO11
-            | GPIO12 | GPIO13 | GPIO14 | GPIO15 },
-        { GPIOF, GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5 | GPIO11
-            | GPIO12 | GPIO13 | GPIO14 | GPIO15 },
-        { GPIOG, GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5 | GPIO8
-            | GPIO15 },
-        { GPIOH, GPIO2 | GPIO3 | GPIO5 | GPIO8 | GPIO9 | GPIO10 | GPIO11
-            | GPIO12 | GPIO13 | GPIO14 | GPIO15 },
-        { GPIOI, GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5 | GPIO6 | GPIO7
-            | GPIO9 | GPIO10 },
+        { ucoo::GPIOD, ucoo::bits<uint16_t> (
+                0, 1, 8, 9, 10, 14, 15) },
+        { ucoo::GPIOE, ucoo::bits<uint16_t> (
+                0, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15) },
+        { ucoo::GPIOF, ucoo::bits<uint16_t> (
+                0, 1, 2, 3, 4, 5, 11, 12, 13, 14, 15) },
+        { ucoo::GPIOG, ucoo::bits<uint16_t> (
+                0, 1, 2, 3, 4, 5, 8, 15) },
+        { ucoo::GPIOH, ucoo::bits<uint16_t> (
+                2, 3, 5, 8, 9, 10, 11, 12, 13, 14, 15) },
+        { ucoo::GPIOI, ucoo::bits<uint16_t> (
+                0, 1, 2, 3, 4, 5, 6, 7, 9, 10) },
     };
     ucoo::Sdram::Param sdram_param {
         .bank = 1,
