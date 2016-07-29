@@ -96,7 +96,7 @@ rcc_peripheral_clock_enable (Rcc rcc)
     int bus_index = static_cast<uint32_t> (rcc) >> 5;
     int bit_index = static_cast<uint32_t> (rcc) & 0x1f;
     (&reg::RCC->AHBENR)[bus_index] |= 1 << bit_index;
-    arch_dsb ();
+    (&reg::RCC->AHBENR)[bus_index];
 }
 
 /// Disable clock for given peripheral.
@@ -106,7 +106,7 @@ rcc_peripheral_clock_disable (Rcc rcc)
     int bus_index = static_cast<uint32_t> (rcc) >> 5;
     int bit_index = static_cast<uint32_t> (rcc) & 0x1f;
     (&reg::RCC->AHBENR)[bus_index] &= ~(1 << bit_index);
-    arch_dsb ();
+    (&reg::RCC->AHBENR)[bus_index];
 }
 
 /// Frequency of the main system clock.
