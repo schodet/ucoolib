@@ -1,0 +1,6 @@
+ucoo_hal_frame_buffer_SOURCES := sdl_frame_buffer.host.cc
+
+SDL_CFLAGS = $(shell sdl2-config --cflags)
+SDL_LIBS = $(shell sdl2-config --libs)
+host_CFLAGS += $(SDL_CFLAGS)
+host_LIBS += $(SDL_LIBS)
