@@ -115,7 +115,21 @@
     interrupt<Irq::SAI1>, \
     interrupt<Irq::LTDC>, \
     interrupt<Irq::LTDC_ER>, \
-    interrupt<Irq::DMA2D>
+    interrupt<Irq::DMA2D>, \
+    UCOO_VECTOR_IRQ_QUADSPI \
+    UCOO_VECTOR_IRQ_DSI
+
+#ifdef QSPI_R_BASE
+# define UCOO_VECTOR_IRQ_QUADSPI interrupt<Irq::QUADSPI>,
+#else
+# define UCOO_VECTOR_IRQ_QUADSPI
+#endif
+
+#ifdef DSI_BASE
+# define UCOO_VECTOR_IRQ_DSI interrupt<Irq::DSI>,
+#else
+# define UCOO_VECTOR_IRQ_DSI
+#endif
 
 namespace ucoo {
 
@@ -301,6 +315,14 @@ template<> void interrupt<Irq::LTDC_ER> ()
     __attribute__ ((weak, alias ("undefined_handler")));
 template<> void interrupt<Irq::DMA2D> ()
     __attribute__ ((weak, alias ("undefined_handler")));
+#ifdef QSPI_R_BASE
+template<> void interrupt<Irq::QUADSPI> ()
+    __attribute__ ((weak, alias ("undefined_handler")));
+#endif
+#ifdef DSI_BASE
+template<> void interrupt<Irq::DSI> ()
+    __attribute__ ((weak, alias ("undefined_handler")));
+#endif
 
 } // namespace ucoo
 

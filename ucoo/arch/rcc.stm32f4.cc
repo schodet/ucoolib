@@ -36,6 +36,7 @@ int rcc_apb2_freq_hz = hsi_freq_hz;
 int rcc_apb1_timer_freq_hz = hsi_freq_hz;
 int rcc_apb2_timer_freq_hz = hsi_freq_hz;
 int rcc_pll48_freq_hz = 0;
+int rcc_lcd_freq_hz = 0;
 
 void
 rcc_sys_clock_setup_pll (int sys_freq_hz, int hse_freq_hz,
@@ -95,7 +96,8 @@ rcc_sys_clock_setup_pll (int sys_freq_hz, int hse_freq_hz,
         | pllm << RCC_PLLCFGR_PLLM_Pos
         | plln << RCC_PLLCFGR_PLLN_Pos
         | (pllp / 2 - 1) << RCC_PLLCFGR_PLLP_Pos
-        | pllq << RCC_PLLCFGR_PLLQ_Pos;
+        | pllq << RCC_PLLCFGR_PLLQ_Pos
+        | (reg::RCC->PLLCFGR & RCC_PLLCFGR_PLLR);
     reg::RCC->CR |= RCC_CR_PLLON;
     while (!(reg::RCC->CR & RCC_CR_PLLRDY))
         ;
@@ -120,6 +122,39 @@ rcc_sys_clock_setup_pll (int sys_freq_hz, int hse_freq_hz,
     rcc_apb1_timer_freq_hz = rcc_apb1_freq_hz * (apb1_pre == 1 ? 1 : 2);
     rcc_apb2_timer_freq_hz = rcc_apb2_freq_hz * (apb2_pre == 1 ? 1 : 2);
     rcc_pll48_freq_hz = pll_in_freq_hz / pllm * plln / pllq;
+}
+
+void
+rcc_sai_pll_setup (int hse_freq_hz,
+                   int pllm, int plln, int pllp, int pllq, int pllq_div,
+                   int pllr, int pllr_div)
+{
+    // Stop PLL.
+    reg::RCC->CR &= ~RCC_CR_PLLSAION;
+    while (reg::RCC->CR & RCC_CR_PLLSAIRDY)
+        ;
+    // Start PLL.
+    static const LookupTable<int, uint32_t> pllr_div_table[] =
+    {
+        { 2, RCC_DCKCFGR_PLLSAIDIVR_Div2 },
+        { 4, RCC_DCKCFGR_PLLSAIDIVR_Div4 },
+        { 8, RCC_DCKCFGR_PLLSAIDIVR_Div8 },
+        { 16, RCC_DCKCFGR_PLLSAIDIVR_Div16 },
+    };
+    reg::RCC->PLLSAICFGR =
+        plln * RCC_PLLSAICFGR_PLLSAIN_0
+        | (pllp / 2 - 1) * RCC_PLLSAICFGR_PLLSAIP_0
+        | pllq * RCC_PLLSAICFGR_PLLSAIQ_0
+        | pllr * RCC_PLLSAICFGR_PLLSAIR_0;
+    reg::RCC->DCKCFGR =
+        (pllq_div - 1) << RCC_DCKCFGR_PLLSAIDIVQ_Pos
+        | simple_table_lookup (pllr_div_table, pllr_div);
+    ucoo::reg::RCC->CR |= RCC_CR_PLLSAION;
+    while (!(ucoo::reg::RCC->CR & RCC_CR_PLLSAIRDY))
+        ;
+    // Update frequencies.
+    int vco_out = hse_freq_hz / pllm * plln;
+    rcc_lcd_freq_hz = vco_out / pllr / pllr_div;
 }
 
 } // namespace ucoo

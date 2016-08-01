@@ -40,6 +40,15 @@
 #define USART_CR2_STOP_Bits_2 USART_CR2_STOP_1
 #define USART_CR2_STOP_Bits_1_5 (USART_CR2_STOP_1 | USART_CR2_STOP_0)
 
+#ifndef USB_OTG_GCCFG_VBUSBSEN
+// OTG version 0x1100
+# define USB_OTG_GCCFG_VBUSBSEN (1 << 19)
+#endif
+#ifndef USB_OTG_GCCFG_VBDEN
+// OTG version 0x2000
+# define USB_OTG_GCCFG_VBDEN (1 << 21)
+#endif
+
 #define USB_OTG_GRXSTSP_PKTSTS_GlobalOutNak (1 << 17)
 #define USB_OTG_GRXSTSP_PKTSTS_Out (2 << 17)
 #define USB_OTG_GRXSTSP_PKTSTS_OutCompleted (3 << 17)

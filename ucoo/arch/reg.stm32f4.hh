@@ -24,7 +24,7 @@
 //
 // }}}
 // Use a superset of all supported chips.
-#include "ST/STM32F4xx/Include/stm32f439xx.h"
+#include "ST/STM32F4xx/Include/stm32f479xx.h"
 #include "ucoo/arch/reg.stm32.hh"
 
 #define SCB_CPACR_CP10_Pos 20
@@ -47,6 +47,15 @@
 #define RCC_PLLCFGR_PLLN_Pos 6
 #define RCC_PLLCFGR_PLLP_Pos 16
 #define RCC_PLLCFGR_PLLQ_Pos 24
+#ifdef RCC_PLLCFGR_PLLR
+# define RCC_PLLCFGR_PLLR_Pos 28
+#endif
+
+#define RCC_DCKCFGR_PLLSAIDIVQ_Pos 8
+#define RCC_DCKCFGR_PLLSAIDIVR_Div2 0
+#define RCC_DCKCFGR_PLLSAIDIVR_Div4 (1 << 16)
+#define RCC_DCKCFGR_PLLSAIDIVR_Div8 (2 << 16)
+#define RCC_DCKCFGR_PLLSAIDIVR_Div16 (3 << 16)
 
 #define GPIO_MODER_Input 0
 #define GPIO_MODER_Output 1
@@ -119,6 +128,30 @@
 #define DESIG_FLASH_SIZE_BASE 0x1fff7a22
 #define DESIG_UNIQUE_ID_BASE 0x1fff7a10
 
+#ifdef DSI_BASE
+# define DSI_VMCR_VMT_NonBurstSyncPulses 0
+# define DSI_VMCR_VMT_NonBurstSyncEvents 1
+# define DSI_VMCR_VMT_Burst 2
+# define DSI_LCOLCR_COLC_16BitConf1 0
+# define DSI_LCOLCR_COLC_16BitConf2 DSI_LCOLCR_COLC0
+# define DSI_LCOLCR_COLC_16BitConf3 DSI_LCOLCR_COLC1
+# define DSI_LCOLCR_COLC_18BitConf1 (DSI_LCOLCR_COLC1 | DSI_LCOLCR_COLC0)
+# define DSI_LCOLCR_COLC_18BitConf2 DSI_LCOLCR_COLC2
+# define DSI_LCOLCR_COLC_24Bit (DSI_LCOLCR_COLC2 | DSI_LCOLCR_COLC0)
+# define DSI_WCFGR_COLMUX_16BitConf1 0
+# define DSI_WCFGR_COLMUX_16BitConf2 DSI_WCFGR_COLMUX0
+# define DSI_WCFGR_COLMUX_16BitConf3 DSI_WCFGR_COLMUX1
+# define DSI_WCFGR_COLMUX_18BitConf1 (DSI_WCFGR_COLMUX1 | DSI_WCFGR_COLMUX0)
+# define DSI_WCFGR_COLMUX_18BitConf2 DSI_WCFGR_COLMUX2
+# define DSI_WCFGR_COLMUX_24Bit (DSI_WCFGR_COLMUX2 | DSI_WCFGR_COLMUX0)
+# define DSI_WRPCR_PLL_NDIV_Pos 2
+# define DSI_WRPCR_PLL_IDF_Pos 11
+# define DSI_WRPCR_PLL_ODF_Div1 0
+# define DSI_WRPCR_PLL_ODF_Div2 DSI_WRPCR_PLL_ODF0
+# define DSI_WRPCR_PLL_ODF_Div4 DSI_WRPCR_PLL_ODF1
+# define DSI_WRPCR_PLL_ODF_Div8 (DSI_WRPCR_PLL_ODF1 | DSI_WRPCR_PLL_ODF0)
+#endif
+
 struct DESIG_TypeDef
 {
     __IO uint32_t U_ID[3];
@@ -183,6 +216,7 @@ struct DESIG_TypeDef
 #undef LTDC
 #undef LTDC_Layer1
 #undef LTDC_Layer2
+#undef DSI
 #undef GPIOA
 #undef GPIOB
 #undef GPIOC
@@ -227,6 +261,7 @@ struct DESIG_TypeDef
 #undef FMC_Bank2_3
 #undef FMC_Bank4
 #undef FMC_Bank5_6
+#undef QUADSPI
 #undef DBGMCU
 #undef USB_OTG_FS
 #undef USB_OTG_HS
@@ -291,6 +326,9 @@ constexpr auto SAI1_Block_B = reinterpret_cast<SAI_Block_TypeDef *> (SAI1_Block_
 constexpr auto LTDC = reinterpret_cast<LTDC_TypeDef *> (LTDC_BASE);
 constexpr auto LTDC_Layer1 = reinterpret_cast<LTDC_Layer_TypeDef *> (LTDC_Layer1_BASE);
 constexpr auto LTDC_Layer2 = reinterpret_cast<LTDC_Layer_TypeDef *> (LTDC_Layer2_BASE);
+#ifdef DSI_BASE
+constexpr auto DSI = reinterpret_cast<DSI_TypeDef *> (DSI_BASE);
+#endif
 constexpr auto GPIOA = reinterpret_cast<GPIO_TypeDef *> (GPIOA_BASE);
 constexpr auto GPIOB = reinterpret_cast<GPIO_TypeDef *> (GPIOB_BASE);
 constexpr auto GPIOC = reinterpret_cast<GPIO_TypeDef *> (GPIOC_BASE);
@@ -332,9 +370,16 @@ constexpr auto HASH_DIGEST = reinterpret_cast<HASH_DIGEST_TypeDef *> (HASH_DIGES
 constexpr auto RNG = reinterpret_cast<RNG_TypeDef *> (RNG_BASE);
 constexpr auto FMC_Bank1 = reinterpret_cast<FMC_Bank1_TypeDef *> (FMC_Bank1_R_BASE);
 constexpr auto FMC_Bank1E = reinterpret_cast<FMC_Bank1E_TypeDef *> (FMC_Bank1E_R_BASE);
+#ifdef FMC_Bank2_3_R_BASE
 constexpr auto FMC_Bank2_3 = reinterpret_cast<FMC_Bank2_3_TypeDef *> (FMC_Bank2_3_R_BASE);
+#endif
+#ifdef FMC_Bank4_R_BASE
 constexpr auto FMC_Bank4 = reinterpret_cast<FMC_Bank4_TypeDef *> (FMC_Bank4_R_BASE);
+#endif
 constexpr auto FMC_Bank5_6 = reinterpret_cast<FMC_Bank5_6_TypeDef *> (FMC_Bank5_6_R_BASE);
+#ifdef QSPI_R_BASE
+constexpr auto QUADSPI = reinterpret_cast<QUADSPI_TypeDef *> (QSPI_R_BASE);
+#endif
 constexpr auto DBGMCU = reinterpret_cast<DBGMCU_TypeDef *> (DBGMCU_BASE);
 constexpr auto USB_OTG_FS = reinterpret_cast<USB_OTG_TypeDef *> (USB_OTG_FS_PERIPH_BASE);
 constexpr auto USB_OTG_HS = reinterpret_cast<USB_OTG_TypeDef *> (USB_OTG_HS_PERIPH_BASE);

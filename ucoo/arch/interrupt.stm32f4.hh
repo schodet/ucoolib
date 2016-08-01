@@ -119,6 +119,12 @@ enum class Irq
     LTDC,
     LTDC_ER,
     DMA2D,
+#ifdef QSPI_R_BASE
+    QUADSPI,
+#endif
+#ifdef DSI_BASE
+    DSI,
+#endif
     COUNT
 };
 

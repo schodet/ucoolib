@@ -94,6 +94,9 @@ enum class Rcc
     RNG = details::rcc_enum (Bus::AHB2, RCC_AHB2ENR_RNGEN),
     OTGFS = details::rcc_enum (Bus::AHB2, RCC_AHB2ENR_OTGFSEN),
     FMC = details::rcc_enum (Bus::AHB3, RCC_AHB3ENR_FMCEN),
+#ifdef RCC_AHB3ENR_QSPIEN
+    QUADSPI = details::rcc_enum (Bus::AHB3, RCC_AHB3ENR_QSPIEN),
+#endif
     TIM2 = details::rcc_enum (Bus::APB1, RCC_APB1ENR_TIM2EN),
     TIM3 = details::rcc_enum (Bus::APB1, RCC_APB1ENR_TIM3EN),
     TIM4 = details::rcc_enum (Bus::APB1, RCC_APB1ENR_TIM4EN),
@@ -137,6 +140,9 @@ enum class Rcc
     SPI6 = details::rcc_enum (Bus::APB2, RCC_APB2ENR_SPI6EN),
     SAI1 = details::rcc_enum (Bus::APB2, RCC_APB2ENR_SAI1EN),
     LTDC = details::rcc_enum (Bus::APB2, RCC_APB2ENR_LTDCEN),
+#ifdef RCC_APB2ENR_DSIEN
+    DSI = details::rcc_enum (Bus::APB2, RCC_APB2ENR_DSIEN),
+#endif
 };
 
 /// Enable clock for given peripheral.
@@ -180,6 +186,9 @@ extern int rcc_apb2_timer_freq_hz;
 /// Frequency of the should-be-48-MHz clock (used for USB, RNG & SDIO).
 extern int rcc_pll48_freq_hz;
 
+/// Frequency of LCD clock;
+extern int rcc_lcd_freq_hz;
+
 /// Setup system clock using PLL, from HSE clock if not 0, else HSI clock.
 /// Also setup flash access and voltage regulator scale.
 void
@@ -187,6 +196,12 @@ rcc_sys_clock_setup_pll (int sys_freq_hz, int hse_freq_hz,
                          int pllm, int plln, int pllp, int pllq,
                          int apb1_pre, int apb2_pre,
                          SupplyRange vrange);
+
+/// Setup SAI PLL.
+void
+rcc_sai_pll_setup (int hse_freq_hz,
+                   int pllm, int plln, int pllp, int pllq, int pllq_div,
+                   int pllr, int pllr_div);
 
 } // namespace ucoo
 

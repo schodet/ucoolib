@@ -117,13 +117,17 @@ UsbDriverDwcOtg::enable ()
         | USB_OTG_GINTMSK_USBSUSPM | USB_OTG_GINTMSK_USBRST
         | USB_OTG_GINTMSK_ENUMDNEM | USB_OTG_GINTMSK_IEPINT
         | USB_OTG_GINTMSK_SRQIM /* ? */
+        // TODO: OTGINT for SEDDET.
         | USB_OTG_GINTMSK_WUIM;
-    // TODO: USB_OTG_GCCFG_VBDEN for F479.
-    hard.base->global.GCCFG |= USB_OTG_GCCFG_VBUSBSEN | USB_OTG_GCCFG_PWRDWN;
+    if (hard.base->global.CID == 0x2000)
+        hard.base->global.GCCFG |= USB_OTG_GCCFG_VBDEN | USB_OTG_GCCFG_PWRDWN;
+    else
+        hard.base->global.GCCFG |= USB_OTG_GCCFG_VBUSBSEN | USB_OTG_GCCFG_PWRDWN;
     hard.base->device.DCFG |= USB_OTG_DCFG_NZLSOHSK | USB_OTG_DCFG_DSPD;
     hard.base->device.DCTL = 0;
     hard.base->device.DIEPMSK = USB_OTG_DIEPMSK_XFRCM;
-    hard.base->device.DAINTMSK = USB_OTG_DAINTMSK_IEPM;
+    hard.base->device.DOEPMSK = USB_OTG_DOEPMSK_XFRCM | USB_OTG_DOEPMSK_STUPM;
+    hard.base->device.DAINTMSK = USB_OTG_DAINTMSK_OEPM | USB_OTG_DAINTMSK_IEPM;
     // Enable interrupts.
     interrupt_enable (hard.irq);
 }
@@ -348,9 +352,35 @@ UsbDriverDwcOtg::isr ()
         {
             if (daint & (1 << i))
             {
-                usb_trace ("isr in xfrc %d", i);
-                ep_handle_in (i ? 0x80 | i : 0);
-                hard.base->ep_in[i].DIEPINT = USB_OTG_DIEPINT_XFRC;
+                uint32_t diepint = hard.base->ep_in[i].DIEPINT;
+                if (diepint & USB_OTG_DIEPINT_XFRC)
+                {
+                    usb_trace ("isr in xfrc %d", i);
+                    ep_handle_in (i ? 0x80 | i : 0);
+                    hard.base->ep_in[i].DIEPINT = USB_OTG_DIEPINT_XFRC;
+                }
+            }
+        }
+    }
+    if (gintsts & USB_OTG_GINTSTS_OEPINT)
+    {
+        /* OUT end point interrupt. */
+        uint32_t daint = hard.base->device.DAINT;
+        for (int i = 0; i < END_POINT_NB; i++)
+        {
+            if (daint & ((1 << 16) << i))
+            {
+                uint32_t doepint = hard.base->ep_out[i].DOEPINT;
+                if (doepint & USB_OTG_DOEPINT_XFRC)
+                {
+                    usb_trace ("isr out xfrc %d", i);
+                    hard.base->ep_out[i].DOEPINT = USB_OTG_DOEPINT_XFRC;
+                }
+                if (doepint & USB_OTG_DOEPINT_STUP)
+                {
+                    usb_trace ("isr out stup %d", i);
+                    hard.base->ep_out[i].DOEPINT = USB_OTG_DOEPINT_STUP;
+                }
             }
         }
     }
@@ -388,6 +418,7 @@ UsbDriverDwcOtg::isr_rx_fifo ()
         assert (ep == 0 && bcnt == 8);
         setup_buf_[0] = hard.base->fifo[0].FIFO;
         setup_buf_[1] = hard.base->fifo[0].FIFO;
+        hard.base->ep_out[0].DOEPTSIZ |= USB_OTG_DOEPTSIZ_STUPCNT;
     }
     else if (pkt_status == USB_OTG_GRXSTSP_PKTSTS_SetupCompleted)
     {
