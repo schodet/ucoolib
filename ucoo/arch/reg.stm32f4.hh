@@ -128,6 +128,11 @@
 #define DESIG_FLASH_SIZE_BASE 0x1fff7a22
 #define DESIG_UNIQUE_ID_BASE 0x1fff7a10
 
+#define DMA2D_CR_MODE_MemoryToMemory 0
+#define DMA2D_CR_MODE_MemoryToMemoryFPC DMA2D_CR_MODE_0
+#define DMA2D_CR_MODE_MemoryToMemoryBlend DMA2D_CR_MODE_1
+#define DMA2D_CR_MODE_RegisterToMemory (DMA2D_CR_MODE_1 | DMA2D_CR_MODE_0)
+
 #ifdef DSI_BASE
 # define DSI_VMCR_VMT_NonBurstSyncPulses 0
 # define DSI_VMCR_VMT_NonBurstSyncEvents 1

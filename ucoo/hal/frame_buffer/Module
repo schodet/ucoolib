@@ -1,4 +1,8 @@
-ucoo_hal_frame_buffer_SOURCES := sdl_frame_buffer.host.cc
+ucoo_hal_frame_buffer_SOURCES := \
+	dma2d.stm32f4.cc \
+	dsi.stm32f4.cc \
+	ltdc.stm32f4.cc \
+	sdl_frame_buffer.host.cc
 
 SDL_CFLAGS = $(shell sdl2-config --cflags)
 SDL_LIBS = $(shell sdl2-config --libs)
