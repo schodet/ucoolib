@@ -43,6 +43,10 @@ SECTIONS
 	. = ALIGN(4);
 	_etext = .;
 
+	.nvram (NOLOAD) : {
+		*(.nvram*)
+	} >nvrammem
+
 	.data : {
 		_data = .;
 		*(.data*)
@@ -60,8 +64,11 @@ SECTIONS
 
 	/DISCARD/ : { *(.eh_frame) }
 
+	.heap (NOLOAD) : {
+		*(.heap*)
+		_heap = .;
+	} >heapmem
+
 	. = ALIGN(4);
 	end = .;
 }
-
-PROVIDE(_stack = ORIGIN(ram) + LENGTH(ram));
