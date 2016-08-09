@@ -24,6 +24,7 @@
 //
 // }}}
 #include "ucoo/hal/frame_buffer/ltdc.stm32f4.hh"
+#include "ucoo/arch/interrupt.arm.hh"
 #include "ucoo/utils/function.hh"
 
 #include <initializer_list>
@@ -49,6 +50,10 @@ class Dsi : public Ltdc
   private:
     /// Number of data lanes.
     int lanes_;
+    /// Refresh is being done.
+    static bool refreshing_;
+  private:
+    friend void interrupt<Irq::DSI> ();
 };
 
 } // namespace ucoo

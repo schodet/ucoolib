@@ -57,6 +57,13 @@ enum DsiDataType
     PACKED_PIXEL_RGB888 = 0x3e,
 };
 
+enum DcsCommand
+{
+    DCS_SET_TEAR_ON = 0x35,
+};
+
+bool Dsi::refreshing_;
+
 Dsi::Dsi (int width, int heigth, int lanes)
     : Ltdc (width, heigth, 2, 1, 1, 2, 1, 1), lanes_ (lanes)
 {
@@ -139,6 +146,8 @@ Dsi::enable (const Function<void ()> &config)
                        5, 2); // pllr, pllr_div => 416 MHz / 5 / 2 ~= 41.6 MHz
     Ltdc::enable ();
     //// Enable DSI Host and DSI wrapper.
+    reg::DSI->WIER = DSI_WIER_ERIE | DSI_WIER_TEIE;
+    interrupt_enable (Irq::DSI);
     reg::DSI->CR = DSI_CR_EN;
     reg::DSI->WCR = DSI_WCR_DSIEN;
     //// Configure display.
@@ -155,6 +164,7 @@ void
 Dsi::disable ()
 {
     // TODO
+    interrupt_disable (Irq::DSI);
     reg::DSI->CR = 0;
     reg::DSI->WCR = 0;
     Ltdc::disable ();
@@ -172,7 +182,10 @@ Dsi::layer_setup (int layer, const Surface &surface, int x, int y)
 void
 Dsi::refresh ()
 {
-    ucoo::reg::DSI->WCR |= DSI_WCR_LTDCEN;
+    refreshing_ = true;
+    ucoo::Dsi::write_command ({ DCS_SET_TEAR_ON, 0x00 });
+    while (refreshing_)
+        ucoo::barrier ();
 }
 
 void
@@ -212,6 +225,22 @@ Dsi::write_command (std::initializer_list<uint8_t> data)
         reg::DSI->GHCR = DCS_LONG_WRITE * DSI_GHCR_DT0
             | 0 * DSI_GHCR_VCID0
             | data.size () * DSI_GHCR_WCLSB0;
+    }
+}
+
+template<>
+void
+interrupt<Irq::DSI> ()
+{
+    if (reg::DSI->WISR & DSI_WISR_TEIF)
+    {
+        reg::DSI->WIFCR = DSI_WIFCR_CTEIF;
+        ucoo::reg::DSI->WCR |= DSI_WCR_LTDCEN;
+    }
+    else if (reg::DSI->WISR & DSI_WISR_ERIF)
+    {
+        reg::DSI->WIFCR = DSI_WIFCR_CERIF;
+        Dsi::refreshing_ = false;
     }
 }
 
