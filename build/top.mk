@@ -10,6 +10,7 @@ endif
 UCOO_BASE := $(patsubst %/build/top.mk,%,$(lastword $(MAKEFILE_LIST)))
 
 include $(UCOO_BASE)/build/macros.mk
+-include $(BASE)/build/macros.mk
 
 # General parameters.
 
