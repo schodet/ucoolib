@@ -77,6 +77,13 @@ RateLimit<Timer>::refresh ()
         next_ = val;
 }
 
+template<typename Timer>
+void
+RateLimit<Timer>::reset ()
+{
+    next_ = timer_.get_value () + interval_;
+}
+
 } // namespace ucoo
 
 #endif // ucoo_utils_rate_limit_tcc

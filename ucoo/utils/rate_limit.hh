@@ -45,6 +45,8 @@ class RateLimit
     /// Refresh timestamp to avoid overflow, must be called periodically when
     /// permission is not requested often enough.
     void refresh ();
+    /// Reset as if permission was allowed.
+    void reset ();
   private:
     /// Associated timer.
     const Timer &timer_;
