@@ -57,7 +57,7 @@ static const UsbHardware usb_hardware[] =
         12, 11, 10
 #endif
     },
-#ifdef USB_OTG_HS_BASE
+#ifdef USB_OTG_HS_PERIPH_BASE
     { reg::USB_OTG_HS, Rcc::OTGHS, Irq::OTG_HS, GPIOB, 15, 14, 12 },
 #endif
 };
@@ -71,7 +71,7 @@ void interrupt<Irq::OTG_FS> ()
     usb_instance->isr ();
 }
 
-#ifdef USB_OTG_HS_BASE
+#ifdef USB_OTG_HS_PERIPH_BASE
 template<>
 void interrupt<Irq::OTG_HS> ()
 {
@@ -100,7 +100,9 @@ UsbDriverDwcOtg::enable ()
     asm volatile ("nop"); // TODO: Do not know why this is needed.
     asm volatile ("nop");
     asm volatile ("nop");
-    // Reset.
+    // Reset, on HS, need to select and power up the PHY or IP is stuck.
+    hard.base->global.GUSBCFG |= USB_OTG_GUSBCFG_PHYSEL;
+    hard.base->global.GCCFG |= USB_OTG_GCCFG_PWRDWN;
     while (!(hard.base->global.GRSTCTL & USB_OTG_GRSTCTL_AHBIDL))
         ;
     hard.base->global.GRSTCTL = USB_OTG_GRSTCTL_CSRST;
