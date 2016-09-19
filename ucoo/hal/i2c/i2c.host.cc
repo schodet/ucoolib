@@ -190,6 +190,22 @@ I2cHost::recv (uint8_t addr, char *buf, int count)
         finished_handler_->finished (master_status_);
 }
 
+void
+I2cHost::send_recv (uint8_t addr, const char *send_buf, int send_count,
+                    char *recv_buf, int recv_count)
+{
+    // No restart in host implementation, do regular send/recv.
+    int r = shared_->send (addr, send_buf, send_count);
+    if (r == send_count)
+    {
+        master_status_ = STATUS_ERROR;
+        if (finished_handler_)
+            finished_handler_->finished (master_status_);
+    }
+    else
+        recv (addr, recv_buf, recv_count);
+}
+
 int
 I2cHost::status ()
 {

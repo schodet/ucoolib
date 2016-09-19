@@ -94,6 +94,45 @@ I2cSoft::recv (uint8_t addr, char *buf, int count)
         finished_handler_->finished (recv);
 }
 
+void
+I2cSoft::send_recv (uint8_t addr, const char *send_buf, int send_count,
+                    char *recv_buf, int recv_count)
+{
+    bool nack;
+    int sent = 0, recv = 0;
+    // Start.
+    send_start ();
+    // Send SLA+W.
+    nack = send_byte (addr);
+    // Send data.
+    for (; !nack && sent < send_count; sent++)
+        nack = send_byte (send_buf[sent]);
+    // Update status, there is no background task.
+    if (sent != send_count)
+    {
+        current_status_ = STATUS_ERROR;
+        if (finished_handler_)
+            finished_handler_->finished (STATUS_ERROR);
+        return;
+    }
+    // Restart.
+    send_restart ();
+    // Send SLA+R.
+    nack = send_byte (addr | 1);
+    if (!nack)
+    {
+        // Receive data, send nack in last byte.
+        for (; recv < recv_count; recv++)
+            recv_buf[recv] = recv_byte (recv == recv_count - 1 ? true : false);
+    }
+    // Stop.
+    send_stop ();
+    // Update status, there is no background task.
+    current_status_ = recv;
+    if (finished_handler_)
+        finished_handler_->finished (recv);
+}
+
 int
 I2cSoft::status ()
 {
@@ -127,6 +166,17 @@ I2cSoft::send_start ()
     delay ();
     scl_.output ();
     delay ();
+}
+
+void
+I2cSoft::send_restart ()
+{
+    sda_.input ();
+    delay ();
+    scl_.input ();
+    wait_scl ();
+    delay ();
+    send_start ();
 }
 
 void

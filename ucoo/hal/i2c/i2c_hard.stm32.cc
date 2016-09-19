@@ -183,6 +183,14 @@ I2cHard::recv (uint8_t addr, char *buf, int count)
     transfer (addr | 1, buf, count);
 }
 
+void
+I2cHard::send_recv (uint8_t addr, const char *send_buf, int send_count,
+                    char *recv_buf, int recv_count)
+{
+    // TODO: not implemented.
+    assert_unreachable ();
+}
+
 int
 I2cHard::status ()
 {

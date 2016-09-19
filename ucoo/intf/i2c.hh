@@ -63,6 +63,12 @@ class I2cMaster
     ///
     /// If asynchronous transfer is not supported, this will block.
     virtual void recv (uint8_t addr, char *buf, int count) = 0;
+    /// Same as send followed by recv, but using a repeated start.  If the
+    /// send phase is not completed fully, STATUS_ERROR is reported, else
+    /// reception phase status is reported.
+    virtual void send_recv (uint8_t addr,
+                            const char *send_buf, int send_count,
+                            char *recv_buf, int recv_count) = 0;
     /// Return last transfer status.
     virtual int status () = 0;
     /// Wait until transfer is finished and return status.

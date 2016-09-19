@@ -44,6 +44,9 @@ class I2cSoft : public I2cMaster
     void send (uint8_t addr, const char *buf, int count);
     /// See I2cMaster::recv.
     void recv (uint8_t addr, char *buf, int count);
+    /// See I2cMaster::send_recv
+    void send_recv (uint8_t addr, const char *send_buf, int send_count,
+                    char *recv_buf, int recv_count);
     /// See I2cMaster::status.
     int status ();
     /// See I2cMaster::wait.
@@ -55,6 +58,8 @@ class I2cSoft : public I2cMaster
     void wait_scl ();
     /// Send start condition.
     void send_start ();
+    /// Send restart condition.
+    void send_restart ();
     /// Send stop condition.
     void send_stop ();
     /// Send one bit.
