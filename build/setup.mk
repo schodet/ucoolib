@@ -12,6 +12,8 @@ ALL_MODULES :=
 NEW_MODULES := $(sort $(DEFAULT_MODULES) $(MODULES) \
 	$(call foreachsub,$(ALL_PROGS),MODULES))
 
+POSTPONED :=
+
 define MODULES_deps_template
 ALL_MODULES += $$(NEW_MODULES)
 NEW_UCOO_MODULES := $$(filter ucoo/%,$$(NEW_MODULES))
@@ -27,6 +29,7 @@ $$(prog)_MODULES := $$(sort $$($$(prog)_MODULES) \
 $$(if $$(NEW_MODULES),$$(eval $$(MODULES_deps_template)))
 endef
 $(eval $(MODULES_deps_template))
+$(eval $(POSTPONED))
 
 ALL_UCOO_MODULES := $(filter ucoo/%,$(ALL_MODULES))
 ALL_EXT_MODULES := $(filter-out ucoo/%,$(ALL_MODULES))
