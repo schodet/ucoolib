@@ -55,6 +55,11 @@ SdlFrameBuffer::disable ()
 }
 
 void
+SdlFrameBuffer::on (bool state)
+{
+}
+
+void
 SdlFrameBuffer::refresh ()
 {
     SDL_UpdateTexture (tex_, nullptr, pixels_, width * 4);

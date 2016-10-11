@@ -36,6 +36,7 @@ class SdlFrameBuffer : public FrameBuffer
         : FrameBuffer (w, h) { }
     void enable () override;
     void disable () override;
+    void on (bool state = true) override;
     void refresh () override;
     void fill (uint32_t color) override;
     void fill (uint32_t color, const Surface::Rect &rect) override;
