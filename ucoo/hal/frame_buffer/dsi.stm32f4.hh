@@ -44,7 +44,7 @@ class Dsi : public Ltdc
     /// Setup a layer.
     void layer_setup (int layer, const Surface &surface, int x, int y);
     /// Refresh screen.
-    static void refresh ();
+    static void refresh (bool wait_hsync);
     /// Write a command to display.
     static void write_command (std::initializer_list<uint8_t> data);
   private:

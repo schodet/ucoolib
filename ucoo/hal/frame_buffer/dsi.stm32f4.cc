@@ -180,10 +180,13 @@ Dsi::layer_setup (int layer, const Surface &surface, int x, int y)
 }
 
 void
-Dsi::refresh ()
+Dsi::refresh (bool wait_hsync)
 {
     refreshing_ = true;
-    ucoo::Dsi::write_command ({ DCS_SET_TEAR_ON, 0x00 });
+    if (wait_hsync)
+        ucoo::Dsi::write_command ({ DCS_SET_TEAR_ON, 0x00 });
+    else
+        ucoo::reg::DSI->WCR |= DSI_WCR_LTDCEN;
     while (refreshing_)
         ucoo::barrier ();
 }
