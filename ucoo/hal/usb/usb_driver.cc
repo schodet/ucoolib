@@ -26,7 +26,7 @@
 
 namespace ucoo {
 
-Trace<CONFIG_UCOO_HAL_USB_TRACE> usb_trace;
+Trace<CONFIG_UCOO_HAL_USB_TRACE> usb_trace ("usb");
 
 void
 UsbDriver::register_application (UsbApplication &app)

@@ -4,6 +4,6 @@ TARGETS = stm32f4
 PROGS = test_usb
 test_usb_SOURCES = test_usb.cc
 
-MODULES = ucoo/hal/usb ucoo/hal/gpio
+MODULES = ucoo/hal/usb ucoo/hal/gpio ucoo/utils
 
 include $(BASE)/build/top.mk

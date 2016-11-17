@@ -1,1 +1,1 @@
-ucoo_utils_SOURCES := delay.arm.cc crc.cc
+ucoo_utils_SOURCES := delay.arm.cc crc.cc trace.cc

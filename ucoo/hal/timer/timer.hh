@@ -23,6 +23,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // }}}
+#include <cstdio>
 
 #if defined TARGET_stm32
 # include "timer.stm32.hh"
@@ -43,6 +44,10 @@ struct TimerTraceTimestamp
     void operator () (Entry &e)
     {
         e.timestamp = Timer::get_value ();
+    }
+    int dump (const Entry &e, const Entry &eprev, char *buf) const
+    {
+        return sprintf (buf, "[%+8d] ", static_cast<int> (e.timestamp - eprev.timestamp));
     }
 };
 
