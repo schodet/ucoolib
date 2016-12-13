@@ -105,6 +105,11 @@ class TimerHard
         FALLING = INVERTED,
         BOTH = 11,
     };
+    /// Use complementary output.
+    enum class Complementary {
+        DO_NOT_USE = 1,
+        USE = 4,
+    };
     /// Temporarily disable updates.
     class UpdateDisabled
     {
@@ -133,7 +138,8 @@ class TimerHard
         Polarity polarity = Polarity::NON_INVERTED>
     struct OptionInputCapture;
     /// Set output compare options.  Setup PWM mode 1.
-    template<int channel, Polarity polarity = Polarity::NON_INVERTED>
+    template<int channel, Polarity polarity = Polarity::NON_INVERTED,
+        Complementary complementary = Complementary::DO_NOT_USE>
     struct OptionOutputCompare;
     /// Set output compare value.
     template<int channel, unsigned int value>

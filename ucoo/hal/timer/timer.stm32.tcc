@@ -411,50 +411,71 @@ struct TimerHard<inst>::OptionInputCapture<4, filter, map, polarity>
 };
 
 template<TimerInstance inst>
-template<int channel, typename TimerHard<inst>::Polarity polarity>
+template<int channel, typename TimerHard<inst>::Polarity polarity,
+    typename TimerHard<inst>::Complementary complementary>
 struct TimerHard<inst>::OptionOutputCompare
 {
     static_assert (channel == 1, "no such channel");
 };
 
 template<TimerInstance inst>
-template<typename TimerHard<inst>::Polarity polarity>
-struct TimerHard<inst>::OptionOutputCompare<1, polarity>
+template<typename TimerHard<inst>::Polarity polarity,
+    typename TimerHard<inst>::Complementary complementary>
+struct TimerHard<inst>::OptionOutputCompare<1, polarity, complementary>
     : public TimerHard<inst>::Option
 {
     static_assert (1 <= TimerHard<inst>::Hard::channels, "no such channel");
+    static_assert (complementary == TimerHard<inst>::Complementary::DO_NOT_USE
+                   || TimerHard<inst>::Hard::advanced,
+                   "no complementary output");
     static const unsigned ccmr1 = TIM_CCMR1_OC1M_PWM1 | TIM_CCMR1_OC1PE;
-    static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC1E;
+    static const unsigned ccer = static_cast<int> (complementary)
+        * static_cast<int> (polarity) * TIM_CCER_CC1E;
 };
 
 template<TimerInstance inst>
-template<typename TimerHard<inst>::Polarity polarity>
-struct TimerHard<inst>::OptionOutputCompare<2, polarity>
+template<typename TimerHard<inst>::Polarity polarity,
+    typename TimerHard<inst>::Complementary complementary>
+struct TimerHard<inst>::OptionOutputCompare<2, polarity, complementary>
     : public TimerHard<inst>::Option
 {
     static_assert (2 <= TimerHard<inst>::Hard::channels, "no such channel");
+    static_assert (complementary == TimerHard<inst>::Complementary::DO_NOT_USE
+                   || TimerHard<inst>::Hard::advanced,
+                   "no complementary output");
     static const unsigned ccmr1 = TIM_CCMR1_OC2M_PWM1 | TIM_CCMR1_OC2PE;
-    static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC2E;
+    static const unsigned ccer = static_cast<int> (complementary)
+        * static_cast<int> (polarity) * TIM_CCER_CC2E;
 };
 
 template<TimerInstance inst>
-template<typename TimerHard<inst>::Polarity polarity>
-struct TimerHard<inst>::OptionOutputCompare<3, polarity>
+template<typename TimerHard<inst>::Polarity polarity,
+    typename TimerHard<inst>::Complementary complementary>
+struct TimerHard<inst>::OptionOutputCompare<3, polarity, complementary>
     : public TimerHard<inst>::Option
 {
     static_assert (3 <= TimerHard<inst>::Hard::channels, "no such channel");
+    static_assert (complementary == TimerHard<inst>::Complementary::DO_NOT_USE
+                   || TimerHard<inst>::Hard::advanced,
+                   "no complementary output");
     static const unsigned ccmr2 = TIM_CCMR2_OC3M_PWM1 | TIM_CCMR2_OC3PE;
-    static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC3E;
+    static const unsigned ccer = static_cast<int> (complementary)
+        * static_cast<int> (polarity) * TIM_CCER_CC3E;
 };
 
 template<TimerInstance inst>
-template<typename TimerHard<inst>::Polarity polarity>
-struct TimerHard<inst>::OptionOutputCompare<4, polarity>
+template<typename TimerHard<inst>::Polarity polarity,
+    typename TimerHard<inst>::Complementary complementary>
+struct TimerHard<inst>::OptionOutputCompare<4, polarity, complementary>
     : public TimerHard<inst>::Option
 {
     static_assert (4 <= TimerHard<inst>::Hard::channels, "no such channel");
+    static_assert (complementary == TimerHard<inst>::Complementary::DO_NOT_USE
+                   || TimerHard<inst>::Hard::advanced,
+                   "no complementary output");
     static const unsigned ccmr2 = TIM_CCMR2_OC4M_PWM1 | TIM_CCMR2_OC4PE;
-    static const unsigned ccer = static_cast<int> (polarity) * TIM_CCER_CC4E;
+    static const unsigned ccer = static_cast<int> (complementary)
+        * static_cast<int> (polarity) * TIM_CCER_CC4E;
 };
 
 template<TimerInstance inst>
