@@ -64,25 +64,29 @@ enum DcsCommand
 
 bool Dsi::refreshing_;
 
-Dsi::Dsi (int width, int heigth, int lanes)
-    : Ltdc (width, heigth, 2, 1, 1, 2, 1, 1), lanes_ (lanes)
+Dsi::Dsi (int width, int heigth, int lanes, bool video_mode,
+          int hsync, int hbp, int hfp,
+          int vsync, int vbp, int vfp)
+    : Ltdc (width, heigth, hsync, hbp, hfp, vsync, vbp, vfp), lanes_ (lanes),
+      video_mode_ (video_mode)
 {
 }
 
 void
-Dsi::enable (const Function<void ()> &config)
+Dsi::enable (const Function<void ()> &config, int phy_hz, int pclk_hz)
 {
-    // TODO: make this more configurable.
     // Enable clocks.
     rcc_peripheral_clock_enable (Rcc::DSI);
     // Enable DSI regulator.
     reg::DSI->WRPCR = DSI_WRPCR_REGEN;
     while (!(reg::DSI->WISR & DSI_WISR_RRS))
         ;
-    // Enable PLL, 500 MHz output frequency (HSE @ 8 MHz).
-    const int phy_hz = 500000000;
+    // Enable PLL.
+    int ndiv = phy_hz * 2 / rcc_hse_freq_hz;
+    assert (ndiv >= 10 && ndiv <= 125
+            && rcc_hse_freq_hz / 2 * ndiv == phy_hz);
     reg::DSI->WRPCR = DSI_WRPCR_REGEN
-        | (125 << DSI_WRPCR_PLL_NDIV_Pos)
+        | (ndiv << DSI_WRPCR_PLL_NDIV_Pos)
         | (2 << DSI_WRPCR_PLL_IDF_Pos)
         | DSI_WRPCR_PLL_ODF_Div1;
     reg::DSI->WRPCR |= DSI_WRPCR_PLLEN;
@@ -95,19 +99,25 @@ Dsi::enable (const Function<void ()> &config)
     reg::DSI->PCONFR = lanes_ - 1;
     // Clock control.
     reg::DSI->CLCR = DSI_CLCR_DPCC;
-    // TODO: Time for LP/HS and HS/LP transition in CLTCR/DLTCR.
-    // TODO: Stop wait time in PCONFR.
+    // Time for LP/HS and HS/LP transition (using workaround for clock) &
+    // maximum read time.
+    reg::DSI->CLTCR = 35 * DSI_CLTCR_HS2LP_TIME0 | 35 * DSI_CLTCR_LP2HS_TIME0;
+    reg::DSI->DLTCR = 35 * DSI_DLTCR_HS2LP_TIME0 | 35 * DSI_DLTCR_LP2HS_TIME0
+        | 256 * DSI_DLTCR_MRD_TIME0;
+    // Stop wait time.
+    reg::DSI->PCONFR |= 10 * DSI_PCONFR_SW_TIME0;
     //// Timings.
     // TX escape clock division factor.
-    reg::DSI->CCR = 4; // 500 MHz / 8 (bit) / 4 < 20 MHz
+    int txeckdiv = (phy_hz + (8 * 20000000 - 1)) / (8 * 20000000);
+    assert (txeckdiv >= 2 && txeckdiv <= 255);
+    reg::DSI->CCR = txeckdiv;
     // TX timeouts.
-    reg::DSI->CCR |= 4 << 8;
-    reg::DSI->TCCR[0] = 0x01000000;
-    reg::DSI->TCCR[1] = 0x00000100;
-    reg::DSI->TCCR[2] = 0x00000100;
-    reg::DSI->TCCR[3] = 0x00000100;
-    reg::DSI->TCCR[4] = 0x00000100;
-    reg::DSI->TCCR[5] = 0x00000100;
+    reg::DSI->TCCR[0] = 0; // No HS or LP TX timeout.
+    reg::DSI->TCCR[1] = 256; // HS read.
+    reg::DSI->TCCR[2] = 256; // LP read.
+    reg::DSI->TCCR[3] = 256; // HS write.
+    reg::DSI->TCCR[4] = 256; // LP write.
+    reg::DSI->TCCR[5] = 256; // BTA.
     //// Flow control & DBI interface.
     reg::DSI->CMCR = DSI_CMCR_GSW0TX | DSI_CMCR_GSW1TX | DSI_CMCR_GSW2TX
         | DSI_CMCR_GSR0TX | DSI_CMCR_GSR1TX | DSI_CMCR_GSR2TX | DSI_CMCR_GLWTX
@@ -124,26 +134,48 @@ Dsi::enable (const Function<void ()> &config)
     // Polarity of control signals.
     reg::DSI->LPCR = 0; // HSP, VSP, DEP
     reg::DSI->WCFGR |= 0; // VSPOL
-    //// Configure adapted command mode.
-    // Command mode.
-    reg::DSI->MCR |= DSI_MCR_CMDM;
-    reg::DSI->WCFGR |= DSI_WCFGR_DSIM;
-    // Maximum memory write.
-    reg::DSI->LCCR = width_;
-    // Tearing effect source and polarity, no automatic refresh.
-    reg::DSI->WCFGR &= ~(DSI_WCFGR_TESRC | DSI_WCFGR_AR);
-    // Tearing effect acknowledge.
-    reg::DSI->CMCR |= DSI_CMCR_TEARE;
+    if (!video_mode_)
+    {
+        //// Configure adapted command mode.
+        // Command mode.
+        reg::DSI->MCR |= DSI_MCR_CMDM;
+        reg::DSI->WCFGR |= DSI_WCFGR_DSIM;
+        // Maximum memory write.
+        reg::DSI->LCCR = width_;
+        // Tearing effect source and polarity, no automatic refresh.
+        reg::DSI->WCFGR &= ~(DSI_WCFGR_TESRC | DSI_WCFGR_AR);
+        // Tearing effect acknowledge.
+        reg::DSI->CMCR |= DSI_CMCR_TEARE;
+        reg::DSI->PCR |= DSI_PCR_BTAE;
+    }
+    else
+    {
+        //// Configure video mode.
+        reg::DSI->VMCR = DSI_VMCR_VMT_Burst | DSI_VMCR_LPVSAE
+            | DSI_VMCR_LPVBPE | DSI_VMCR_LPVFPE | DSI_VMCR_LPVAE
+            | DSI_VMCR_LPHBPE | DSI_VMCR_LPHFPE | DSI_VMCR_LPCE;
+        reg::DSI->MCR &= ~DSI_MCR_CMDM;
+        reg::DSI->WCFGR &= ~DSI_WCFGR_DSIM;
+        // Packet size.
+        reg::DSI->VPCR = width_;
+        reg::DSI->VCCR = 0;
+        // Timings.
+        reg::DSI->VHSACR = static_cast<long long> (hsync_)
+            * (phy_hz / 8) / pclk_hz;
+        reg::DSI->VHBPCR = static_cast<long long> (hbp_)
+            * (phy_hz / 8) / pclk_hz;
+        reg::DSI->VLCR = static_cast<long long> (hsync_ + hbp_ + width_ + hfp_)
+            * (phy_hz / 8) / pclk_hz;
+        reg::DSI->VVSACR = vsync_;
+        reg::DSI->VVBPCR = vbp_;
+        reg::DSI->VVFPCR = vfp_;
+        reg::DSI->VVACR = heigth_;
+        reg::DSI->LPMCR = 64 * DSI_LPMCR_LPSIZE0 | 0 * DSI_LPMCR_VLPSIZE0;
+    }
     //// Enable D-PHY and D-PHY clock lane settings.
     reg::DSI->PCTLR = DSI_PCTLR_DEN;
     reg::DSI->PCTLR = DSI_PCTLR_CKE | DSI_PCTLR_DEN;
     //// Configure LTDC.
-    rcc_sai_pll_setup (8000000,
-                       4, // pllm => 8 MHz / 4 = 2 MHz
-                       208, // plln => 2 MHz * 208 = 416 MHz
-                       8, // pllp => 416 MHz / 8 = 52 MHz
-                       15, 32, // pllq, pllq_div => 416 MHz / 15 / 32 ~= 0.86 MHz
-                       5, 2); // pllr, pllr_div => 416 MHz / 5 / 2 ~= 41.6 MHz
     Ltdc::enable ();
     //// Enable DSI Host and DSI wrapper.
     reg::DSI->WIER = DSI_WIER_ERIE | DSI_WIER_TEIE;
@@ -152,12 +184,14 @@ Dsi::enable (const Function<void ()> &config)
     reg::DSI->WCR = DSI_WCR_DSIEN;
     //// Configure display.
     config ();
-    //// Flow control & DBI interface.
-    reg::DSI->CMCR &= ~(DSI_CMCR_GSW0TX | DSI_CMCR_GSW1TX | DSI_CMCR_GSW2TX
-                        | DSI_CMCR_GSR0TX | DSI_CMCR_GSR1TX | DSI_CMCR_GSR2TX
-                        | DSI_CMCR_GLWTX | DSI_CMCR_DSW0TX | DSI_CMCR_DSW1TX
-                        | DSI_CMCR_DSR0TX | DSI_CMCR_DLWTX | DSI_CMCR_MRDPS);
-    reg::DSI->PCR = DSI_PCR_BTAE;
+    if (!video_mode_)
+    {
+        // Need HS to transmit pixels.
+        reg::DSI->CMCR &= ~(DSI_CMCR_GSW0TX | DSI_CMCR_GSW1TX | DSI_CMCR_GSW2TX
+                            | DSI_CMCR_GSR0TX | DSI_CMCR_GSR1TX | DSI_CMCR_GSR2TX
+                            | DSI_CMCR_GLWTX | DSI_CMCR_DSW0TX | DSI_CMCR_DSW1TX
+                            | DSI_CMCR_DSR0TX | DSI_CMCR_DLWTX | DSI_CMCR_MRDPS);
+    }
 }
 
 void
@@ -174,27 +208,37 @@ Dsi::disable ()
 void
 Dsi::layer_setup (int layer, const Surface &surface, int x, int y)
 {
-    reg::DSI->WCR &= ~DSI_WCR_DSIEN;
-    Ltdc::layer_setup (layer, surface, x, y);
-    reg::DSI->WCR |= DSI_WCR_DSIEN;
+    if (!video_mode_)
+    {
+        reg::DSI->WCR &= ~DSI_WCR_DSIEN;
+        Ltdc::layer_setup (layer, surface, x, y);
+        reg::DSI->WCR |= DSI_WCR_DSIEN;
+    }
+    else
+        Ltdc::layer_setup (layer, surface, x, y);
 }
 
 void
 Dsi::refresh (bool wait_hsync)
 {
-    refreshing_ = true;
-    if (wait_hsync)
-        ucoo::Dsi::write_command ({ DCS_SET_TEAR_ON, 0x00 });
-    else
-        ucoo::reg::DSI->WCR |= DSI_WCR_LTDCEN;
-    while (refreshing_)
-        ucoo::barrier ();
+    if (!video_mode_)
+    {
+        refreshing_ = true;
+        if (wait_hsync)
+            ucoo::Dsi::write_command ({ DCS_SET_TEAR_ON, 0x00 });
+        else
+            ucoo::reg::DSI->WCR |= DSI_WCR_LTDCEN;
+        while (refreshing_)
+            ucoo::barrier ();
+    }
 }
 
 void
 Dsi::write_command (std::initializer_list<uint8_t> data)
 {
     while (!(reg::DSI->GPSR & DSI_GPSR_CMDFE))
+        ;
+    while (!(reg::DSI->GPSR & DSI_GPSR_PWRFE))
         ;
     uint32_t w = 0;
     int wb = 0;

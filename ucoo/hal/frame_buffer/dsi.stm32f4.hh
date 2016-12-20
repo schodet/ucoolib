@@ -36,20 +36,25 @@ class Dsi : public Ltdc
 {
   public:
     /// Constructor.
-    Dsi (int width, int heigth, int lanes);
+    Dsi (int width, int heigth, int lanes, bool video_mode = false,
+         int hsync = 2, int hbp = 1, int hfp = 1,
+         int vsync = 2, int vbp = 1, int vfp = 1);
     /// Enable controller.
-    void enable (const Function<void ()> &config);
+    void enable (const Function<void ()> &config, int phy_hz = 500000000,
+                 int pclk_hz = 40000000);
     /// Disable controller.
     void disable ();
     /// Setup a layer.
     void layer_setup (int layer, const Surface &surface, int x, int y);
     /// Refresh screen.
-    static void refresh (bool wait_hsync);
+    void refresh (bool wait_hsync);
     /// Write a command to display.
     static void write_command (std::initializer_list<uint8_t> data);
   private:
     /// Number of data lanes.
     int lanes_;
+    /// Using video mode or adapted command mode?
+    bool video_mode_;
     /// Refresh is being done.
     static bool refreshing_;
   private:

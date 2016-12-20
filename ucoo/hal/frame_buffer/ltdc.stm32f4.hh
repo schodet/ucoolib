@@ -43,7 +43,7 @@ class Ltdc
     void layer_setup (int layer, const Surface &surface, int x, int y);
   protected:
     int width_, heigth_;
-  private:
+  protected:
     int hsync_, hbp_, hfp_;
     int vsync_, vbp_, vfp_;
 };

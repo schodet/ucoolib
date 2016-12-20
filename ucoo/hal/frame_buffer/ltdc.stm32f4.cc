@@ -80,7 +80,7 @@ Ltdc::layer_setup (int layer, const Surface &surface, int x, int y)
     reg->CFBLNR = surface.h;
     reg->CR = LTDC_LxCR_LEN;
     // Load parameters.
-    reg::LTDC->SRCR = LTDC_SRCR_IMR;
+    reg::LTDC->SRCR = LTDC_SRCR_VBR;
 }
 
 } // namespace ucoo
