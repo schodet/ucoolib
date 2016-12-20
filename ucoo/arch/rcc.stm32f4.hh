@@ -165,6 +165,9 @@ rcc_peripheral_clock_disable (Rcc rcc)
     (&reg::RCC->AHB1ENR)[bus_index];
 }
 
+/// Frequency of external oscillator.
+extern int rcc_hse_freq_hz;
+
 /// Frequency of the main system clock.
 extern int rcc_sys_freq_hz;
 

@@ -29,6 +29,7 @@ namespace ucoo {
 
 static const int hsi_freq_hz = 16000000;
 
+int rcc_hse_freq_hz = 0;
 int rcc_sys_freq_hz = hsi_freq_hz;
 int rcc_ahb_freq_hz = hsi_freq_hz;
 int rcc_apb1_freq_hz = hsi_freq_hz;
@@ -62,6 +63,7 @@ rcc_sys_clock_setup_pll (int sys_freq_hz, int hse_freq_hz,
         while (!(reg::RCC->CR & RCC_CR_HSERDY))
             ;
     }
+    rcc_hse_freq_hz = hse_freq_hz;
     // Adapt voltage regulator scale.
     if (sys_freq_hz <= 120000000)
         reg::PWR->CR = (reg::PWR->CR & ~PWR_CR_VOS) | PWR_CR_VOS_Scale3;
@@ -129,6 +131,7 @@ rcc_sai_pll_setup (int hse_freq_hz,
                    int pllm, int plln, int pllp, int pllq, int pllq_div,
                    int pllr, int pllr_div)
 {
+    assert (rcc_hse_freq_hz == hse_freq_hz);
     // Stop PLL.
     reg::RCC->CR &= ~RCC_CR_PLLSAION;
     while (reg::RCC->CR & RCC_CR_PLLSAIRDY)
@@ -153,7 +156,7 @@ rcc_sai_pll_setup (int hse_freq_hz,
     while (!(ucoo::reg::RCC->CR & RCC_CR_PLLSAIRDY))
         ;
     // Update frequencies.
-    int vco_out = hse_freq_hz / pllm * plln;
+    int vco_out = rcc_hse_freq_hz / pllm * plln;
     rcc_lcd_freq_hz = vco_out / pllr / pllr_div;
 }
 
