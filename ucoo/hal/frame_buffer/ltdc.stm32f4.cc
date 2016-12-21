@@ -83,4 +83,11 @@ Ltdc::layer_setup (int layer, const Surface &surface, int x, int y)
     reg::LTDC->SRCR = LTDC_SRCR_VBR;
 }
 
+void
+Ltdc::wait_reload ()
+{
+    while (reg::LTDC->SRCR & LTDC_SRCR_VBR)
+        ;
+}
+
 } // namespace ucoo

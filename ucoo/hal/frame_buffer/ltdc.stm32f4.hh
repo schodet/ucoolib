@@ -41,6 +41,8 @@ class Ltdc
     void disable ();
     /// Setup a layer.
     void layer_setup (int layer, const Surface &surface, int x, int y);
+    /// Wait until previous setup is loaded.
+    void wait_reload ();
   protected:
     int width_, heigth_;
   protected:

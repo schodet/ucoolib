@@ -89,6 +89,8 @@ class FrameBuffer
     virtual void disable () = 0;
     /// Turn display on or off.
     virtual void on (bool state = true) = 0;
+    /// To be called before drawing in the hidden buffer.
+    virtual void will_refresh () { }
     /// Show hidden buffer on screen.
     virtual void refresh () = 0;
     /// Fill with color.
