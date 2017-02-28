@@ -72,13 +72,13 @@ self_programming_erase (uint32_t addr, int count)
     reg::FLASH->KEYR = FLASH_KEYR_KEY2;
     while (reg::FLASH->SR & FLASH_SR_BSY)
         ;
-    reg::FLASH->CR = FLASH_CR_PSIZE_x32;
+    reg::FLASH->CR = FLASH_CR_PSIZE_x8;
     for (sector = 0; count && sector < lengthof (sector_addr); sector++)
     {
         if (addr == sector_addr[sector])
         {
             int snb = sector >= 12 ? sector + 16 - 12 : sector;
-            reg::FLASH->CR = FLASH_CR_PSIZE_x32 | (snb * FLASH_CR_SNB_0)
+            reg::FLASH->CR = FLASH_CR_PSIZE_x8 | (snb * FLASH_CR_SNB_0)
                 | FLASH_CR_SER;
             reg::FLASH->CR |= FLASH_CR_STRT;
             while (reg::FLASH->SR & FLASH_SR_BSY)
@@ -105,11 +105,11 @@ self_programming_write (uint32_t addr, const char *buf, int count)
     reg::FLASH->KEYR = FLASH_KEYR_KEY2;
     while (reg::FLASH->SR & FLASH_SR_BSY)
         ;
-    reg::FLASH->CR = FLASH_CR_PSIZE_x32 | FLASH_CR_PG;
-    for (int i = 0; i < count; i += 4)
+    reg::FLASH->CR = FLASH_CR_PSIZE_x8 | FLASH_CR_PG;
+    for (int i = 0; i < count; i ++)
     {
-        *reinterpret_cast<volatile uint32_t *> (addr + i) =
-            *reinterpret_cast<const uint32_t *> (buf + i);
+        *reinterpret_cast<volatile uint8_t *> (addr + i) =
+            *reinterpret_cast<const uint8_t *> (buf + i);
 	while (reg::FLASH->SR & FLASH_SR_BSY)
             ;
     }
