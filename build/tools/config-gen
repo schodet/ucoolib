@@ -20,11 +20,13 @@ def read_config(modules_configs, project_config, known_targets):
         else:
             with mcf:
                 parser.readfp(mcf)
-    # Removed unknown targets.
+    # Removed unknown targets and undefined overridden values.
     for section in parser.sections():
         if ':' in section:
-            _, target = section.split(':', 1)
+            name, target = section.split(':', 1)
             if target not in known_targets:
+                parser.remove_section(section)
+            if not parser.has_section(name):
                 parser.remove_section(section)
     # Save the list of existing items for later check.
     def config_items(parser):
@@ -67,65 +69,102 @@ def check_config(config, targets, subtargets):
     """Run consistency checks on configuration."""
     for section, section_dict in config.iteritems():
         for key, values in section_dict.iteritems():
-            # Check targets.
-            for ts in values:
-                if ts is not None and ts not in subtargets:
-                    raise RuntimeError("unknown target %s" % ts)
-            values_targets = reduce(lambda a, b: a + b, (subtargets[ts]
-                    for ts in values if ts is not None), [ ])
-            values_targets_set = set(values_targets)
-            # Check for items with no default value.
+            level_per_target = dict()
+            for st in values:
+                if st is None:
+                    continue
+                # Check for unknown target (they are removed from default
+                # configuration, but not from project configuration).
+                if st not in subtargets:
+                    raise RuntimeError("unknown target %s" % st)
+                # Check for ambiguous configuration (configuration for which
+                # there is no rule to decide which is valid as they have the
+                # same level).
+                level = subtargets[st].level
+                for t in subtargets[st].targets:
+                    if t in level_per_target:
+                        if level_per_target[t] == level:
+                            raise RuntimeError("ambiguous configuration for"
+                                    " %s:%s" % (section, key))
+                        elif level_per_target[t] < level:
+                            level_per_target[t] = level
+                    else:
+                        level_per_target[t] = level
+            # If no default value, each target should have a value.
             if values[None] == '':
-                if not values_targets:
+                if not level_per_target:
                     raise RuntimeError("no value given for %s:%s"
                             % (section, key))
-                else:
-                    if values_targets_set < targets:
-                        raise RuntimeError("no value given for %s:%s for"
-                                " targets: %s" % (section, key,
-                                    ', '.join (targets - values_targets_set)))
-            # Check for items overridden several times for the same target.
-            if len(values_targets) != len(values_targets_set):
-                raise RuntimeError("several values given for %s:%s for the"
-                        " same target" % (section, key))
+                elif len(level_per_target) < len(targets):
+                    targets_set = set(level_per_target.keys())
+                    raise RuntimeError("no value given for %s:%s for"
+                            " targets: %s" % (section, key,
+                                ', '.join (targets - targets_set)))
 
 def parse_targets(targets_option):
     """Parse a space separated target:subtarget list.  Return a set of
-    targets, and a mapping of each subtarget to a list of target."""
+    targets, a mapping of each subtarget to a level and list of target, and a
+    sorted list of targets, per level.
+
+    A subtarget level encodes relation between subtargets.  Higher level means
+    that this subtarget is a refinement of lower level subtargets and that
+    configuration can be more specific."""
     if targets_option is None:
         targets_option = ''
     targets = set()
-    subtargets = collections.defaultdict(list)
+    class Subtarget:
+        def __init__(self):
+            self.level = 0
+            self.targets = []
+    subtargets = collections.defaultdict(Subtarget)
+    # Parse.
     for tpair in targets_option.split():
         tpairl = tpair.split(':')
         if len(tpairl) != 2:
             raise RuntimeError("bad target:subtarget pair %s" % tpair)
         target, subtarget = tpairl
         targets.add(target)
-        subtargets[subtarget].append(target)
-    return targets, dict(subtargets)
+        subtargets[subtarget].targets.append(target)
+    # Compute level.
+    again = True
+    while again:
+        again = False
+        for k in subtargets:
+            if subtargets[k].level > 100:
+                raise RuntimeError("loop in targets declaration")
+            for t in subtargets[k].targets:
+                if t != k and subtargets[t].level <= subtargets[k].level:
+                    subtargets[t].level = subtargets[k].level + 1
+                    again = True
+    # Sort targets.
+    targets_sorted = sorted(subtargets.keys(),
+            key=lambda k: subtargets[k].level, reverse=True)
+    targets_sorted.append(None)
+    # Done.
+    return targets, dict(subtargets), targets_sorted
 
-def write_header(filename, section, section_dict):
+def write_header(filename, section, section_dict, targets_sorted):
     """Write (update) a section to a C header file."""
     # Prepare new content.
     items = [ ]
     section = section.replace('/', '_').upper()
     for key, values in section_dict.iteritems():
-        cond = False
-        for target, value in values.iteritems():
-            if target is None: continue
-            item_fmt = ('#ifdef TARGET_{target}\n'
-                    '# define CONFIG_{section}_{key} ({value})\n'
-                    '#endif')
-            items.append(item_fmt.format(section=section, key=key.upper(),
-                target=target, value=value))
-            cond = True
-        item_fmt = '#define CONFIG_{section}_{key} ({value})'
-        if cond:
-            item_fmt = '#ifndef CONFIG_{section}_{key}\n# ' \
-                    + item_fmt[1:] + '\n#endif'
-        items.append(item_fmt.format(section=section, key=key.upper(),
-            value=values[None]))
+        cond = 'if'
+        for target in targets_sorted:
+            if target in values:
+                value = values[target]
+                item_fmt = '#define CONFIG_{section}_{key} ({value})'
+                if target is not None:
+                    item_fmt = ('#{cond} defined(TARGET_{target})\n# '
+                            + item_fmt[1:])
+                elif cond != 'if':
+                    item_fmt = '#else\n# ' \
+                            + item_fmt[1:]
+                items.append(item_fmt.format(section=section,
+                    key=key.upper(), target=target, value=value, cond=cond))
+                cond = 'elif'
+        if len(values) > 1:
+            items.append('#endif')
     guard = re.sub(r'\W', '_', filename)
     content = '\n'.join([
         '#ifndef %s' % guard,
@@ -153,11 +192,11 @@ def write_header(filename, section, section_dict):
     with open(filename, 'w') as hf:
         hf.write(content)
 
-def write_headers(filename_pattern, config):
+def write_headers(filename_pattern, config, targets_sorted):
     """Write (update) all sections to C header files."""
     for section, section_dict in config.iteritems():
         filename = filename_pattern.replace('%', section)
-        write_header(filename, section, section_dict)
+        write_header(filename, section, section_dict, targets_sorted)
 
 if __name__ == '__main__':
     parser = optparse.OptionParser(
@@ -173,12 +212,12 @@ if __name__ == '__main__':
     options, modules_configs = parser.parse_args()
 
     try:
-        targets, subtargets = parse_targets(options.targets)
+        targets, subtargets, targets_sorted = parse_targets(options.targets)
         config = read_config(modules_configs, options.project_config,
                 subtargets.keys())
         check_config(config, targets, subtargets)
         if options.c_header_template:
-            write_headers(options.c_header_template, config)
+            write_headers(options.c_header_template, config, targets_sorted)
     except RuntimeError, e:
         print >> sys.stderr, e
         sys.exit(1)

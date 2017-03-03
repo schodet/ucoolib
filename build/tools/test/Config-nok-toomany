@@ -1,7 +1,7 @@
 [a]
 bar = 2
 
-[a:stm32f4]
+[a:stm32]
 bar = 3
 
 [a:arm]
