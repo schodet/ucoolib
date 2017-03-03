@@ -24,6 +24,8 @@
 #include "ucoo/arch/arch.hh"
 #include "ucoo/arch/rcc.stm32.hh"
 
+#include "config/ucoo/arch.hh"
+
 namespace ucoo {
 
 void
@@ -36,7 +38,7 @@ arch_init (int argc, const char **argv)
                              5, // pllq => 240 MHz / 5 = 48 MHz
                              4, // apb1_pre => 30 MHz
                              2, // apb2_pre => 60 MHz
-                             SupplyRange::V2_7);
+                             CONFIG_UCOO_ARCH_SUPPLY_RANGE);
     rcc_peripheral_clock_enable (Rcc::SYSCFG);
 }
 

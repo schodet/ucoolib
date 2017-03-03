@@ -1,0 +1,4 @@
+[ucoo/arch]
+supply_range = UNUSED
+[ucoo/arch:stm32f4]
+supply_range = SupplyRange::V2_7
